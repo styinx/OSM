@@ -1,0 +1,7 @@
+[requires]
+gtest/1.8.1@bincrafters/stable
+protobuf/3.9.1@bincrafters/stable
+zlib/1.2.9@conan/stable
+
+[generators]
+cmake
