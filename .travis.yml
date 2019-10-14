@@ -1,0 +1,42 @@
+language: cpp
+
+os:
+  - linux
+
+compiler:
+  - clang
+  - gcc
+
+cache:
+  directories:
+    - $HOME/.cache
+
+addons:
+  apt:
+    packages:
+    - cmake
+    - gcc9
+    - clang9
+
+before_install:
+  - git clone https://github.com//libosmscout
+  - cd libosmscout
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
+  - cd ..
+  - mkdir build
+  - sudo apt-get update
+  - sudo apt-get install -y libgcc9-dev libclang9
+  - sudo apt-get install -y qt5-default
+
+install:
+  - sudo python -m pip install conan
+
+script:
+  - conan install . -if build
+  - cd build
+  - cmake .. && make
+  - cd ..
+
