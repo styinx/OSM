@@ -23,22 +23,19 @@ set(DIR_CODE code)
 set(DIR_APP ${DIR_CODE}/apps)
 set(DIR_TEST ${DIR_CODE}/test)
 set(DIR_INCLUDE ${DIR_CODE}/include)
-set(DIR_LIBRARY ${DIR_CODE}/lib)
+set(DIR_LIBOSMSCOUT libosmscout)
 
+include_directories(
+    ${DIR_INCLUDE}
+    ${DIR_LIBOSMSCOUT}/build/libosmscout/include
+    ${DIR_LIBOSMSCOUT}/build/libosmscout-import/include
+    ${DIR_LIBOSMSCOUT}/libosmscout/include
+    ${DIR_LIBOSMSCOUT}/libosmscout-import/include)
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    set(OS_DIR_INCLUDE /usr/include/)
-    set(OS_DIR_LIBRARY /usr/libs/)
-endif()
-
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    set(OS_DIR_INCLUDE C:/Include/)
-    set(OS_DIR_LIBRARY C:/Libs/)
-endif()
-
-
-include_directories(${DIR_INCLUDE} ${OS_DIR_INCLUDE})
-link_directories(${DIR_LIBRARY} ${OS_DIR_LIBRARY})
+link_directories(
+    ${DIR_LIBOSMSCOUT}/build/
+    ${DIR_LIBOSMSCOUT}/build/libosmscout/
+    ${DIR_LIBOSMSCOUT}/build/libosmscout-import/)
 
 #
 # Compiler
@@ -54,7 +51,9 @@ SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COMPILE_FLAGS}")
 #
 
 set(LIBRARIES
-    -lpthread)
+    -lpthread
+    -losmscout
+    -losmscout_import)
 
 set(TEST_LIBRARIES
     -lgtest
@@ -75,7 +74,8 @@ conan_basic_setup()
 #
 
 set(INCLUDES
-    code/include/prototypes.hpp code/include/std.hpp)
+    code/include/prototypes.hpp
+    code/include/std.hpp)
 
 
 #
@@ -108,6 +108,10 @@ set(TEST_FILES
 #
 # Builds
 #
+
+# Task 2
+add_executable(${PROJECT_NAME}_Task_2 ${FILES} ${DIR_APP}/task2.cpp)
+target_link_libraries(${PROJECT_NAME}_Task_2 ${LIBRARIES})
 
 # Main
 add_executable(${PROJECT_NAME} ${FILES} ${DIR_APP}/main.cpp)

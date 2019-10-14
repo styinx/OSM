@@ -1,3 +1,4 @@
+dist: bionic
 language: cpp
 
 os:
@@ -15,24 +16,31 @@ addons:
   apt:
     packages:
     - cmake
+    - protobuf-compiler
+    - qt5-default
+
+jobs:
+  include:
+    - stage: compile
+      script: echo compile
+    - stage: test
+      script: echo test
 
 before_install:
+  - sudo python -m pip install conan
+  - mkdir build
+  - conan install . -if build
+
+install:
   - git clone https://github.com/Framstag/libosmscout
   - cd libosmscout
   - mkdir build
   - cd build
   - cmake ..
-  - make
-  - cd ..
-  - mkdir build
-  - sudo apt-get update
-  - sudo apt-get install -y qt5-default
-
-install:
-  - sudo python -m pip install conan
+  - make Import
+  - cd ../..
 
 script:
-  - conan install . -if build
   - cd build
   - cmake .. && make
   - cd ..

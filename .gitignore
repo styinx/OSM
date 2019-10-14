@@ -4,6 +4,9 @@
 # Resource Directory
 /resources
 
+# libosmscout Directory
+/libosmscout
+
 # Project Files/Directories
 /.idea
 

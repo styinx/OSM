@@ -1,45 +1,89 @@
 # OSM
 
-## Install dependencies
+## Install
 
-### libosmscout
-
-- Install the library into your preferred path.
+### Clone github repo
 
 ```
-sudo apt install qt5-default
-git clone https://github.com/Framstag/libosmscout
-cd libosmscout
-mkdir build 
-cd build
-cmake ..
-make
+git clone https://github.com/styinx/OSM
+cd OSM
 ```
 
-### conan
+### Install dependencies
+
+#### Install conan
+
+- requires python and pip
 
 ```
 pip install conan
 ```
 
-## Install application
-
-- install the application into your preferred path.
+#### Install protobuf compiler
 
 ```
-git clone https://github.com/styinx/OSM
-cd OSM
+sudo apt install protobuf-compiler
+```
+
+#### Install QT5
+
+```
+sudo apt install qt5-default
+```
+
+### libosmscout
+
+#### Clone libosmscout
+
+- navigate to the base dir of the OSM repository
+
+```
+git clone https://github.com/Framstag/libosmscout
+cd libosmscout
+```
+
+#### Build libosmscout
+
+- navigate to the base dir of the libosmscout repository
+
+```
+mkdir build 
+cd build
+cmake ..
+make Import
+```
+
+### Build OSM
+
+- navigate to the base dir of the OSM repository
+
+```
 mkdir build
 conan install . -if build
-cd
 cd build
 cmake ..
 make
 ```
 
-- choose the base path of the OSM application to run it
+### Run OSM
+
+- navigate to the base dir of the OSM repository
 
 ```
-cd ../build/bin
+cd build/bin
 ./OSM
+```
+
+## Usage
+
+### Read pbf file (Task 2)
+
+```
+./OSM_Task2 -d <pbf file path> --destinationDirectory <temp file path> --typefile ../../libosmscout/stylesheets/map.ost
+```
+
+### Efficient data sctructure (Task 3)
+
+```
+./OSM_Task3 -d <pbf file path> --destinationDirectory <temp file path> --typefile ../../libosmscout/stylesheets/map.ost
 ```
