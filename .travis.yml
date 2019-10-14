@@ -17,7 +17,7 @@ addons:
     - cmake
 
 before_install:
-  - git clone https://github.com//libosmscout
+  - git clone https://github.com/Framstag/libosmscout
   - cd libosmscout
   - mkdir build
   - cd build
