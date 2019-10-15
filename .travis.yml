@@ -36,7 +36,7 @@ install:
   - cd libosmscout
   - mkdir build
   - cd build
-  - cmake ..
+  - cmake .. || true
   - make Import
   - cd ../..
 
