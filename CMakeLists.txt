@@ -23,19 +23,18 @@ set(DIR_CODE code)
 set(DIR_APP ${DIR_CODE}/apps)
 set(DIR_TEST ${DIR_CODE}/test)
 set(DIR_INCLUDE ${DIR_CODE}/include)
-set(DIR_LIBOSMSCOUT libosmscout)
+set(DIR_OSMPBF osmpbf)
+
+find_package(Protobuf REQUIRED)
+find_package(ZLIB REQUIRED)
 
 include_directories(
     ${DIR_INCLUDE}
-    ${DIR_LIBOSMSCOUT}/build/libosmscout/include
-    ${DIR_LIBOSMSCOUT}/build/libosmscout-import/include
-    ${DIR_LIBOSMSCOUT}/libosmscout/include
-    ${DIR_LIBOSMSCOUT}/libosmscout-import/include)
+    ${DIR_OSMPBF}
+    ${DIR_OSMPBF}/osmpbf/include)
 
 link_directories(
-    ${DIR_LIBOSMSCOUT}/build/
-    ${DIR_LIBOSMSCOUT}/build/libosmscout/
-    ${DIR_LIBOSMSCOUT}/build/libosmscout-import/)
+    ${DIR_OSMPBF}/build/osmpbf)
 
 #
 # Compiler
@@ -52,8 +51,9 @@ SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COMPILE_FLAGS}")
 
 set(LIBRARIES
     -lpthread
-    -losmscout
-    -losmscout_import)
+    -losmpbf
+    -lz
+    ${PROTOBUF_LIBRARIES})
 
 set(TEST_LIBRARIES
     -lgtest
@@ -75,7 +75,8 @@ conan_basic_setup()
 
 set(INCLUDES
     code/include/prototypes.hpp
-    code/include/std.hpp)
+    code/include/std.hpp
+    code/include/structures/AdjacentMatrix.hpp)
 
 
 #
@@ -83,7 +84,7 @@ set(INCLUDES
 #
 
 set(SOURCES
-    )
+    code/source/structures/AdjacentMatrix.cpp)
 
 
 #
@@ -112,6 +113,10 @@ set(TEST_FILES
 # Task 2
 add_executable(${PROJECT_NAME}_Task_2 ${FILES} ${DIR_APP}/task2.cpp)
 target_link_libraries(${PROJECT_NAME}_Task_2 ${LIBRARIES})
+
+# Task 3
+add_executable(${PROJECT_NAME}_Task_3 ${FILES} ${DIR_APP}/task3.cpp)
+target_link_libraries(${PROJECT_NAME}_Task_3 ${LIBRARIES})
 
 # Main
 add_executable(${PROJECT_NAME} ${FILES} ${DIR_APP}/main.cpp)

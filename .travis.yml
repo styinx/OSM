@@ -17,31 +17,14 @@ addons:
     packages:
     - cmake
     - protobuf-compiler
+    - libprotobuf-dev
     - qt5-default
 
 jobs:
   include:
+    - stage: install
+      script: ./scripts/install.sh
     - stage: compile
-      script: echo compile
+      script: ./scripts/compile.sh
     - stage: test
-      script: echo test
-
-before_install:
-  - sudo python -m pip install conan
-  - mkdir build
-  - conan install . -if build
-
-install:
-  - git clone https://github.com/Framstag/libosmscout
-  - cd libosmscout
-  - mkdir build
-  - cd build
-  - cmake .. || true
-  - make Import
-  - cd ../..
-
-script:
-  - cd build
-  - cmake .. && make
-  - cd ..
-
+      script: ./scripts/test.sh

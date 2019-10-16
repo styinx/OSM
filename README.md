@@ -1,77 +1,28 @@
 # OSM
 
-## Install
-
-### Clone github repo
-
 ```
 git clone https://github.com/styinx/OSM
 cd OSM
 ```
 
-### Install dependencies
-
-#### Install conan
-
-- requires python and pip
+## Install
 
 ```
-pip install conan
+./scripts/install.sh
 ```
 
-#### Install protobuf compiler
+## Build 
 
 ```
-sudo apt install protobuf-compiler
+./scripts/compile.sh
 ```
 
-#### Install QT5
-
-```
-sudo apt install qt5-default
-```
-
-### libosmscout
-
-#### Clone libosmscout
+## Run
 
 - navigate to the base dir of the OSM repository
 
 ```
-git clone https://github.com/Framstag/libosmscout
-cd libosmscout
-```
-
-#### Build libosmscout
-
-- navigate to the base dir of the libosmscout repository
-
-```
-mkdir build 
-cd build
-cmake ..
-make Import
-```
-
-### Build OSM
-
-- navigate to the base dir of the OSM repository
-
-```
-mkdir build
-conan install . -if build
-cd build
-cmake ..
-make
-```
-
-### Run OSM
-
-- navigate to the base dir of the OSM repository
-
-```
-cd build/bin
-./OSM
+sh ./build/bin/OSM
 ```
 
 ## Usage
@@ -79,11 +30,17 @@ cd build/bin
 ### Read pbf file (Task 2)
 
 ```
-./OSM_Task2 -d <pbf file path> --destinationDirectory <temp file path> --typefile ../../libosmscout/stylesheets/map.ost
+sh ./build/bin/OSM_Task_2 <pbf file path> 
 ```
 
 ### Efficient data sctructure (Task 3)
 
 ```
-./OSM_Task3 -d <pbf file path> --destinationDirectory <temp file path> --typefile ../../libosmscout/stylesheets/map.ost
+sh ./build/bin/OSM_Task_3 <pbf file path>
 ```
+
+## Notes
+
+Hardware:
+  - 16 GB RAM
+  - Intel(R) Core(TM) i5-4690K CPU @ 3.50GHz
