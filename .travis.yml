@@ -15,10 +15,10 @@ cache:
 addons:
   apt:
     packages:
+    - pip3
     - cmake
     - protobuf-compiler
     - libprotobuf-dev
-    - qt5-default
 
 jobs:
   include:

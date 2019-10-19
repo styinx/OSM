@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+python3 -m pip install virtualenv
 python3 -m virtualenv venv/ -p python3
 . ./venv/bin/activate
 
