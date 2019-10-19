@@ -76,7 +76,8 @@ conan_basic_setup()
 set(INCLUDES
     code/include/prototypes.hpp
     code/include/std.hpp
-    code/include/structures/AdjacentMatrix.hpp)
+    code/include/structures/AdjacentMatrix.hpp
+    )
 
 
 #
@@ -84,7 +85,8 @@ set(INCLUDES
 #
 
 set(SOURCES
-    code/source/structures/AdjacentMatrix.cpp)
+    code/source/structures/AdjacentMatrix.cpp
+    )
 
 
 #

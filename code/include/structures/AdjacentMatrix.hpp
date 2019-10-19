@@ -1,18 +1,32 @@
 #ifndef OSM_ADJACENTMATRIX_HPP
 #define OSM_ADJACENTMATRIX_HPP
 
-#include <vector>
 #include <cstdint>
-
-using ID = std::uint64_t;
+#include <array>
+#include <set>
+#include <unordered_map>
+#include <vector>
 
 namespace OSM
 {
+    using ID = std::int64_t;
+
+    struct Node
+    {
+        ID id;
+        std::vector<int> edges;
+    };
+
+    struct Edge
+    {
+
+    };
+
     class AdjacentMatrix final
     {
     private:
         std::vector<ID> m_nodes;
-        std::vector<int> m_edges;
+        std::vector<ID> m_edges;
 
     public:
         AdjacentMatrix()                                = default;
@@ -21,7 +35,12 @@ namespace OSM
         AdjacentMatrix& operator=(const AdjacentMatrix& other) = default;
         AdjacentMatrix& operator=(AdjacentMatrix&& other) noexcept = default;
         virtual ~AdjacentMatrix()                                  = default;
-    };
-}
 
-#endif //OSM_ADJACENTMATRIX_HPP
+        unsigned nodeCount() const;
+        unsigned edgeCount() const;
+        AdjacentMatrix& addNode(const ID node);
+        AdjacentMatrix& addEdge(const ID source, const ID target);
+    };
+}  // namespace OSM
+
+#endif  // OSM_ADJACENTMATRIX_HPP
