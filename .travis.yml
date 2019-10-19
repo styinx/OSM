@@ -15,7 +15,7 @@ cache:
 addons:
   apt:
     packages:
-    - pip3
+    - python3-pip
     - cmake
     - protobuf-compiler
     - libprotobuf-dev
