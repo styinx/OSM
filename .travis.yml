@@ -20,13 +20,9 @@ addons:
     - protobuf-compiler
     - libprotobuf-dev
 
-jobs:
-  include:
-    - stage: test
-      script: ./scripts/test.sh
-
 install:
   - ./scripts/install.sh
 
 script:
   - ./scripts/compile.sh
+  - ./scripts/test.sh
