@@ -22,9 +22,11 @@ addons:
 
 jobs:
   include:
-    - stage: install
-      script: ./scripts/install.sh
-    - stage: compile
-      script: ./scripts/compile.sh
     - stage: test
       script: ./scripts/test.sh
+
+install:
+  - ./scripts/install.sh
+
+script:
+  - ./scripts/compile.sh

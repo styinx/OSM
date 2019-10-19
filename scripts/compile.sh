@@ -3,8 +3,7 @@
 cd osmpbf
 mkdir build
 cd build
-cmake ..
-make
+cmake .. && make
 cd ../..
 
 cd build

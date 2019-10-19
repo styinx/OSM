@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 
-python -m install conan
+python3 -m virtualenv venv/ -p python3
+. ./venv/bin/activate
+
+python3 -m pip install -r requirements.txt
+
 mkdir build
 conan install . -if build
+
+deactivate ./venv/bin/
 
 sudo apt-get install libprotobuf-dev protobuf-compiler
 
