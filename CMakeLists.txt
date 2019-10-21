@@ -40,7 +40,7 @@ link_directories(
 # Compiler
 #
 
-SET(GCC_COMPILE_FLAGS "-Wall -Wextra -ansi -pedantic")
+SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -O3")
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COMPILE_FLAGS}")
 
@@ -76,7 +76,7 @@ conan_basic_setup()
 set(INCLUDES
     code/include/prototypes.hpp
     code/include/std.hpp
-    code/include/structures/AdjacentMatrix.hpp
+    code/include/structures/AdjacencyArray.hpp
     )
 
 
@@ -85,7 +85,7 @@ set(INCLUDES
 #
 
 set(SOURCES
-    code/source/structures/AdjacentMatrix.cpp
+    code/source/structures/AdjacencyArray.cpp
     )
 
 

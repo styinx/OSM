@@ -1,3 +1,5 @@
+#include "structures/AdjacencyArray.hpp"
+
 #include <chrono>
 #include <iomanip>
 #include <iostream>
@@ -8,8 +10,6 @@
 #include <osmpbf/osmfile.h>
 #include <osmpbf/primitiveblockinputadaptor.h>
 
-#include "structures/AdjacentMatrix.hpp"
-
 struct Info
 {
     unsigned nodes     = 0;
@@ -17,14 +17,15 @@ struct Info
     unsigned relations = 0;
 };
 
-void parseBlock(OSM::AdjacentMatrix& matrix, Info& info, osmpbf::PrimitiveBlockInputAdaptor& pbi)
+void parseBlock(OSM::AdjacencyArray& matrix, Info& info, osmpbf::PrimitiveBlockInputAdaptor& pbi)
 {
     if(pbi.nodesSize())
     {
         for(osmpbf::INodeStream node = pbi.getNodeStream(); !node.isNull(); node.next())
         {
             info.nodes++;
-            matrix.addNode(node.id());
+            matrix.addNode(OSM::Node{node.id(), node.latd(), node.lond()});
+            //matrix.m_m[node.id()] = std::vector<OSM::ID*>();
         }
     }
 
@@ -38,7 +39,8 @@ void parseBlock(OSM::AdjacentMatrix& matrix, Info& info, osmpbf::PrimitiveBlockI
 //            {
 //                if(refIt != way.refEnd() && last != way.refEnd())
 //                {
-//                    matrix.addEdge(*refIt, *last);
+//                    //matrix.addEdge(*refIt, *last);
+//                    //matrix.m_m[*refIt].emplace_back(matrix.m_m[*last].first);
 //                }
 //                last = refIt;
 //            }
@@ -91,7 +93,7 @@ int main(int argc, char** argv)
     auto             stop  = system_clock::now();
     duration<double> diff  = duration<double>(0);
 
-    OSM::AdjacentMatrix matrix{};
+    OSM::AdjacencyArray matrix{};
     osmpbf::PrimitiveBlockInputAdaptor pbi;
     while(inFile.parseNextBlock(pbi))
     {

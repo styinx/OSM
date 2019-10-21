@@ -44,3 +44,11 @@ sh ./build/bin/OSM_Task_3 <pbf file path>
 Hardware:
   - 16 GB RAM
   - Intel(R) Core(TM) i5-4690K CPU @ 3.50GHz
+
+Execution times:
+  - Task 2:
+    - BW: ~ 30sec
+    - DE: ~ 3min
+  - Task 3:
+    - BW: ~ 2min 30sec
+    - DE: ~ 
