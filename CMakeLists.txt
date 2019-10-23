@@ -77,7 +77,7 @@ set(INCLUDES
     code/include/prototypes.hpp
     code/include/std.hpp
     code/include/structures/AdjacencyArray.hpp
-    )
+    code/include/ISerializable.hpp)
 
 
 #

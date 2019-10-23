@@ -6,7 +6,7 @@
 namespace OSM
 {
     Node::Node(const OSM::ID id, const double lat, double lon)
-        : id(id)
+//        : id(id)
 //        , lat(lat)
 //        , lon(lon)
     {
@@ -35,5 +35,10 @@ namespace OSM
     unsigned AdjacencyArray::edgeCount() const
     {
         return m_edges.size();
+    }
+
+    Vector<Byte> AdjacencyArray::serialize()
+    {
+        return OSM::Vector<Byte>();
     }
 }
