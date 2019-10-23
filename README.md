@@ -1,5 +1,8 @@
 # OSM
 
+[![Build Status](https://travis-ci.com/styinx/OSM.svg?token=MRNvDQResksrdNAQddri&branch=master)](https://travis-ci.com/styinx/OSM)
+[![Build Status](https://travis-ci.com/styinx/OSM.svg?token=MRNvDQResksrdNAQddri&branch=dev)](https://travis-ci.com/styinx/OSM)
+
 ```
 git clone https://github.com/styinx/OSM
 cd OSM
