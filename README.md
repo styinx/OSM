@@ -1,7 +1,6 @@
 # OSM
 
 [![Build Status](https://travis-ci.com/styinx/OSM.svg?token=MRNvDQResksrdNAQddri&branch=master)](https://travis-ci.com/styinx/OSM)
-[![Build Status](https://travis-ci.com/styinx/OSM.svg?token=MRNvDQResksrdNAQddri&branch=dev)](https://travis-ci.com/styinx/OSM)
 
 ```
 git clone https://github.com/styinx/OSM
@@ -42,16 +41,19 @@ sh ./build/bin/OSM_Task_2 <pbf file path>
 sh ./build/bin/OSM_Task_3 <pbf file path>
 ```
 
-## Notes
+# Notes
 
-Hardware:
-  - 16 GB RAM
-  - Intel(R) Core(TM) i5-4690K CPU @ 3.50GHz
+## Germany
+- Nodes: 307793444
+- Ways: 49974007
+- Relations: 622452
 
-Execution times:
-  - Task 2:
-    - BW: ~ 30sec
-    - DE: ~ 3min
-  - Task 3:
-    - BW: ~ 2min 30sec
-    - DE: ~ 
+## BW
+- Nodes: 43693622
+- Ways: 7245584
+- Relations: 90278
+
+## Stuttgart
+- Nodes: 14660711
+- Ways: 2546502
+- Relations: 25540

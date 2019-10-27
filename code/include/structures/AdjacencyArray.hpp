@@ -1,7 +1,6 @@
 #ifndef OSM_ADJACENCYARRAY_HPP
 #define OSM_ADJACENCYARRAY_HPP
 
-#include <ISerializable.hpp>
 #include <array>
 #include <cstdint>
 #include <map>
@@ -12,8 +11,6 @@
 
 namespace OSM
 {
-    using ID = std::int64_t;
-
     enum class EdgeType : Byte
     {
         NONE            = 0x00,
@@ -28,24 +25,33 @@ namespace OSM
 
     struct Node
     {
-//        ID       id;
-//        double   lat;
-//        double   lon;
-//        EdgeType type;
+        Sint64   id;
+        float    lat;
+        float    lon;
+        EdgeType type1;
+        EdgeType type2;
 
-        explicit Node(const ID id, const double lat, double lon);
+        explicit Node(const Sint64 id, const float lat, const float lon);
     };
 
     struct Edge
     {
-        ID target;
+        Sint64 source;
+        Sint64 target;
     };
 
-    class AdjacencyArray final : public ISerializable
+    inline bool operator<(const Edge& first, const Edge& second);
+
+    class AdjacencyArray final
     {
-    private:
-        std::vector<Node> m_nodes;
-        std::vector<Edge> m_edges;
+    public:
+        Vector<Node>   m_nodes;
+        Vector<Sint64> m_edges;
+        Vector<Sint64> m_offset;
+
+        Set<Edge> m_temp_edges;
+
+        Uint64 m_edges_count = 0;
 
     public:
         explicit AdjacencyArray();
@@ -55,12 +61,11 @@ namespace OSM
         AdjacencyArray& operator=(AdjacencyArray&& other) noexcept = delete;
         virtual ~AdjacencyArray()                                  = default;
 
-        unsigned        nodeCount() const;
-        unsigned        edgeCount() const;
-        AdjacencyArray& addNode(const Node& node);
-        AdjacencyArray& addEdge(const Edge& edge);
-
-        Vector<Byte> serialize() override;
+        unsigned nodeCount() const;
+        unsigned edgeCount() const;
+        void     addNode(const Node& node);
+        void     addEdge(const Sint64 from, const Sint64 to);
+        void computeEdges();
     };
 }  // namespace OSM
 
