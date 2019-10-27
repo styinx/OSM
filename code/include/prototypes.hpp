@@ -5,8 +5,9 @@
 #include <list>
 #include <map>
 #include <queue>
-#include <unordered_map>
+#include <set>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 namespace OSM
@@ -24,16 +25,20 @@ namespace OSM
     using Sint64 = std::int64_t;
 
     // complex types
-    using Thread = std::thread;
-    using String = std::string;
+    using Thread  = std::thread;
+    using String  = std::string;
     using WString = std::wstring;
-    //using Any = std::any;
+    // using Any = std::any;
 
     // collection types
+    template<typename T, std::size_t Size>
+    using Array = std::array<T, Size>;
     template<typename T>
     using Vector = std::vector<T>;
     template<typename T>
     using List = std::list<T>;
+    template<typename T>
+    using Set = std::set<T>;
     template<typename T>
     using Queue = std::queue<T>;
     template<typename K, typename V>
@@ -53,7 +58,6 @@ namespace OSM
     template<typename Func>
     using Function = std::function<Func>;
 
-
-} // namespace OSM
+}  // namespace OSM
 
 #endif  // OSM_PROTOTYPES_HPP

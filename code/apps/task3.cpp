@@ -17,15 +17,15 @@ struct Info
     unsigned relations = 0;
 };
 
-void parseBlock(OSM::AdjacencyArray& matrix, Info& info, osmpbf::PrimitiveBlockInputAdaptor& pbi)
+
+void parseBlock(OSM::AdjacencyArray& array, Info& info, osmpbf::PrimitiveBlockInputAdaptor& pbi)
 {
     if(pbi.nodesSize())
     {
         for(osmpbf::INodeStream node = pbi.getNodeStream(); !node.isNull(); node.next())
         {
             info.nodes++;
-            matrix.addNode(OSM::Node{node.id(), node.latd(), node.lond()});
-            //matrix.m_m[node.id()] = std::vector<OSM::ID*>();
+            array.addNode(OSM::Node{node.id(), static_cast<float>(node.latd()), static_cast<float>(node.lond())});
         }
     }
 
@@ -34,23 +34,23 @@ void parseBlock(OSM::AdjacencyArray& matrix, Info& info, osmpbf::PrimitiveBlockI
         for(osmpbf::IWayStream way = pbi.getWayStream(); !way.isNull(); way.next())
         {
             info.ways++;
-//            osmpbf::RefIterator last = way.refEnd();
-//            for(osmpbf::RefIterator refIt(way.refBegin()), refEnd(way.refEnd()); refIt != refEnd; ++refIt)
-//            {
-//                if(refIt != way.refEnd() && last != way.refEnd())
-//                {
-//                    //matrix.addEdge(*refIt, *last);
-//                    //matrix.m_m[*refIt].emplace_back(matrix.m_m[*last].first);
-//                }
-//                last = refIt;
-//            }
+            osmpbf::IWay::RefIterator previous = nullptr;
+            for(osmpbf::IWay::RefIterator refIt(way.refBegin()), refEnd(way.refEnd()); refIt != refEnd; ++refIt)
+            {
+                if(previous != nullptr && refIt != refEnd)
+                {
+                    array.addEdge(*previous, *refIt);
+                    *refIt;
+                }
+
+                previous = refIt;
+            }
         }
     }
 
     if(pbi.relationsSize())
     {
-        for(osmpbf::IRelationStream relation = pbi.getRelationStream(); !relation.isNull();
-            relation.next())
+        for(osmpbf::IRelationStream relation = pbi.getRelationStream(); !relation.isNull(); relation.next())
         {
             info.relations++;
         }
@@ -93,16 +93,22 @@ int main(int argc, char** argv)
     auto             stop  = system_clock::now();
     duration<double> diff  = duration<double>(0);
 
-    OSM::AdjacencyArray matrix{};
+    OSM::AdjacencyArray array{};
     osmpbf::PrimitiveBlockInputAdaptor pbi;
     while(inFile.parseNextBlock(pbi))
     {
         if(pbi.isNull())
             continue;
-        parseBlock(matrix, info, pbi);
+        parseBlock(array, info, pbi);
 
         if(diff > std::chrono::duration<double>(1))
         {
+            OSM::Uint64 s = array.m_nodes.size() * sizeof(OSM::Node) + array.m_temp_edges.size() * sizeof(OSM::Edge);
+            if(s > 14000000000)
+            {
+                return 1;
+            }
+
             auto duration = duration_cast<seconds>(system_clock::now() - stop).count();
             std::cout << std::right << std::setw(5) << duration << "s: ";
             printInfo(info);
@@ -116,8 +122,13 @@ int main(int argc, char** argv)
     std::cout << std::right << std::setw(5) << duration << "s: ";
     printInfo(info);
 
-    std::cout << matrix.nodeCount() << " nodes\n";
-    std::cout << matrix.edgeCount() << " edges\n";
+    std::cout << array.nodeCount() << " nodes\n";
+    std::cout << array.edgeCount() << " edges\n";
+    std::cout << array.m_temp_edges.size() << " temp edges\n";
+
+    array.computeEdges();
+
+    std::cout << array.m_offset.size() << " offset\n";
 
     return 0;
 }
