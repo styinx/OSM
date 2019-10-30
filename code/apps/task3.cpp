@@ -69,6 +69,11 @@ unsigned printInfo(const Info& info)
     return nodes.size() + ways.size() + relations.size();
 }
 
+bool operator==(const OSM::Node first, const OSM::Node second)
+{
+    return first.id == second.id;
+}
+
 int main(int argc, char** argv)
 {
     using namespace std::chrono;
@@ -88,6 +93,8 @@ int main(int argc, char** argv)
         return -1;
     }
 
+    std::cout << "Node " << sizeof(OSM::Node) << " bytes | Edge " << sizeof(OSM::Edge) << " bytes\n";
+
     Info             info{};
     auto             start = system_clock::now();
     auto             stop  = system_clock::now();
@@ -103,11 +110,11 @@ int main(int argc, char** argv)
 
         if(diff > std::chrono::duration<double>(1))
         {
-            OSM::Uint64 s = array.m_nodes.size() * sizeof(OSM::Node) + array.m_temp_edges.size() * sizeof(OSM::Edge);
-            if(s > 14000000000)
-            {
-                return 1;
-            }
+//            OSM::Uint64 s = array.m_nodes.size() * sizeof(OSM::Node) + array.m_temp_edges.size() * sizeof(OSM::Edge);
+//            if(s > 12000000000)
+//            {
+//                return 1;
+//            }
 
             auto duration = duration_cast<seconds>(system_clock::now() - stop).count();
             std::cout << std::right << std::setw(5) << duration << "s: ";
@@ -124,11 +131,9 @@ int main(int argc, char** argv)
 
     std::cout << array.nodeCount() << " nodes\n";
     std::cout << array.edgeCount() << " edges\n";
-    std::cout << array.m_temp_edges.size() << " temp edges\n";
+    std::cout << array.m_offset.size() << " offset\n";
 
     array.computeEdges();
-
-    std::cout << array.m_offset.size() << " offset\n";
 
     return 0;
 }

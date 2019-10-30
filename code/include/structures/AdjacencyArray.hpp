@@ -30,6 +30,8 @@ namespace OSM
         float    lon;
         EdgeType type1;
         EdgeType type2;
+        EdgeType type3;
+        EdgeType type4;
 
         explicit Node(const Sint64 id, const float lat, const float lon);
     };
@@ -40,7 +42,10 @@ namespace OSM
         Sint64 target;
     };
 
+    inline bool operator<(const Node& first, const Node& second);
     inline bool operator<(const Edge& first, const Edge& second);
+    inline bool compareNodes(const Node& first, const Node& second);
+    inline bool compareEdges(const Edge& first, const Edge& second);
 
     class AdjacencyArray final
     {
@@ -49,7 +54,7 @@ namespace OSM
         Vector<Sint64> m_edges;
         Vector<Sint64> m_offset;
 
-        Set<Edge> m_temp_edges;
+        Vector<Edge> m_temp_edges;
 
         Uint64 m_edges_count = 0;
 
@@ -65,7 +70,7 @@ namespace OSM
         unsigned edgeCount() const;
         void     addNode(const Node& node);
         void     addEdge(const Sint64 from, const Sint64 to);
-        void computeEdges();
+        void     computeEdges();
     };
 }  // namespace OSM
 

@@ -12,10 +12,24 @@ namespace OSM
     {
 
     }
+    bool operator<(const Node& first, const Node& second)
+    {
+        return first.id < second.id;
+    }
 
     bool operator<(const Edge& first, const Edge& second)
     {
         return std::tie(first.source, first.target) < std::tie(second.source, second.target);
+    }
+
+    bool compareNodes(const Node& first, const Node& second)
+    {
+        return first.id < second.id;
+    }
+
+    bool compareEdges(const Edge& first, const Edge& second)
+    {
+        return first.source < second.source;
     }
 
     AdjacencyArray::AdjacencyArray() = default;
@@ -27,8 +41,7 @@ namespace OSM
 
     void AdjacencyArray::addEdge(const Sint64 from, const Sint64 to)
     {
-        m_temp_edges.emplace(Edge{from, to});
-        m_temp_edges.emplace(Edge{to, from});
+        m_temp_edges.emplace_back(Edge{from, to});
 
         m_edges_count += 1;
     }
@@ -45,26 +58,58 @@ namespace OSM
 
     void AdjacencyArray::computeEdges()
     {
-        Sint64 offset = 0;
-        m_offset.emplace_back(offset);
+        std::cout << "sort nodes ";
+        std::sort(m_nodes.begin(), m_nodes.end(), compareNodes);
+        std::cout << "end\n";
 
-        Uint64 node_index = 0;
-        Sint64 node_val = m_nodes[0].id;
+        std::cout << "sort edges ";
+        std::sort(m_temp_edges.begin(), m_temp_edges.end(), compareEdges);
+        std::cout << "end\n";
 
+        m_offset.resize(m_edges.size() + 1);
+        m_offset[0] = 0;
+        Uint64 offset = 1;
+
+        auto node = m_nodes.begin();
         auto it = m_temp_edges.begin();
-        while(it != m_temp_edges.end())
+        while(it != m_temp_edges.end() && node != m_nodes.end())
         {
-            m_edges.emplace_back(it->target);
-            if(it->source == node_val)
+            if(it->source == node->id)
             {
-                ++offset;
+                m_edges.emplace_back(it->target);
+                m_offset[offset]++;
+                it++;
+            }
+            else if(it->source < node->id)
+            {
+                it++;
             }
             else
             {
-                node_val = m_nodes[++node_index].id;
-                m_offset.emplace_back(offset++);
+                node++;
             }
-            it = m_temp_edges.erase(it);
         }
+
+        node = m_nodes.begin();
+        it = m_temp_edges.begin();
+        while(it != m_temp_edges.end() && node != m_nodes.end())
+        {
+            if(it->target == node->id)
+            {
+                m_edges.emplace_back(it->source);
+                m_offset[offset]++;
+                it++;
+            }
+            else if(it->target < node->id)
+            {
+                it++;
+            }
+            else
+            {
+                node++;
+            }
+        }
+
+        m_temp_edges.clear();
     }
 }
