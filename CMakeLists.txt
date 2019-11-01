@@ -75,9 +75,8 @@ conan_basic_setup()
 
 set(INCLUDES
     code/include/prototypes.hpp
-    code/include/std.hpp
     code/include/structures/AdjacencyArray.hpp
-    code/include/ISerializable.hpp)
+    code/include/structures/Primitives.hpp code/include/io/osmpbfReader.hpp)
 
 
 #
@@ -86,7 +85,7 @@ set(INCLUDES
 
 set(SOURCES
     code/source/structures/AdjacencyArray.cpp
-    )
+    code/source/structures/Primitives.cpp code/source/io/osmpbfReader.cpp)
 
 
 #
@@ -119,6 +118,14 @@ target_link_libraries(${PROJECT_NAME}_Task_2 ${LIBRARIES})
 # Task 3
 add_executable(${PROJECT_NAME}_Task_3 ${FILES} ${DIR_APP}/task3.cpp)
 target_link_libraries(${PROJECT_NAME}_Task_3 ${LIBRARIES})
+
+# Task 4
+add_executable(${PROJECT_NAME}_Task_4 ${FILES} ${DIR_APP}/task4.cpp)
+target_link_libraries(${PROJECT_NAME}_Task_4 ${LIBRARIES})
+
+# Task 5
+add_executable(${PROJECT_NAME}_Task_5 ${FILES} ${DIR_APP}/task5.cpp)
+target_link_libraries(${PROJECT_NAME}_Task_5 ${LIBRARIES})
 
 # Main
 add_executable(${PROJECT_NAME} ${FILES} ${DIR_APP}/main.cpp)
