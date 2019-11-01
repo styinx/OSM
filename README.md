@@ -35,10 +35,22 @@ sh ./build/bin/OSM
 sh ./build/bin/OSM_Task_2 <pbf file path> 
 ```
 
-### Efficient data sctructure (Task 3)
+### Efficient data structure (Task 3)
 
 ```
 sh ./build/bin/OSM_Task_3 <pbf file path>
+```
+
+### Visualize osm map (Task 4)
+
+```
+sh ./build/bin/OSM_Task_4 <pbf file path>
+```
+
+### Shortest-path algorithm (Task 5)
+
+```
+sh ./build/bin/OSM_Task_5 <pbf file path>
 ```
 
 # Notes
