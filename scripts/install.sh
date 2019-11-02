@@ -11,6 +11,6 @@ conan install . -if build
 
 deactivate ./venv/bin/
 
-sudo apt-get install libprotobuf-dev protobuf-compiler
+sudo apt-get install libprotobuf-dev protobuf-compiler qt5-default
 
 git clone --recurse-submodules https://github.com/inphos42/osmpbf/
