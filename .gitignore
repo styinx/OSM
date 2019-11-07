@@ -1,14 +1,14 @@
 # Build Directory
-/build
+./build
 
 # Resource Directory
-/resources
+./resources
 
 # libosmscout Directory
-/osmpbf
+./osmpbf
 
 # Project Files/Directories
-/.idea
+./.idea
 
 # Prerequisites
 *.d

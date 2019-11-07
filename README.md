@@ -45,6 +45,7 @@ sh ./build/bin/OSM_Task_3 <pbf file path>
 
 ```
 sh ./build/bin/OSM_Task_4 <pbf file path>
+rcc -binary resources.qrc -o resources.rcc
 ```
 
 ### Shortest-path algorithm (Task 5)
