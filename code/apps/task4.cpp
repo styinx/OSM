@@ -1,24 +1,31 @@
+#include "gui/Window.hpp"
 #include "io/osmpbfReader.hpp"
 
+#include <QApplication>
+#include <QtCore/QResource>
 #include <iostream>
 
 int main(int argc, char** argv)
 {
-    using namespace std::chrono;
+    //    if(argc < 2)
+    //    {
+    //        std::cout << "Need in file" << std::endl;
+    //        return -1;
+    //    }
+    //
+    //    auto file_name = std::string{argv[1]};
+    //    auto array  = OSM::AdjacencyArray{};
+    //    auto reader = OSM::osmpbfReader{file_name};
+    //
+    //    reader.read(array);
+    //    reader.printInfo();
+    //    array.computeOffsets();
 
-    if(argc < 2)
-    {
-        std::cout << "Need in file" << std::endl;
-        return -1;
-    }
+    QApplication app(argc, argv);
+    QResource::registerResource("../../resources.rcc");
 
-    auto file_name = std::string{argv[1]};
-    auto array  = OSM::AdjacencyArray{};
-    auto reader = OSM::osmpbfReader{file_name};
+    auto window = OSM::Window();
+    window.show();
 
-    reader.read(array);
-    reader.printInfo();
-    array.computeOffsets();
-
-    return 0;
+    return app.exec();
 }

@@ -25,12 +25,15 @@ set(DIR_TEST ${DIR_CODE}/test)
 set(DIR_INCLUDE ${DIR_CODE}/include)
 set(DIR_OSMPBF osmpbf)
 
+find_package(Qt5 COMPONENTS Widgets WebEngineWidgets REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(ZLIB REQUIRED)
 
 include_directories(
     ${DIR_INCLUDE}
     ${DIR_OSMPBF}
+    ${Qt5Widgets_INCLUDE_DIRS}
+    ${Qt5WebEngineWidgets_INCLUDE_DIRS}
     ${DIR_OSMPBF}/osmpbf/include)
 
 link_directories(
@@ -40,7 +43,7 @@ link_directories(
 # Compiler
 #
 
-SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -O3")
+SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -O3 -fPIC")
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COMPILE_FLAGS}")
 
@@ -48,6 +51,10 @@ SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COMPILE_FLAGS}")
 #
 # Libraries
 #
+
+set(QT_LIBS
+    ${Qt5Widgets_LIBRARIES}
+    ${Qt5WebEngineWidgets_LIBRARIES})
 
 set(LIBRARIES
     -lpthread
@@ -76,7 +83,13 @@ conan_basic_setup()
 set(INCLUDES
     code/include/prototypes.hpp
     code/include/structures/AdjacencyArray.hpp
-    code/include/structures/Primitives.hpp code/include/io/osmpbfReader.hpp)
+    code/include/structures/Primitives.hpp
+    code/include/io/osmpbfReader.hpp)
+
+set(GUI_INCLUDES
+    code/include/gui/Window.hpp
+    code/include/gui/UIMap.hpp
+    code/include/gui/Panel.hpp)
 
 
 #
@@ -85,7 +98,13 @@ set(INCLUDES
 
 set(SOURCES
     code/source/structures/AdjacencyArray.cpp
-    code/source/structures/Primitives.cpp code/source/io/osmpbfReader.cpp)
+    code/source/structures/Primitives.cpp
+    code/source/io/osmpbfReader.cpp)
+
+set(GUI_SOURCES
+    code/source/gui/Window.cpp
+    code/source/gui/Panel.cpp
+    code/source/gui/UIMap.cpp)
 
 
 #
@@ -93,6 +112,7 @@ set(SOURCES
 #
 
 set(FILES ${INCLUDES} ${SOURCES})
+set(GUI_FILES ${GUI_INCLUDES} ${GUI_SOURCES})
 
 
 #
@@ -120,16 +140,16 @@ add_executable(${PROJECT_NAME}_Task_3 ${FILES} ${DIR_APP}/task3.cpp)
 target_link_libraries(${PROJECT_NAME}_Task_3 ${LIBRARIES})
 
 # Task 4
-add_executable(${PROJECT_NAME}_Task_4 ${FILES} ${DIR_APP}/task4.cpp)
-target_link_libraries(${PROJECT_NAME}_Task_4 ${LIBRARIES})
+add_executable(${PROJECT_NAME}_Task_4 ${FILES} ${GUI_FILES} ${DIR_APP}/task4.cpp)
+target_link_libraries(${PROJECT_NAME}_Task_4 ${LIBRARIES} ${QT_LIBS})
 
 # Task 5
-add_executable(${PROJECT_NAME}_Task_5 ${FILES} ${DIR_APP}/task5.cpp)
-target_link_libraries(${PROJECT_NAME}_Task_5 ${LIBRARIES})
+add_executable(${PROJECT_NAME}_Task_5 ${FILES} ${GUI_FILES} ${DIR_APP}/task5.cpp)
+target_link_libraries(${PROJECT_NAME}_Task_5 ${LIBRARIES} ${QT_LIBS})
 
 # Main
-add_executable(${PROJECT_NAME} ${FILES} ${DIR_APP}/main.cpp)
-target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
+add_executable(${PROJECT_NAME} ${FILES} ${GUI_FILES} ${DIR_APP}/main.cpp)
+target_link_libraries(${PROJECT_NAME} ${LIBRARIES} ${QT_LIBS})
 
 # Test
 add_executable(${PROJECT_NAME}_Test ${TEST_FILES} ${DIR_TEST}/test.cpp)

@@ -1,0 +1,7 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file alias="map_html">ui/html/main.html</file>
+    <file alias="map_css">ui/css/style.css</file>
+    <file alias="map_js">ui/js/map.js</file>
+</qresource>
+</RCC>
