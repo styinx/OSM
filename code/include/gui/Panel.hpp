@@ -19,10 +19,11 @@ namespace OSM
         QPushButton*  m_go;
         QTableWidget* m_table;
 
-        QWidget*     m_grid_wrapper;
         QGridLayout* m_grid;
         QLabel*      m_label_start;
         QLabel*      m_label_stop;
+
+        QSizePolicy m_fill_policy;
 
         void initTop();
         void initBottom();

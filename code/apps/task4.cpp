@@ -2,6 +2,7 @@
 #include "io/osmpbfReader.hpp"
 
 #include <QApplication>
+#include <QtCore/QResource>
 #include <iostream>
 
 int main(int argc, char** argv)
@@ -21,6 +22,7 @@ int main(int argc, char** argv)
     //    array.computeOffsets();
 
     QApplication app(argc, argv);
+    QResource::registerResource("../../resources.rcc");
 
     auto window = OSM::Window();
     window.show();

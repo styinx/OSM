@@ -12,7 +12,7 @@ namespace OSM
 
 
     public:
-        UIMap()                     = default;
+        UIMap();
         UIMap(const UIMap& other)     = delete;
         UIMap(UIMap&& other) noexcept = delete;
         UIMap& operator=(const UIMap& other) = delete;
