@@ -3,6 +3,7 @@
 
 #include "gui/Panel.hpp"
 #include "gui/UIMap.hpp"
+#include "structures/AdjacencyArray.hpp"
 
 #include <QtWidgets/QMainWindow>
 
@@ -18,7 +19,7 @@ namespace OSM
         QSplitter* m_main_splitter;
 
     public:
-        Window();
+        Window(const OSM::AdjacencyArray& array);
         Window(const Window& other)     = delete;
         Window(Window&& other) noexcept = delete;
         Window& operator=(const Window& other) = delete;
@@ -26,6 +27,6 @@ namespace OSM
         virtual ~Window()                          = default;
     };
 
-} // namespace OSM
+}  // namespace OSM
 
-#endif //OSM_WINDOW_HPP
+#endif  // OSM_WINDOW_HPP

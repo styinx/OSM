@@ -20,7 +20,7 @@ namespace OSM
         Uint64 m_relations = 0;
 
     public:
-        osmpbfReader(const std::string& osm_file);
+        explicit osmpbfReader(const std::string& osm_file);
         osmpbfReader(const osmpbfReader& other)     = delete;
         osmpbfReader(osmpbfReader&& other) noexcept = delete;
         osmpbfReader& operator=(const osmpbfReader& other) = delete;

@@ -17,30 +17,12 @@ namespace OSM
 
     AdjacencyArray::AdjacencyArray() = default;
 
-    void AdjacencyArray::addNode(const Node& node)
-    {
-        m_nodes.emplace_back(node);
-    }
-
-    void AdjacencyArray::addEdge(const Edge& edge)
-    {
-        m_edges.emplace_back(edge);
-    }
-
-    unsigned AdjacencyArray::nodeCount() const
-    {
-        return m_nodes.size();
-    }
-
-    unsigned AdjacencyArray::edgeCount() const
-    {
-        return m_edges.size();
-    }
-
     void AdjacencyArray::computeOffsets()
     {
         std::sort(m_nodes.begin(), m_nodes.end(), compareNodes);
         std::sort(m_edges.begin(), m_edges.end(), compareEdges);
+
+        // TODO use indexes instead of ids.
 
         auto node = m_nodes.begin();
         auto edge = m_edges.begin();
@@ -63,5 +45,40 @@ namespace OSM
                 offset++;
             }
         }
+    }
+
+    void AdjacencyArray::addNode(const Node& node)
+    {
+        m_nodes.emplace_back(node);
+    }
+
+    void AdjacencyArray::addEdge(const Edge& edge)
+    {
+        m_edges.emplace_back(edge);
+    }
+
+    size_t AdjacencyArray::nodeCount() const
+    {
+        return m_nodes.size();
+    }
+
+    size_t AdjacencyArray::edgeCount() const
+    {
+        return m_edges.size();
+    }
+
+    Node AdjacencyArray::getNode(const Uint64 index) const
+    {
+        return m_nodes[index];
+    }
+
+    Edge AdjacencyArray::getEdge(const Uint64 index) const
+    {
+        return m_edges[index];
+    }
+
+    Sint64 AdjacencyArray::getOffset(const Uint64 index) const
+    {
+        return m_offset[index];
     }
 }

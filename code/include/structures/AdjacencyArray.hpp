@@ -10,10 +10,10 @@ namespace OSM
 
     class AdjacencyArray final
     {
-    public:
+    private:
         Vector<Node>   m_nodes;
         Vector<Edge>   m_edges;
-        Vector<Sint64> m_offset;
+        Vector<Uint64> m_offset;
 
     public:
         explicit AdjacencyArray();
@@ -23,11 +23,14 @@ namespace OSM
         AdjacencyArray& operator=(AdjacencyArray&& other) noexcept = delete;
         virtual ~AdjacencyArray()                                  = default;
 
-        unsigned nodeCount() const;
-        unsigned edgeCount() const;
-        void     addNode(const Node& node);
-        void     addEdge(const Edge& edge);
-        void     computeOffsets();
+        void   computeOffsets();
+        void   addNode(const Node& node);
+        void   addEdge(const Edge& edge);
+        size_t nodeCount() const;
+        size_t edgeCount() const;
+        Node   getNode(const Uint64 index) const;
+        Edge   getEdge(const Uint64 index) const;
+        Sint64 getOffset(const Uint64 index) const;
     };
 }  // namespace OSM
 

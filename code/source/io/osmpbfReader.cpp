@@ -62,7 +62,10 @@ namespace OSM
                 for(INodeStream node = pbi.getNodeStream(); !node.isNull(); node.next())
                 {
                     ++m_nodes;
-                    array.addNode(OSM::Node{node.id(), node.latd(), node.lond()});
+                    if(node.id() >= 0)
+                    {
+                        array.addNode(OSM::Node{node.id(), node.latd(), node.lond()});
+                    }
                 }
             }
 
@@ -77,9 +80,15 @@ namespace OSM
                     {
                         if(previous != nullptr)
                         {
-                            array.addEdge(OSM::Edge{*previous, *it});
+                            if(*previous >= 0)
+                            {
+                                array.addEdge(OSM::Edge{*previous, *it});
+                            }
                         }
-                        previous = it;
+                        if(*it >= 0)
+                        {
+                            previous = it;
+                        }
                     }
                 }
             }

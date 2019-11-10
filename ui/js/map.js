@@ -1,10 +1,42 @@
-var map = L.map('map').setView([48.745158,9.106606], 13);
+document.addEventListener("DOMContentLoaded", function () {
+
+    new QWebChannel(qt.webChannelTransport, function (channel) {
+        window.bridge = channel.objects.UIBridge;
+        setMapBounds();
+    });
+});
+
+let attribution = '';
+let token = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+let map = L.map('map').setView([48.745158, 9.106606], 15);
 
 L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={token}', {
-    maxZoom: 18,
-    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
-        '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
-        'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+    maxZoom: 20,
+    attribution: '',
     id: 'mapbox.streets',
-    token: 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw'
+    token: token
 }).addTo(map);
+
+map.on("viewreset", setMapBounds);
+
+function setMapBounds()
+{
+    let bounds = map.getBounds();
+    let sw = bounds["_southWest"];
+    let ne = bounds["_northEast"];
+
+    bridge.setMapBounds(ne.lat, ne.lng, sw.lat, sw.lng);
+}
+
+function showGraph(nodeList) {
+
+    let line = [];
+
+    for(let index = 0; index < nodeList.length; ++index)
+    {
+        L.circle(nodeList[index], {radius: 1, color: 'rgba(200, 100, 0, 0.75)'}).addTo(map);
+        line.push(nodeList[index]);
+    }
+
+    L.polyline(line, {color: 'rgba(0, 100, 200, 0.25)'}).addTo(map);
+}

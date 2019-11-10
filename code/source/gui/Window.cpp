@@ -3,10 +3,10 @@
 namespace OSM
 {
 
-    OSM::Window::Window()
+    Window::Window(const OSM::AdjacencyArray& array)
     {
         m_panel = new Panel();
-        m_map = new UIMap();
+        m_map = new UIMap(array);
 
         m_main_splitter = new QSplitter{Qt::Orientation::Horizontal};
 

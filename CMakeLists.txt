@@ -8,6 +8,8 @@ project(OSM)
 cmake_minimum_required(VERSION 3.5)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
 set(BIN_PATH "bin")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${BIN_PATH}")
@@ -77,6 +79,13 @@ conan_basic_setup()
 
 
 #
+# Resources
+#
+
+set(RESOURCES
+    resources.qrc)
+
+#
 # Includes
 #
 
@@ -84,7 +93,9 @@ set(INCLUDES
     code/include/prototypes.hpp
     code/include/structures/AdjacencyArray.hpp
     code/include/structures/Primitives.hpp
-    code/include/io/osmpbfReader.hpp)
+    code/include/io/osmpbfReader.hpp
+    code/include/gui/UIBridge.hpp
+    code/include/gui/mapTypes.hpp)
 
 set(GUI_INCLUDES
     code/include/gui/Window.hpp
@@ -104,7 +115,8 @@ set(SOURCES
 set(GUI_SOURCES
     code/source/gui/Window.cpp
     code/source/gui/Panel.cpp
-    code/source/gui/UIMap.cpp)
+    code/source/gui/UIMap.cpp
+    code/source/gui/UIBridge.cpp)
 
 
 #
@@ -140,11 +152,11 @@ add_executable(${PROJECT_NAME}_Task_3 ${FILES} ${DIR_APP}/task3.cpp)
 target_link_libraries(${PROJECT_NAME}_Task_3 ${LIBRARIES})
 
 # Task 4
-add_executable(${PROJECT_NAME}_Task_4 ${FILES} ${GUI_FILES} ${DIR_APP}/task4.cpp)
+add_executable(${PROJECT_NAME}_Task_4 ${FILES} ${GUI_FILES} ${RESOURCES} ${DIR_APP}/task4.cpp)
 target_link_libraries(${PROJECT_NAME}_Task_4 ${LIBRARIES} ${QT_LIBS})
 
 # Task 5
-add_executable(${PROJECT_NAME}_Task_5 ${FILES} ${GUI_FILES} ${DIR_APP}/task5.cpp)
+add_executable(${PROJECT_NAME}_Task_5 ${FILES} ${GUI_FILES} ${RESOURCES} ${DIR_APP}/task5.cpp)
 target_link_libraries(${PROJECT_NAME}_Task_5 ${LIBRARIES} ${QT_LIBS})
 
 # Main
