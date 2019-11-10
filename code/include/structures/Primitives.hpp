@@ -5,7 +5,7 @@
 
 namespace OSM
 {
-
+    
     enum class NodeType : Byte
     {
         wikipedia          = 0x07,
