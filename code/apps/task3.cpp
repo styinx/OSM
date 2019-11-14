@@ -16,7 +16,6 @@ int main(int argc, char** argv)
 
     reader.read(array);
     reader.printInfo();
-    array.computeOffsets();
 
     return 0;
 }

@@ -3,7 +3,7 @@
 namespace OSM
 {
 
-    Window::Window(const OSM::AdjacencyArray& array)
+    Window::Window(const AdjacencyArray* array)
     {
         m_panel = new Panel();
         m_map = new UIMap(array);

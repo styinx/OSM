@@ -1,8 +1,8 @@
 #include "gui/Window.hpp"
 #include "io/osmpbfReader.hpp"
+#include "structures/AdjacencyArray.hpp"
 
 #include <QApplication>
-#include <structures/AdjacencyArray.hpp>
 
 int main(int argc, char** argv)
 {
@@ -15,12 +15,11 @@ int main(int argc, char** argv)
 
         reader.read(array);
         reader.printInfo();
-        array.computeOffsets();
     }
 
     QApplication app(argc, argv);
 
-    auto window = OSM::Window(array);
+    auto window = OSM::Window(&array);
     window.show();
 
     return app.exec();

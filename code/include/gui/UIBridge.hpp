@@ -13,15 +13,15 @@ namespace OSM
     {
         Q_OBJECT
     private:
-        MapBounds m_bounds;
-        const UIMap*    m_map;
+        MapBounds    m_bounds;
+        const UIMap* m_map;
 
     public slots:
         void dummy();
         void setMapBounds(const float n_lat, const float n_lon, const float s_lat, const float s_lon);
 
     public:
-        UIBridge(const UIMap* map);
+        explicit UIBridge(const UIMap* map);
         UIBridge(const UIBridge& other)     = delete;
         UIBridge(UIBridge&& other) noexcept = delete;
         UIBridge& operator=(const UIBridge& other) = delete;
