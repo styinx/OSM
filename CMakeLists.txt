@@ -9,6 +9,9 @@ cmake_minimum_required(VERSION 3.5)
 
 set(CMAKE_CXX_STANDARD 17)
 
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+
 set(BIN_PATH "bin")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${BIN_PATH}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${BIN_PATH}")
@@ -154,15 +157,9 @@ target_link_libraries(${PROJECT_NAME}_Task_2 ${LIBRARIES})
 add_executable(${PROJECT_NAME}_Task_3 ${FILES} ${DIR_APP}/task3.cpp)
 target_link_libraries(${PROJECT_NAME}_Task_3 ${LIBRARIES})
 
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-
 # Task 4
 add_executable(${PROJECT_NAME}_Task_4 ${FILES} ${RESOURCES} ${DIR_APP}/task4.cpp)
 target_link_libraries(${PROJECT_NAME}_Task_4 ${LIBRARIES})
-
-set(CMAKE_AUTOMOC OFF)
-set(CMAKE_AUTORCC OFF)
 
 # Task 5
 add_executable(${PROJECT_NAME}_Task_5 ${FILES} ${DIR_APP}/task5.cpp)
