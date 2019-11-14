@@ -19,7 +19,7 @@ namespace OSM
         QSplitter* m_main_splitter;
 
     public:
-        Window(const OSM::AdjacencyArray& array);
+        explicit Window(const AdjacencyArray* array);
         Window(const Window& other)     = delete;
         Window(Window&& other) noexcept = delete;
         Window& operator=(const Window& other) = delete;

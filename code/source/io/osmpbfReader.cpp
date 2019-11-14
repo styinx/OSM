@@ -64,7 +64,7 @@ namespace OSM
                     ++m_nodes;
                     if(node.id() >= 0)
                     {
-                        array.addNode(OSM::Node{node.id(), node.latd(), node.lond()});
+                        array.addIONode(IONode{node.id(), node.latd(), node.lond()});
                     }
                 }
             }
@@ -82,7 +82,7 @@ namespace OSM
                         {
                             if(*previous >= 0)
                             {
-                                array.addEdge(OSM::Edge{*previous, *it});
+                                array.addIOEdge(IOEdge{*previous, *it});
                             }
                         }
                         if(*it >= 0)
@@ -101,6 +101,8 @@ namespace OSM
                 }
             }
         }
+
+        array.computeOffsets();
     }
 
 }  // namespace OSM

@@ -1,6 +1,8 @@
 #ifndef OSM_PANEL_HPP
 #define OSM_PANEL_HPP
 
+#include "structures/Primitives.hpp"
+
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
@@ -13,6 +15,8 @@ namespace OSM
 
     class Panel final : public QSplitter
     {
+        Q_OBJECT
+
     private:
         QLineEdit*    m_start;
         QLineEdit*    m_stop;
@@ -28,6 +32,12 @@ namespace OSM
         void initTop();
         void initBottom();
 
+    public slots:
+        void go();
+
+    signals:
+        void goPressed();
+
     public:
         Panel();
         Panel(const Panel& other)     = delete;
@@ -35,6 +45,8 @@ namespace OSM
         Panel& operator=(const Panel& other) = delete;
         Panel& operator=(Panel&& other) noexcept = delete;
         virtual ~Panel()                         = default;
+
+        void addNode(const Node* node);
     };
 
 }  // namespace OSM

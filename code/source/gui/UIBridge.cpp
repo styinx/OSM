@@ -1,7 +1,6 @@
 #include "gui/UIBridge.hpp"
 #include "gui/UIMap.hpp"
 
-#include <QtWidgets/QMessageBox>
 
 namespace OSM
 {

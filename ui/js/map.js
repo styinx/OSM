@@ -30,13 +30,11 @@ function setMapBounds()
 
 function showGraph(nodeList) {
 
-    let line = [];
-
     for(let index = 0; index < nodeList.length; ++index)
     {
-        L.circle(nodeList[index], {radius: 1, color: 'rgba(200, 100, 0, 0.75)'}).addTo(map);
-        line.push(nodeList[index]);
+        for(let node = 0; node < nodeList[index].length; ++node) {
+            L.circle(nodeList[index][node], {radius: 1, color: 'rgba(255, 200, 0, 0.75)'}).addTo(map);
+        }
+        L.polyline(nodeList[index], {color: 'rgba(0, 100, 200, 0.25)'}).addTo(map);
     }
-
-    L.polyline(line, {color: 'rgba(0, 100, 200, 0.25)'}).addTo(map);
 }

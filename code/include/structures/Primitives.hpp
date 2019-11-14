@@ -5,8 +5,34 @@
 
 namespace OSM
 {
-    
-    enum class NodeType : Byte
+
+    struct IONode
+    {
+        Uint64 id;
+        float  lat;
+        float  lon;
+
+        explicit IONode(const Sint64 id, const double lat, const double lon)
+            : id(static_cast<Uint64>(id))
+            , lat(static_cast<float>(lat))
+            , lon(static_cast<float>(lon))
+        {
+        }
+    };
+
+    struct IOEdge
+    {
+        Uint64 source;
+        Uint64 target;
+
+        explicit IOEdge(const Sint64 source, const Sint64 target)
+            : source(static_cast<Uint64>(source))
+            , target(static_cast<Uint64>(target))
+        {
+        }
+    };
+
+    enum class DummyType : Byte
     {
         wikipedia          = 0x07,
         website            = 0x08,  // web // url // contact:website
@@ -50,23 +76,28 @@ namespace OSM
         highway            = 0x23,
     };
 
-    struct Node
+    enum class NodeTypeMask : Byte
     {
-        Sint64   id;
-        float    lat;
-        float    lon;
-        NodeType type1;
-        NodeType type2;
-        NodeType type3;
-        NodeType type4;
-
-        explicit Node(const Sint64 id, const double lat, const double lon);
+        HIGHWAY          = 0x00,  // is a highway node
+        BICYCLE          = 0x01,
+        _1               = 0x02,
+        PUBLIC_TRANSPORT = 0x04,  // is a public transport node
+        TOWN             = 0x08,  // is a town node
+        _2               = 0x0F,
+        TEXT             = 0x10,  // has a description
+        MEDIA            = 0x20,  // has media content
+        WEB              = 0x40,  // has web content
+        CONTACT          = 0x80,  // has contact content
+        _3               = 0xF0
     };
 
-    struct Edge
+    struct Node
     {
-        Sint64 source;
-        Sint64 target;
+        float        lat;
+        float        lon;
+        NodeTypeMask type;
+        Byte         dummy1;
+        Uint16       dummy2;
     };
 
 }  // namespace OSM

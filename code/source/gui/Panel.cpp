@@ -1,6 +1,7 @@
 #include "gui/Panel.hpp"
 
 #include <QHeaderView>
+#include <QtWidgets/QMessageBox>
 
 namespace OSM
 {
@@ -20,6 +21,8 @@ namespace OSM
 
         initTop();
         initBottom();
+
+        QObject::connect(m_go, SIGNAL(clicked()), this, SLOT(go()));
     }
 
     void Panel::initTop()
@@ -52,10 +55,34 @@ namespace OSM
         m_table->verticalHeader()->hide();
         m_table->horizontalHeader()->hide();
 
-        m_table->setItem(0, 0, new QTableWidgetItem("test 1"));
-        m_table->setItem(0, 1, new QTableWidgetItem("test 2"));
+        auto node = std::make_shared<Node>(Node{45.34, 54.32});
+
+        addNode(node.get());
 
         addWidget(m_table);
+    }
+
+    void Panel::addNode(const Node* node)
+    {
+        auto lat = new QTableWidgetItem(QString::number(node->lat));
+        lat->setFlags(lat->flags() ^ Qt::ItemIsEditable);
+
+        auto lon = new QTableWidgetItem(QString::number(node->lon));
+        lon->setFlags(lon->flags() ^ Qt::ItemIsEditable);
+
+        m_table->setItem(m_table->rowCount(), 0, lat);
+        m_table->setItem(m_table->rowCount(), 1, lon);
+    }
+
+    void addItem()
+    {
+        auto item = new QTableWidgetItem("test 1");
+        item->setFlags(item->flags() ^ Qt::ItemIsEditable);
+    }
+
+    void Panel::go()
+    {
+        QMessageBox::information(this, "Go Pressed", m_start->text() + " " + m_stop->text());
     }
 
 }  // namespace OSM
