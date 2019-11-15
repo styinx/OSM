@@ -6,16 +6,50 @@
 namespace OSM
 {
 
-    struct IONode
+    enum class NodeTypeMask : Byte
+    {
+        _1               = 0x00,
+        HIGHWAY          = 0x01,  // is a highway node
+        BICYCLE          = 0x02,
+        PUBLIC_TRANSPORT = 0x04,  // is a public transport node
+        ONE_WAY          = 0x08,  // is a one way highway
+        _2               = 0x0F,
+        TEXT             = 0x10,  // has a description
+        MEDIA            = 0x20,  // has media content
+        WEB              = 0x40,  // has web content
+        CONTACT          = 0x80,  // has contact content
+        _3               = 0xF0
+    };
+
+    inline Byte operator|=(Byte value, const NodeTypeMask mask)
+    {
+        return value |= static_cast<Byte>(mask);
+    }
+
+    struct Node
     {
         Uint64 id;
         float  lat;
         float  lon;
+        Byte   mask;
+        Byte   max_speed;
+        Uint16 town;
 
-        explicit IONode(const Sint64 id, const double lat, const double lon)
+        Node() = default;
+
+        explicit Node(
+            const Sint64 id,
+            const double lat,
+            const double lon,
+            const Byte   mask,
+            const Byte   speed,
+            const Uint16 town)
             : id(static_cast<Uint64>(id))
             , lat(static_cast<float>(lat))
             , lon(static_cast<float>(lon))
+            , mask(mask)
+            , max_speed(speed)
+            , town(town)
         {
         }
     };
@@ -24,6 +58,12 @@ namespace OSM
     {
         Uint64 source;
         Uint64 target;
+
+        explicit IOEdge(const Uint64 source, const Uint64 target)
+            : source(source)
+            , target(target)
+        {
+        }
 
         explicit IOEdge(const Sint64 source, const Sint64 target)
             : source(static_cast<Uint64>(source))
@@ -74,30 +114,6 @@ namespace OSM
         motorcycle         = 0x23,
         maxspeed           = 0x23,
         highway            = 0x23,
-    };
-
-    enum class NodeTypeMask : Byte
-    {
-        HIGHWAY          = 0x00,  // is a highway node
-        BICYCLE          = 0x01,
-        _1               = 0x02,
-        PUBLIC_TRANSPORT = 0x04,  // is a public transport node
-        TOWN             = 0x08,  // is a town node
-        _2               = 0x0F,
-        TEXT             = 0x10,  // has a description
-        MEDIA            = 0x20,  // has media content
-        WEB              = 0x40,  // has web content
-        CONTACT          = 0x80,  // has contact content
-        _3               = 0xF0
-    };
-
-    struct Node
-    {
-        float        lat;
-        float        lon;
-        NodeTypeMask type;
-        Byte         dummy1;
-        Uint16       dummy2;
     };
 
 }  // namespace OSM

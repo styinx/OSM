@@ -3,6 +3,7 @@
 
 #include "prototypes.hpp"
 #include "structures/AdjacencyArray.hpp"
+#include "io/MapData.hpp"
 
 #include <osmpbf/osmfile.h>
 
@@ -18,6 +19,8 @@ namespace OSM
         Uint64 m_nodes     = 0;
         Uint64 m_ways      = 0;
         Uint64 m_relations = 0;
+
+        static Byte readMaxSpeed(const std::string& speed);
 
     public:
         explicit osmpbfReader(const std::string& osm_file);

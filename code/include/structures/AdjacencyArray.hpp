@@ -5,7 +5,7 @@
 
 namespace OSM
 {
-    inline bool compareNodes(const IONode& first, const IONode& second);
+    inline bool compareNodes(const Node& first, const Node& second);
     inline bool compareEdges(const IOEdge& first, const IOEdge& second);
 
     class AdjacencyArray final
@@ -16,13 +16,12 @@ namespace OSM
         Vector<Uint64> m_offset;
 
         // Only for reading and constructing the real structures
-        Vector<IONode> m_io_nodes;
         Vector<IOEdge> m_io_edges;
 
         template<typename R>
         R offsetCheck(Vector<R> container, Uint64 index) const
         {
-            if(container.size() > 0 && index < container.size() - 1)
+            if(container.size() > 0 && index < container.size())
             {
                 return container[index];
             }
@@ -38,7 +37,7 @@ namespace OSM
         virtual ~AdjacencyArray()                                  = default;
 
         void   computeOffsets();
-        void   addIONode(const IONode& node);
+        void   addNode(const Node& node);
         void   addIOEdge(const IOEdge& edge);
         size_t nodeCount() const;
         size_t edgeCount() const;

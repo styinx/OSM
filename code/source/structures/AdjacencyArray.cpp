@@ -5,7 +5,7 @@
 namespace OSM
 {
 
-    bool compareNodes(const IONode& first, const IONode& second)
+    bool compareNodes(const Node& first, const Node& second)
     {
         return first.id < second.id;
     }
@@ -19,14 +19,14 @@ namespace OSM
 
     void AdjacencyArray::computeOffsets()
     {
-        std::sort(m_io_nodes.begin(), m_io_nodes.end(), compareNodes);
+        std::sort(m_nodes.begin(), m_nodes.end(), compareNodes);
         std::sort(m_io_edges.begin(), m_io_edges.end(), compareEdges);
 
-        auto node = m_io_nodes.begin();
+        auto node = m_nodes.begin();
         auto edge = m_io_edges.begin();
         Uint64 offset = 1;
 
-        m_offset.resize(m_io_nodes.size() + 1);
+        m_offset.resize(m_nodes.size() + 1);
         m_offset[0] = 0;
 
         // Compute offsets of the edges
@@ -45,14 +45,11 @@ namespace OSM
             }
         }
 
-        // Replace IONode with Node
-        node = m_io_nodes.begin();
-        while(node != m_io_nodes.end())
+        while(offset < m_offset.size())
         {
-            m_nodes.emplace_back(Node{(*node).lat, (*node).lon});
-            node++;
+            m_offset[offset + 1] += m_offset[offset];
+            offset++;
         }
-        m_io_nodes.clear();
 
         // Replace IOEdge with Uint64
         edge = m_io_edges.begin();
@@ -64,9 +61,9 @@ namespace OSM
         m_io_edges.clear();
     }
 
-    void AdjacencyArray::addIONode(const IONode& node)
+    void AdjacencyArray::addNode(const Node& node)
     {
-        m_io_nodes.emplace_back(node);
+        m_nodes.emplace_back(node);
     }
 
     void AdjacencyArray::addIOEdge(const IOEdge& edge)

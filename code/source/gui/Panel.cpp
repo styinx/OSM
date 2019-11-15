@@ -55,7 +55,7 @@ namespace OSM
         m_table->verticalHeader()->hide();
         m_table->horizontalHeader()->hide();
 
-        auto node = std::make_shared<Node>(Node{45.34, 54.32});
+        auto node = std::make_shared<Node>(Node{});
 
         addNode(node.get());
 
