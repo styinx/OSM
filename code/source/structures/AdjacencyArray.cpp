@@ -81,18 +81,16 @@ namespace OSM
         return m_edges.size();
     }
 
-    Node AdjacencyArray::getNode(const Uint64 index) const
+    Vector<Node> AdjacencyArray::getNodes() const
     {
-        return offsetCheck(m_nodes, index);
+        return m_nodes;
     }
-
-    Uint64 AdjacencyArray::getEdge(const Uint64 index) const
+    Vector<Uint64> AdjacencyArray::getEdges() const
     {
-        return offsetCheck(m_edges, index);
+        return m_edges;
     }
-
-    Uint64 AdjacencyArray::getOffset(const Uint64 index) const
+    Vector<Uint64> AdjacencyArray::getOffsets() const
     {
-        return offsetCheck(m_offset, index);
+        return m_offset;
     }
 }

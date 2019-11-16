@@ -1,9 +1,10 @@
 #ifndef OSM_OSMPBFREADER_HPP
 #define OSM_OSMPBFREADER_HPP
 
+#include "gui/mapTypes.hpp"
+#include "io/MapData.hpp"
 #include "prototypes.hpp"
 #include "structures/AdjacencyArray.hpp"
-#include "io/MapData.hpp"
 
 #include <osmpbf/osmfile.h>
 
@@ -30,8 +31,9 @@ namespace OSM
         osmpbfReader& operator=(osmpbfReader&& other) noexcept = delete;
         virtual ~osmpbfReader()                                = default;
 
-        void printInfo();
-        void read(OSM::AdjacencyArray& array);
+        void      printInfo();
+        void      read(OSM::AdjacencyArray& array);
+        MapBounds getMapBounds();
     };
 
 }  // namespace OSM

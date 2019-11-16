@@ -46,7 +46,7 @@ link_directories(
 # Compiler
 #
 
-SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -fPIC ")
+SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -fPIC -O3")
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COMPILE_FLAGS}")
 
@@ -101,7 +101,7 @@ set(INCLUDES
     code/include/alg/Dijkstra.hpp
     code/include/NonCopyable.hpp
     code/include/NonMoveable.hpp
-    code/include/structures/Graph.hpp code/include/io/MapData.hpp code/include/structures/RTree.hpp)
+    code/include/io/MapData.hpp code/include/structures/Grid.hpp)
 
 set(GUI_INCLUDES
     code/include/gui/Window.hpp
@@ -116,7 +116,7 @@ set(GUI_INCLUDES
 set(SOURCES
     code/source/structures/AdjacencyArray.cpp
     code/source/io/osmpbfReader.cpp
-    code/source/structures/Graph.cpp code/source/io/MapData.cpp)
+    code/source/io/MapData.cpp code/source/structures/Grid.cpp)
 
 set(GUI_SOURCES
     code/source/gui/Window.cpp

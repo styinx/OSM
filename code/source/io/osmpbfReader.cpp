@@ -85,10 +85,10 @@ namespace OSM
                     ++m_nodes;
                     if(node.id() >= 0)
                     {
-                        bool hasTown = false;
-                        Byte mask = 0;
-                        Byte speed = 1;
-                        Uint16 town = 0;
+                        bool        hasTown = false;
+                        Byte        mask    = 0;
+                        Byte        speed   = 1;
+                        Uint16      town    = 0;
                         std::string name;
 
                         for(uint32_t i = 0, s = node.tagsSize(); i < s; ++i)
@@ -161,6 +161,14 @@ namespace OSM
         }
 
         array.computeOffsets();
+    }
+
+    MapBounds osmpbfReader::getMapBounds()
+    {
+        return {static_cast<float>(m_osm_file.minLatd()),
+                static_cast<float>(m_osm_file.maxLatd()),
+                static_cast<float>(m_osm_file.minLond()),
+                static_cast<float>(m_osm_file.maxLond())};
     }
 
 }  // namespace OSM

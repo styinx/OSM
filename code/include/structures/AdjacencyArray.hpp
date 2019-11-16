@@ -18,16 +18,6 @@ namespace OSM
         // Only for reading and constructing the real structures
         Vector<IOEdge> m_io_edges;
 
-        template<typename R>
-        R offsetCheck(Vector<R> container, Uint64 index) const
-        {
-            if(container.size() > 0 && index < container.size())
-            {
-                return container[index];
-            }
-            return R{};
-        }
-
     public:
         explicit AdjacencyArray();
         AdjacencyArray(const AdjacencyArray& other)     = delete;
@@ -41,9 +31,9 @@ namespace OSM
         void   addIOEdge(const IOEdge& edge);
         size_t nodeCount() const;
         size_t edgeCount() const;
-        Node   getNode(const Uint64 index) const;
-        Uint64   getEdge(const Uint64 index) const;
-        Uint64 getOffset(const Uint64 index) const;
+        Vector<Node> getNodes() const;
+        Vector<Uint64> getEdges() const;
+        Vector<Uint64> getOffsets() const;
     };
 }  // namespace OSM
 
