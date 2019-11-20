@@ -4,6 +4,7 @@
 #include "gui/UIBridge.hpp"
 #include "gui/mapTypes.hpp"
 #include "structures/AdjacencyArray.hpp"
+#include "structures/Grid.hpp"
 
 #include <QtWebChannel/QWebChannel>
 #include <QtWebEngineWidgets/QWebEngineView>
@@ -18,8 +19,10 @@ namespace OSM
         UIBridge*             m_bridge;
         const AdjacencyArray* m_array;
 
+        Grid m_grid;
+
     public:
-        explicit UIMap(const OSM::AdjacencyArray* array);
+        explicit UIMap(const OSM::AdjacencyArray* array, const MapBounds& bounds);
         UIMap(const UIMap& other)     = delete;
         UIMap(UIMap&& other) noexcept = delete;
         UIMap& operator=(const UIMap& other) = delete;

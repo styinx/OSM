@@ -1,14 +1,11 @@
 #include "gui/UIMap.hpp"
 
-#include <QtCore/QFile>
-#include <QtWidgets/QMessageBox>
-#include <iostream>
-
 namespace OSM
 {
 
-    UIMap::UIMap(const OSM::AdjacencyArray* array)
+    UIMap::UIMap(const OSM::AdjacencyArray* array, const MapBounds& bounds)
         : m_array(array)
+        , m_grid(bounds)
     {
         m_channel = new QWebChannel(this);
         m_bridge = new UIBridge(this);
@@ -17,47 +14,28 @@ namespace OSM
         page()->setWebChannel(m_channel);
 
         load(QUrl{"qrc:///map_html"});
+
+        int i = 0;
+        for(const auto& node : array->getNodes())
+        {
+            m_grid.set(node.lat, node.lon, i++);
+        }
     }
 
     void UIMap::drawEdges(const MapBounds& bounds) const
     {
-        Vector<Vector<std::pair<float, float>>> nodes;
-        auto bound = std::min(m_array->nodeCount(), 200UL);
+        auto nodes = m_array->getNodes();
+        auto center = bounds.center();
 
-        for(Uint64 i = 0; i < bound; ++i)
+        QString params;
+        for(const auto& index : m_grid.get(center.first, center.second))
         {
-//            if(bounds.isInBounds(node.lat, node.lon) && nodes.size() < 1000)
-//            {
-                Vector<std::pair<float, float>> nodeList;
-                for(Uint64 j = m_array->getOffset(i); j < m_array->getOffset(i + 1) - 1; ++j)
-                {
-                    nodeList.emplace_back(
-                        std::pair<float, float>{m_array->getNode(j).lat, m_array->getNode(j).lon});
-                }
-                if(nodeList.size() > 0)
-                {
-                    nodes.emplace_back(nodeList);
-                }
-//            }
+            const auto node = nodes[index];
+
+            params += "[" + QString::number(node.lat) + "," + QString::number(node.lon) + "],";
         }
 
-        QString paramString = "";
-        for(const auto& n : nodes)
-        {
-            QString inner;
-            for(const auto& nl : n)
-            {
-                inner += "[" + QString::number(nl.first) + ", " + QString::number(nl.second) + "],";
-            }
-            if(n.size() > 0)
-            {
-                paramString += "[" + inner.left(inner.length() - 1) + "],";
-            }
-        }
-
-        qDebug() << paramString;
-
-        page()->runJavaScript("showGraph([" + paramString.left(paramString.length() - 1) + "]);");
+        page()->runJavaScript("showGraph([[" + params.left(params.size() - 1) + "]]);");
     }
 
 } // namespace OSM

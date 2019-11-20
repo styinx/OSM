@@ -39,6 +39,8 @@ namespace OSM
     using List = std::list<T>;
     template<typename T>
     using Set = std::set<T>;
+    template<typename K, typename V>
+    using Pair = std::pair<K, V>;
     template<typename T>
     using Queue = std::queue<T>;
     template<typename K, typename V>

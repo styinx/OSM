@@ -1,6 +1,8 @@
 #ifndef OSM_OSMPBFREADER_HPP
 #define OSM_OSMPBFREADER_HPP
 
+#include "gui/mapTypes.hpp"
+#include "io/MapData.hpp"
 #include "prototypes.hpp"
 #include "structures/AdjacencyArray.hpp"
 
@@ -19,6 +21,8 @@ namespace OSM
         Uint64 m_ways      = 0;
         Uint64 m_relations = 0;
 
+        static Byte readMaxSpeed(const std::string& speed);
+
     public:
         explicit osmpbfReader(const std::string& osm_file);
         osmpbfReader(const osmpbfReader& other)     = delete;
@@ -27,8 +31,9 @@ namespace OSM
         osmpbfReader& operator=(osmpbfReader&& other) noexcept = delete;
         virtual ~osmpbfReader()                                = default;
 
-        void printInfo();
-        void read(OSM::AdjacencyArray& array);
+        void      printInfo();
+        void      read(OSM::AdjacencyArray& array);
+        MapBounds getMapBounds();
     };
 
 }  // namespace OSM

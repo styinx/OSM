@@ -9,6 +9,8 @@ document.addEventListener("DOMContentLoaded", function () {
 let attribution = '';
 let token = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
 let map = L.map('map').setView([48.745158, 9.106606], 15);
+let popup = L.popup();
+let activeMarker = undefined;
 
 L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={token}', {
     maxZoom: 20,
@@ -18,6 +20,7 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={
 }).addTo(map);
 
 map.on("viewreset", setMapBounds);
+map.on("click", onMapClick);
 
 function setMapBounds()
 {
@@ -37,4 +40,10 @@ function showGraph(nodeList) {
         }
         L.polyline(nodeList[index], {color: 'rgba(0, 100, 200, 0.25)'}).addTo(map);
     }
+}
+
+function onMapClick(e) {
+    popup.setLatLng(e.latlng)
+        .setContent("Clicked at " + e.latlng.toString())
+        .addTo(map);
 }

@@ -3,27 +3,88 @@
 
 #include "prototypes.hpp"
 
+#include <cmath>
+
 namespace OSM
 {
 
-    struct IONode
+    enum class NodeTypeMask : Byte
+    {
+        _1               = 0x00,
+        HIGHWAY          = 0x01,  // is a highway node
+        BICYCLE          = 0x02,
+        PUBLIC_TRANSPORT = 0x04,  // is a public transport node
+        ONE_WAY          = 0x08,  // is a one way highway
+        _2               = 0x0F,
+        TEXT             = 0x10,  // has a description
+        MEDIA            = 0x20,  // has media content
+        WEB              = 0x40,  // has web content
+        CONTACT          = 0x80,  // has contact content
+        _3               = 0xF0
+    };
+
+    inline Byte operator|=(Byte value, const NodeTypeMask mask)
+    {
+        return value |= static_cast<Byte>(mask);
+    }
+
+    struct Node
     {
         Uint64 id;
         float  lat;
         float  lon;
+        Byte   mask;
+        Byte   max_speed;
+        Uint16 town;
 
-        explicit IONode(const Sint64 id, const double lat, const double lon)
+        Node() = default;
+
+        explicit Node(
+            const Sint64 id,
+            const double lat,
+            const double lon,
+            const Byte   mask,
+            const Byte   speed,
+            const Uint16 town)
             : id(static_cast<Uint64>(id))
             , lat(static_cast<float>(lat))
             , lon(static_cast<float>(lon))
+            , mask(mask)
+            , max_speed(speed)
+            , town(town)
         {
         }
     };
+
+    inline float deg2rad(const float deg)
+    {
+        return deg * M_PI / 180;
+    }
+
+    inline float dist(const Node& n1, const Node& n2)
+    {
+        const double e_rad = 6371e3;
+        const double lat1_rad = deg2rad(n1.lat);
+        const double lon1_rad = deg2rad(n1.lon);
+        const double lat2_rad = deg2rad(n2.lat);
+        const double lon2_rad = deg2rad(n2.lon);
+
+        const double u = sin((lat1_rad - lat2_rad) / 2);
+        const double v = sin((lon1_rad - lon2_rad) / 2);
+
+        return 2.0 * e_rad * asin(sqrt(pow(u, 2) + cos(lat1_rad) * cos(lat2_rad) * pow(v, 2)));
+    }
 
     struct IOEdge
     {
         Uint64 source;
         Uint64 target;
+
+        explicit IOEdge(const Uint64 source, const Uint64 target)
+            : source(source)
+            , target(target)
+        {
+        }
 
         explicit IOEdge(const Sint64 source, const Sint64 target)
             : source(static_cast<Uint64>(source))
@@ -74,30 +135,6 @@ namespace OSM
         motorcycle         = 0x23,
         maxspeed           = 0x23,
         highway            = 0x23,
-    };
-
-    enum class NodeTypeMask : Byte
-    {
-        HIGHWAY          = 0x00,  // is a highway node
-        BICYCLE          = 0x01,
-        _1               = 0x02,
-        PUBLIC_TRANSPORT = 0x04,  // is a public transport node
-        TOWN             = 0x08,  // is a town node
-        _2               = 0x0F,
-        TEXT             = 0x10,  // has a description
-        MEDIA            = 0x20,  // has media content
-        WEB              = 0x40,  // has web content
-        CONTACT          = 0x80,  // has contact content
-        _3               = 0xF0
-    };
-
-    struct Node
-    {
-        float        lat;
-        float        lon;
-        NodeTypeMask type;
-        Byte         dummy1;
-        Uint16       dummy2;
     };
 
 }  // namespace OSM

@@ -4,11 +4,13 @@
 
 #include <iomanip>
 #include <iostream>
+#include <osmpbf/include/osmpbf/filter.h>
 #include <osmpbf/inode.h>
 #include <osmpbf/irelation.h>
 #include <osmpbf/iway.h>
 #include <osmpbf/osmfile.h>
 #include <osmpbf/primitiveblockinputadaptor.h>
+#include <regex>
 
 namespace OSM
 {
@@ -16,6 +18,18 @@ namespace OSM
         : m_osm_file(osm_file, false)
     {
         m_osm_file.open();
+    }
+
+    Byte osmpbfReader::readMaxSpeed(const std::string& speed)
+    {
+        std::regex  r(R".*([0-9]+(\.[0-9+])?).*");
+        std::smatch match;
+        if(std::regex_search(speed.begin(), speed.end(), match, r))
+        {
+            // TODO extract speed unit
+            return std::abs(std::stoi(match[0]));
+        }
+        return 1;
     }
 
     void osmpbfReader::printInfo()
@@ -43,6 +57,10 @@ namespace OSM
 
         osmpbf::PrimitiveBlockInputAdaptor pbi{};
 
+        MapData::addTown("null");
+
+        osmpbf::AndTagFilter highwayFilter({new osmpbf::KeyOnlyTagFilter("highway")});
+
         while(m_osm_file.parseNextBlock(pbi))
         {
             if(diff > second)
@@ -54,6 +72,11 @@ namespace OSM
             }
             diff = std::chrono::system_clock::now() - start;
 
+            highwayFilter.assignInputAdaptor(&pbi);
+
+            if(!highwayFilter.rebuildCache())
+                continue;
+
             if(pbi.isNull())
                 continue;
 
@@ -64,7 +87,44 @@ namespace OSM
                     ++m_nodes;
                     if(node.id() >= 0)
                     {
-                        array.addIONode(IONode{node.id(), node.latd(), node.lond()});
+                        bool        hasTown = false;
+                        Byte        mask    = 0;
+                        Byte        speed   = 1;
+                        Uint16      town    = 0;
+                        std::string name;
+
+                        for(uint32_t i = 0, s = node.tagsSize(); i < s; ++i)
+                        {
+                            const auto& key = node.key(i);
+                            const auto& val = node.value(i);
+
+                            if(key == "maxspeed")
+                            {
+                                readMaxSpeed(node.value(i));
+                            }
+                            else if(key == "oneway")
+                            {
+                                mask |= NodeTypeMask::ONE_WAY;
+                            }
+                            else if(key == "name")
+                            {
+                                name = val;
+                            }
+                            else if(key == "place")
+                            {
+                                if(val == "city" || val == "town")
+                                {
+                                    hasTown = true;
+                                }
+                            }
+                        }
+
+                        if(hasTown)
+                        {
+                            town = MapData::addTown(name);
+                        }
+
+                        array.addNode(Node{node.id(), node.latd(), node.lond(), mask, speed, town});
                     }
                 }
             }
@@ -103,6 +163,14 @@ namespace OSM
         }
 
         array.computeOffsets();
+    }
+
+    MapBounds osmpbfReader::getMapBounds()
+    {
+        return {static_cast<float>(m_osm_file.minLatd()),
+                static_cast<float>(m_osm_file.maxLatd()),
+                static_cast<float>(m_osm_file.minLond()),
+                static_cast<float>(m_osm_file.maxLond())};
     }
 
 }  // namespace OSM
