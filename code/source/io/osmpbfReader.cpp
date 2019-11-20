@@ -59,6 +59,8 @@ namespace OSM
 
         MapData::addTown("null");
 
+        osmpbf::AndTagFilter highwayFilter({new osmpbf::KeyOnlyTagFilter("highway")});
+
         while(m_osm_file.parseNextBlock(pbi))
         {
             if(diff > second)
@@ -70,9 +72,9 @@ namespace OSM
             }
             diff = std::chrono::system_clock::now() - start;
 
-            osmpbf::AndTagFilter andFilter({new osmpbf::KeyOnlyTagFilter("highway")});
+            highwayFilter.assignInputAdaptor(&pbi);
 
-            if(!andFilter.rebuildCache())
+            if(!highwayFilter.rebuildCache())
                 continue;
 
             if(pbi.isNull())

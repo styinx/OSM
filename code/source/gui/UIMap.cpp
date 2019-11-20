@@ -1,7 +1,5 @@
 #include "gui/UIMap.hpp"
 
-#include <iostream>
-
 namespace OSM
 {
 
@@ -28,19 +26,13 @@ namespace OSM
     {
         auto nodes = m_array->getNodes();
         auto center = bounds.center();
-        Vector<Uint64> cell = m_grid.get(center.first, center.second);
 
         QString params;
-        int n = 0;
-        for(const auto& index : cell)
+        for(const auto& index : m_grid.get(center.first, center.second))
         {
             const auto node = nodes[index];
 
-            if(n < 10000)
-            {
-                params += "[" + QString::number(node.lat) + "," + QString::number(node.lon) + "],";
-                n++;
-            }
+            params += "[" + QString::number(node.lat) + "," + QString::number(node.lon) + "],";
         }
 
         page()->runJavaScript("showGraph([[" + params.left(params.size() - 1) + "]]);");

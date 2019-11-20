@@ -30,7 +30,7 @@ namespace OSM
         m_offset[0] = 0;
 
         // Compute offsets of the edges
-        while(edge != m_io_edges.end())
+        while(edge != m_io_edges.end() && node != m_nodes.end())
         {
             if(node->id == edge->source)
             {
@@ -45,6 +45,7 @@ namespace OSM
             }
         }
 
+        // Fill offsets if edges at the end do not have edges
         while(offset < m_offset.size())
         {
             m_offset[offset + 1] += m_offset[offset];
