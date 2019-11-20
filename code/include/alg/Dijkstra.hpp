@@ -3,8 +3,9 @@
 
 #include "NonCopyable.hpp"
 #include "NonMoveable.hpp"
+#include "structures/AdjacencyArray.hpp"
 
-#include "structures/Graph.hpp"
+#include <nlohmann/json.hpp>
 
 namespace OSM
 {
@@ -14,12 +15,15 @@ namespace OSM
         , public NonMoveable
     {
     private:
-
     public:
-        Dijkstra()                          = default;
-        virtual ~Dijkstra()                            = default;
+        Dijkstra()          = default;
+        virtual ~Dijkstra() = default;
 
-        void compute(const Graph& g);
+        static Pair<float, Vector<Uint64>>
+        compute(const AdjacencyArray& arr, const Uint64 from, const Uint64 to);
+
+        static nlohmann::json
+        computeGJSON(const AdjacencyArray& arr, const Uint64 from, const Uint64 to);
     };
 
 }  // namespace OSM
