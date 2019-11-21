@@ -59,7 +59,8 @@ namespace OSM
         return {dist_km, path};
     }
 
-    nlohmann::json Dijkstra::computeGJSON(const AdjacencyArray& arr, const Uint64 from, const Uint64 to)
+    nlohmann::json
+    Dijkstra::computeGJSON(const AdjacencyArray& arr, const Uint64 from, const Uint64 to)
     {
         auto pair = compute(arr, from, to);
         return nlohmann::json();

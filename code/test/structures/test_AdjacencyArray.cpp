@@ -36,11 +36,15 @@ namespace OSMTest
 
         array.computeOffsets();
 
-        ASSERT_EQ(0U, array.getOffset(0));
-        ASSERT_EQ(3U, array.getOffset(1)); // a
-        ASSERT_EQ(5U, array.getOffset(2)); // b
-        ASSERT_EQ(5U, array.getOffset(3)); // c
-        ASSERT_EQ(5U, array.getOffset(4)); // d
+        const auto nodes   = array.getNodes();
+        const auto edges   = array.getEdges();
+        const auto offsets = array.getOffsets();
+
+        ASSERT_EQ(0U, offsets[0]);
+        ASSERT_EQ(3U, offsets[1]);  // a
+        ASSERT_EQ(5U, offsets[2]);  // b
+        ASSERT_EQ(5U, offsets[3]);  // c
+        ASSERT_EQ(5U, offsets[4]);  // d
     }
 
 }  // namespace OSMTest
