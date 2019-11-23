@@ -1,6 +1,7 @@
 #ifndef OSM_UIMAP_HPP
 #define OSM_UIMAP_HPP
 
+#include "alg/Dijkstra.hpp"
 #include "gui/UIBridge.hpp"
 #include "gui/mapTypes.hpp"
 #include "structures/AdjacencyArray.hpp"
@@ -19,7 +20,8 @@ namespace OSM
         UIBridge*             m_bridge;
         const AdjacencyArray* m_array;
 
-        Grid m_grid;
+        Grid     m_grid;
+        Dijkstra m_dijkstra;
 
     public:
         explicit UIMap(const OSM::AdjacencyArray* array, const MapBounds& bounds);
@@ -29,7 +31,8 @@ namespace OSM
         UIMap& operator=(UIMap&& other) noexcept = delete;
         virtual ~UIMap()                         = default;
 
-        void drawEdges(const MapBounds& bounds) const;
+        Pair<float, Vector<Uint64>> calculateDistance(const QString& from, const QString& to);
+        void                        drawEdges(const MapBounds& bounds) const;
     };
 
 }  // namespace OSM

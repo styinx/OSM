@@ -25,6 +25,8 @@ namespace OSM
         Window& operator=(const Window& other) = delete;
         Window& operator=(Window&& other) noexcept = delete;
         virtual ~Window()                          = default;
+
+        UIMap* getMap();
     };
 
 }  // namespace OSM

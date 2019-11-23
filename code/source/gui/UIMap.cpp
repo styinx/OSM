@@ -1,14 +1,17 @@
 #include "gui/UIMap.hpp"
 
+#include "io/MapData.hpp"
+
 namespace OSM
 {
 
     UIMap::UIMap(const OSM::AdjacencyArray* array, const MapBounds& bounds)
         : m_array(array)
         , m_grid(bounds)
+        , m_dijkstra(m_array)
     {
         m_channel = new QWebChannel(this);
-        m_bridge = new UIBridge(this);
+        m_bridge  = new UIBridge(this);
 
         m_channel->registerObject("UIBridge", m_bridge);
         page()->setWebChannel(m_channel);
@@ -22,20 +25,74 @@ namespace OSM
         }
     }
 
-    void UIMap::drawEdges(const MapBounds& bounds) const
+    Pair<float, Vector<Uint64>> UIMap::calculateDistance(const QString& from, const QString& to)
     {
-        auto nodes = m_array->getNodes();
-        auto center = bounds.center();
+        const auto  max       = std::numeric_limits<Uint64>::max();
+        Uint64      from_town = max;
+        Uint64      from_node = max;
+        Uint64      to_town   = max;
+        Uint64      to_node   = max;
+        std::string from_name = from.toStdString();
+        std::string to_name   = to.toStdString();
 
-        QString params;
-        for(const auto& index : m_grid.get(center.first, center.second))
+        for(const auto& o : MapData::getTowns())
         {
-            const auto node = nodes[index];
+            if(o.second == from_name)
+            {
+                from_town = o.first;
+            }
+            else if(o.second == to_name)
+            {
+                to_town = o.first;
+            }
 
-            params += "[" + QString::number(node.lat) + "," + QString::number(node.lon) + "],";
+            if(from_town != max && to_town != max)
+            {
+                int index = 0;
+                for(const auto& node : m_array->getNodes())
+                {
+                    if(node.town == from_town)
+                    {
+                        from_node = index;
+                    }
+                    else if(node.town == to_town)
+                    {
+                        to_node = index;
+                    }
+
+                    if(from_node != max && to_node != max)
+                    {
+                        return m_dijkstra.compute(from_node, to_node);
+                    }
+
+                    ++index;
+                }
+                break;
+            }
         }
 
-        page()->runJavaScript("showGraph([[" + params.left(params.size() - 1) + "]]);");
+        return {-1, {}};
     }
 
-} // namespace OSM
+    void UIMap::drawEdges(const MapBounds& bounds) const
+    {
+        const auto nodes   = m_array->getNodes();
+        const auto edges   = m_array->getEdges();
+        const auto offsets = m_array->getOffsets();
+        const auto center  = bounds.center();
+
+        QString params;
+//        for(const auto& index : m_grid.get(center.first, center.second))
+//        {
+////            QString inner;
+////            for(Uint64 n = offsets[index]; n < offsets[index + 1]; ++n)
+////            {
+////                inner += "[" + QString::number(node.lat) + "," + QString::number(node.lon) + "],";
+////            }
+////            params += "[" + inner.left(inner.size() - 1) + "],";
+//        }
+
+        page()->runJavaScript("showGraph([" + params.left(params.size() - 1) + "]);");
+    }
+
+}  // namespace OSM

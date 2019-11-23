@@ -15,15 +15,23 @@ namespace OSM
         , public NonMoveable
     {
     private:
+        const Uint64          U64_max = std::numeric_limits<Uint64>::max();
+        const AdjacencyArray* m_array;
+        Vector<Uint64>        m_V;
+        Vector<Uint64>        m_prev;
+        Vector<float>         m_dist;
+
+        Queue<Uint64> m_frontier;
+        Set<Uint64>   m_explored;
+
     public:
-        Dijkstra()          = default;
+        explicit Dijkstra(const AdjacencyArray* array);
         virtual ~Dijkstra() = default;
 
-        static Pair<float, Vector<Uint64>>
-        compute(const AdjacencyArray& arr, const Uint64 from, const Uint64 to);
+        Vector<Uint64> UCS(Vector<Uint64> goal, int start);
 
-        static nlohmann::json
-        computeGJSON(const AdjacencyArray& arr, const Uint64 from, const Uint64 to);
+        Pair<float, Vector<Uint64>> compute(const Uint64 from, const Uint64 to);
+        nlohmann::json              computeGJSON(const Uint64 from, const Uint64 to);
     };
 
 }  // namespace OSM

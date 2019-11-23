@@ -12,12 +12,14 @@
 
 namespace OSM
 {
+    class Window;
 
     class Panel final : public QSplitter
     {
         Q_OBJECT
 
     private:
+        Window*       m_parent;
         QLineEdit*    m_start;
         QLineEdit*    m_stop;
         QPushButton*  m_go;
@@ -39,7 +41,7 @@ namespace OSM
         void goPressed();
 
     public:
-        Panel();
+        explicit Panel(Window* parent);
         Panel(const Panel& other)     = delete;
         Panel(Panel&& other) noexcept = delete;
         Panel& operator=(const Panel& other) = delete;
