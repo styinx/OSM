@@ -52,14 +52,13 @@ namespace OSM
             offset++;
         }
 
-        // Replace IOEdge with Uint64
-        edge = m_io_edges.begin();
-        while(edge != m_io_edges.end())
-        {
-            m_edges.emplace_back((*edge).target);
-            edge++;
-        }
-        m_io_edges.clear();
+//        // Replace IOEdge with Uint64
+//        m_edges.resize(m_io_edges.size());
+//        for(Uint64 i = 0; i < m_io_edges.size(); ++i)
+//        {
+//            m_edges[i] = (*edge).target;
+//        }
+//        m_io_edges.clear();
     }
 
     void AdjacencyArray::addNode(const Node& node)
@@ -93,5 +92,15 @@ namespace OSM
     Vector<Uint64> AdjacencyArray::getOffsets() const
     {
         return m_offset;
+    }
+
+    void AdjacencyArray::sortNodes()
+    {
+        std::sort(m_nodes.begin(), m_nodes.end(), compareNodes);
+    }
+
+    void AdjacencyArray::sortEdges()
+    {
+        std::sort(m_io_edges.begin(), m_io_edges.end(), compareEdges);
     }
 }

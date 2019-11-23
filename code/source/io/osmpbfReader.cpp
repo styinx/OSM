@@ -160,6 +160,9 @@ namespace OSM
                     ++m_relations;
                 }
             }
+
+            array.sortNodes();
+            array.sortEdges();
         }
 
         array.computeOffsets();

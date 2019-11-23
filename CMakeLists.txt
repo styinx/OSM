@@ -34,6 +34,7 @@ find_package(ZLIB REQUIRED)
 
 include_directories(
     ${DIR_INCLUDE}
+    ${GTEST_INCLUDE_DIRS}
     ${DIR_OSMPBF}
     ${Qt5Widgets_INCLUDE_DIRS}
     ${Qt5WebEngineWidgets_INCLUDE_DIRS}

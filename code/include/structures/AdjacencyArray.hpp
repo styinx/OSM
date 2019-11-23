@@ -34,6 +34,9 @@ namespace OSM
         Vector<Node> getNodes() const;
         Vector<Uint64> getEdges() const;
         Vector<Uint64> getOffsets() const;
+
+        void sortNodes();
+        void sortEdges();
     };
 }  // namespace OSM
 
