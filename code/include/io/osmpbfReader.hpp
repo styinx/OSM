@@ -19,6 +19,7 @@ namespace OSM
         Uint64 m_duration  = 0;
         Uint64 m_nodes     = 0;
         Uint64 m_ways      = 0;
+        Uint64 m_edges     = 0;
         Uint64 m_relations = 0;
 
         static Byte readMaxSpeed(const std::string& speed);

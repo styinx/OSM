@@ -30,6 +30,7 @@ set(DIR_OSMPBF osmpbf)
 
 find_package(Qt5 COMPONENTS Widgets WebEngineWidgets REQUIRED)
 find_package(Protobuf REQUIRED)
+find_package(GTest REQUIRED)
 find_package(ZLIB REQUIRED)
 
 include_directories(

@@ -35,9 +35,10 @@ namespace OSM
     void osmpbfReader::printInfo()
     {
         std::cout << std::right << std::setw(3) << m_duration << "s"
-                  << " | Nodes: " << std::right << std::setw(15) << m_nodes
-                  << " | Ways: " << std::right << std::setw(15) << m_ways
-                  << " | Relations: " << std::right << std::setw(15) << m_relations << "\n";
+                  << " | Nodes: " << std::right << std::setw(12) << m_nodes
+                  << " | Ways: " << std::right << std::setw(12) << m_ways
+                  << " (Edges: " << std::right << std::setw(12) << m_edges << ")"
+                  << " | Relations: " << std::right << std::setw(12) << m_relations << "\n";
     }
 
     void osmpbfReader::read(OSM::AdjacencyArray& array)
@@ -85,47 +86,47 @@ namespace OSM
                 for(INodeStream node = pbi.getNodeStream(); !node.isNull(); node.next())
                 {
                     ++m_nodes;
-                    if(node.id() >= 0)
-                    {
-                        bool        hasTown = false;
-                        Byte        mask    = 0;
-                        Byte        speed   = 1;
-                        Uint16      town    = 0;
-                        std::string name;
-
-                        for(uint32_t i = 0, s = node.tagsSize(); i < s; ++i)
-                        {
-                            const auto& key = node.key(i);
-                            const auto& val = node.value(i);
-
-                            if(key == "maxspeed")
-                            {
-                                readMaxSpeed(node.value(i));
-                            }
-                            else if(key == "oneway")
-                            {
-                                mask |= NodeTypeMask::ONE_WAY;
-                            }
-                            else if(key == "name")
-                            {
-                                name = val;
-                            }
-                            else if(key == "place")
-                            {
-                                if(val == "city" || val == "town")
-                                {
-                                    hasTown = true;
-                                }
-                            }
-                        }
-
-                        if(hasTown)
-                        {
-                            town = MapData::addTown(name);
-                        }
-
-                        array.addNode(Node{node.id(), node.latd(), node.lond(), mask, speed, town});
-                    }
+//                    if(node.id() >= 0)
+//                    {
+//                        bool        hasTown = false;
+//                        Byte        mask    = 0;
+//                        Byte        speed   = 1;
+//                        Uint16      town    = 0;
+//                        std::string name;
+//
+//                        for(uint32_t i = 0, s = node.tagsSize(); i < s; ++i)
+//                        {
+//                            const auto& key = node.key(i);
+//                            const auto& val = node.value(i);
+//
+//                            if(key == "maxspeed")
+//                            {
+//                                readMaxSpeed(node.value(i));
+//                            }
+//                            else if(key == "oneway")
+//                            {
+//                                mask |= NodeTypeMask::ONE_WAY;
+//                            }
+//                            else if(key == "name")
+//                            {
+//                                name = val;
+//                            }
+//                            else if(key == "place")
+//                            {
+//                                if(val == "city" || val == "town")
+//                                {
+//                                    hasTown = true;
+//                                }
+//                            }
+//                        }
+//
+//                        if(hasTown)
+//                        {
+//                            town = MapData::addTown(name);
+//                        }
+//
+//                        array.addNode(Node{node.id(), node.latd(), node.lond(), mask, speed, town});
+//                    }
                 }
             }
 
@@ -142,7 +143,8 @@ namespace OSM
                         {
                             if(*previous >= 0)
                             {
-                                array.addIOEdge(IOEdge{*previous, *it});
+                                array.addIOEdge(IOEdge{static_cast<Uint64>(*previous), static_cast<Uint64>(*it)});
+                                m_edges++;
                             }
                         }
                         if(*it >= 0)
@@ -160,9 +162,6 @@ namespace OSM
                     ++m_relations;
                 }
             }
-
-            array.sortNodes();
-            array.sortEdges();
         }
 
         array.computeOffsets();
