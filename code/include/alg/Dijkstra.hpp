@@ -5,8 +5,6 @@
 #include "NonMoveable.hpp"
 #include "structures/AdjacencyArray.hpp"
 
-#include <nlohmann/json.hpp>
-
 namespace OSM
 {
 
@@ -28,10 +26,8 @@ namespace OSM
         explicit Dijkstra(const AdjacencyArray* array);
         virtual ~Dijkstra() = default;
 
-        Vector<Uint64> UCS(Vector<Uint64> goal, int start);
-
         Pair<float, Vector<Uint64>> compute(const Uint64 from, const Uint64 to);
-        nlohmann::json              computeGJSON(const Uint64 from, const Uint64 to);
+        std::string computeGeoJson(const Uint64 from, const Uint64 to);
     };
 
 }  // namespace OSM

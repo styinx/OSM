@@ -25,16 +25,16 @@ namespace OSMTest
         array.addNode(d);
         array.addNode(e);
 
-        IOEdge ab{a.id, b.id};
-        IOEdge ac{a.id, c.id};
-        IOEdge ba{b.id, a.id};
-        IOEdge be{b.id, e.id};
-        IOEdge ca{c.id, a.id};
-        IOEdge cd{c.id, d.id};
-        IOEdge dc{d.id, c.id};
-        IOEdge de{d.id, e.id};
-        IOEdge eb{e.id, b.id};
-        IOEdge ed{e.id, d.id};
+        Edge ab{a.id, b.id};
+        Edge ac{a.id, c.id};
+        Edge ba{b.id, a.id};
+        Edge be{b.id, e.id};
+        Edge ca{c.id, a.id};
+        Edge cd{c.id, d.id};
+        Edge dc{d.id, c.id};
+        Edge de{d.id, e.id};
+        Edge eb{e.id, b.id};
+        Edge ed{e.id, d.id};
 
         array.addIOEdge(ab);
         array.addIOEdge(ac);

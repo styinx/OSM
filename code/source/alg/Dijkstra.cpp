@@ -25,9 +25,9 @@ namespace OSM
         Vector<Uint64> path{};
         Uint64         u       = 0;
         float          dist_m  = -1;
-        const auto     offsets = m_array->getOffsets();
+        const auto     ooffsets = m_array->getOOffsets();
+        const auto     ioffsets = m_array->getIOffsets();
         const auto     nodes   = m_array->getNodes();
-        const auto     edges   = m_array->getEdges();
 
         m_dist = Vector<float>(nodes.size(), U64_max);
         m_prev = Vector<Uint64>(nodes.size(), U64_max);
@@ -58,13 +58,9 @@ namespace OSM
             u = m_V[min_index];
 
             // Check neighbours of min neighbour
-            for(Uint64 i = offsets[u]; i < offsets[u + 1]; ++i)
+            for(Uint64 i = ooffsets[u]; i < ooffsets[u + 1]; ++i)
             {
-                const auto node_id   = edges[i];
-                const auto neighbour = std::distance(
-                    nodes.begin(), std::find_if(nodes.begin(), nodes.end(), [node_id](const Node& n) {
-                        return n.id == node_id;
-                    }));
+                const auto neighbour = i;
 
                 if(m_V[i] < U64_max)
                 {
@@ -93,100 +89,13 @@ namespace OSM
         }
 
         return {dist_m, path};
-
-        //
-        //        auto node = from;
-        //        auto cost = 0;
-        //        m_frontier.emplace(node);
-        //
-        //        const auto& offsets = m_array->getOffsets();
-        //        const auto& nodes   = m_array->getNodes();
-        //
-        //        while(true)
-        //        {
-        //            if(m_frontier.empty())
-        //                return {U64_max, {}};
-        //
-        //            node = m_frontier.front();
-        //            m_frontier.pop();
-        //
-        //            if(node == to)
-        //                return {U64_max, {}};
-        //
-        //            m_explored.emplace(node);
-        //
-        //            for(Uint64 i = offsets[node]; i < offsets[node + 1]; ++i)
-        //            {
-        //                if(std::find(m_explored.begin(), m_explored.end(), i) != m_explored.end())
-        //                {
-        //                    m_frontier.emplace(i);
-        //                }
-        //            }
-        //        }
-        //
-        //        return {dist_km, path};
     }
 
-    Vector<Uint64> Dijkstra::UCS(Vector<Uint64> goal, int start)
-    {
-        return {};
-        //        Vector<Uint64>                            solution;
-        //        std::priority_queue<Pair<Uint64, Uint64>> queue;
-        //        Uint64                                    count = 0;
-        //
-        //        for(Uint64 i = 0; i < goal.size(); i++)
-        //        {
-        //            solution.push_back(U64_max);
-        //        }
-        //
-        //        queue.push(std::make_pair(0, start));
-        //
-        //        while(!queue.empty())
-        //        {
-        //            Pair<Uint64, Uint64> p = queue.top();
-        //
-        //            queue.pop();
-        //            p.first *= -1;
-        //
-        //            if(find(goal.begin(), goal.end(), p.second) != goal.end())
-        //            {
-        //                Uint64 index = find(goal.begin(), goal.end(), p.second) - goal.begin();
-        //
-        //                if(solution[index] == U64_max)
-        //                {
-        //                    count++;
-        //                }
-        //
-        //                if(solution[index] > p.first)
-        //                {
-        //                    solution[index] = p.first;
-        //                }
-        //
-        //                queue.pop();
-        //
-        //                if(count == goal.size())
-        //                    return solution;
-        //            }
-        //
-        //            if(visited[p.second] == 0)
-        //            {
-        //                for(int i = 0; i < graph[p.second].size(); i++)
-        //                {
-        //                    queue.push(make_pair(
-        //                        (p.first + cost[make_pair(p.second, graph[p.second][i])]) * -1,
-        //                        graph[p.second][i]));
-        //                }
-        //            }
-        //            visited[p.second] = 1;
-        //        }
-
-        //        return solution;
-    }
-
-    nlohmann::json Dijkstra::computeGJSON(const Uint64 from, const Uint64 to)
+    std::string Dijkstra::computeGeoJson(const Uint64 from, const Uint64 to)
     {
         auto pair = compute(from, to);
-        return nlohmann::json();
+
+
     }
 
 }  // namespace OSM

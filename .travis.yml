@@ -23,4 +23,3 @@ install:
 
 script:
   - ./scripts/compile.sh
-  - ./scripts/test.sh

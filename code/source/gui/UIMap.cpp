@@ -78,19 +78,35 @@ namespace OSM
     {
         const auto nodes   = m_array->getNodes();
         const auto edges   = m_array->getEdges();
-        const auto offsets = m_array->getOffsets();
+        const auto offsets = m_array->getOOffsets();
         const auto center  = bounds.center();
 
         QString params;
-//        for(const auto& index : m_grid.get(center.first, center.second))
-//        {
-////            QString inner;
-////            for(Uint64 n = offsets[index]; n < offsets[index + 1]; ++n)
-////            {
-////                inner += "[" + QString::number(node.lat) + "," + QString::number(node.lon) + "],";
-////            }
-////            params += "[" + inner.left(inner.size() - 1) + "],";
-//        }
+        for(const auto& index : m_grid.get(center.first, center.second))
+        {
+            QString inner;
+            for(Uint64 n = offsets[index]; n < offsets[index + 1]; ++n)
+            {
+                auto node = nodes[edges[n].source];
+                inner += "[" + QString::number(node.lat) + "," + QString::number(node.lon) + "],";
+            }
+            params += "[" + inner.left(inner.size() - 1) + "],";
+        }
+
+        qDebug() << params;
+        page()->runJavaScript("showGraph([" + params.left(params.size() - 1) + "]);");
+    }
+
+    void UIMap::drawPath(const Vector<Uint64>& path) const
+    {
+        const auto nodes = m_array->getNodes();
+        QString params;
+
+        for(const auto& node : path)
+        {
+            const auto n = nodes[node];
+            params += "[" + QString::number(n.lat) + "," + QString::number(n.lat) + "],";
+        }
 
         page()->runJavaScript("showGraph([" + params.left(params.size() - 1) + "]);");
     }

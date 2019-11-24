@@ -107,12 +107,16 @@ namespace OSM
         }
 
         auto pair = m_parent->getMap()->calculateDistance(start, stop);
-        QString path;
-        for(const auto& s : pair.second)
+
+        if(pair.first == -1)
         {
-            path += QString::number(s);
+            QMessageBox::information(this, "Path not found", "No connection");
         }
-        QMessageBox::information(this, "Go Pressed", QString::number(pair.first) + " " + path);
+        else
+        {
+            QMessageBox::information(this, "Path found", QString::number(pair.first) + "m");
+            m_parent->getMap()->drawPath(pair.second);
+        }
     }
 
 }  // namespace OSM

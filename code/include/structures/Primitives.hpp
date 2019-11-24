@@ -75,18 +75,18 @@ namespace OSM
         return static_cast<float>(2.0F * e_rad * asin(sqrt(pow(u, 2) + cos(lat1_rad) * cos(lat2_rad) * pow(v, 2))));
     }
 
-    struct IOEdge
+    struct Edge
     {
         Uint64 source;
         Uint64 target;
 
-        explicit IOEdge(const Uint64 source, const Uint64 target)
+        explicit Edge(const Uint64 source, const Uint64 target)
             : source(source)
             , target(target)
         {
         }
 
-        explicit IOEdge(const Sint64 source, const Sint64 target)
+        explicit Edge(const Sint64 source, const Sint64 target)
             : source(static_cast<Uint64>(source))
             , target(static_cast<Uint64>(target))
         {

@@ -27,8 +27,10 @@ namespace OSM
             m_bounds.max_lat = s_lat;
             m_bounds.min_lon = s_lon;
 
-            m_map->drawEdges(m_bounds);
+
         }
+
+        m_map->drawEdges(m_bounds);
     }
 
 }  // namespace OSM

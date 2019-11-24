@@ -35,7 +35,7 @@ namespace OSM
     void osmpbfReader::printInfo()
     {
         std::cout << std::right << std::setw(3) << m_duration << "s"
-                  << " | Nodes: " << std::right << std::setw(12) << m_nodes
+                  << " | Nodes: " << std::right << std::setw(12) << m_nodes.first << "/" << std::setw(12) << m_nodes.second
                   << " | Ways: " << std::right << std::setw(12) << m_ways
                   << " (Edges: " << std::right << std::setw(12) << m_edges << ")"
                   << " | Relations: " << std::right << std::setw(12) << m_relations << "\n";
@@ -56,11 +56,13 @@ namespace OSM
         auto diff   = Duration{0};
         auto second = Duration{1};
 
-        osmpbf::PrimitiveBlockInputAdaptor pbi{};
-
         MapData::addTown("null");
 
-        osmpbf::AndTagFilter highwayFilter({new osmpbf::KeyOnlyTagFilter("highway")});
+        osmpbf::PrimitiveBlockInputAdaptor pbi{};
+        osmpbf::OrTagFilter highwayFilter({
+            new osmpbf::KeyOnlyTagFilter("highway"),
+            new osmpbf::KeyOnlyTagFilter("name"),
+            new osmpbf::KeyMultiValueTagFilter("place", {"city", "town"})});
 
         while(m_osm_file.parseNextBlock(pbi))
         {
@@ -73,60 +75,63 @@ namespace OSM
             }
             diff = std::chrono::system_clock::now() - start;
 
+            if(pbi.isNull())
+                continue;
+
             highwayFilter.assignInputAdaptor(&pbi);
 
             if(!highwayFilter.rebuildCache())
-                continue;
-
-            if(pbi.isNull())
                 continue;
 
             if(pbi.nodesSize())
             {
                 for(INodeStream node = pbi.getNodeStream(); !node.isNull(); node.next())
                 {
-                    ++m_nodes;
-//                    if(node.id() >= 0)
-//                    {
-//                        bool        hasTown = false;
-//                        Byte        mask    = 0;
-//                        Byte        speed   = 1;
-//                        Uint16      town    = 0;
-//                        std::string name;
-//
-//                        for(uint32_t i = 0, s = node.tagsSize(); i < s; ++i)
-//                        {
-//                            const auto& key = node.key(i);
-//                            const auto& val = node.value(i);
-//
-//                            if(key == "maxspeed")
-//                            {
-//                                readMaxSpeed(node.value(i));
-//                            }
-//                            else if(key == "oneway")
-//                            {
-//                                mask |= NodeTypeMask::ONE_WAY;
-//                            }
-//                            else if(key == "name")
-//                            {
-//                                name = val;
-//                            }
-//                            else if(key == "place")
-//                            {
-//                                if(val == "city" || val == "town")
-//                                {
-//                                    hasTown = true;
-//                                }
-//                            }
-//                        }
-//
-//                        if(hasTown)
-//                        {
-//                            town = MapData::addTown(name);
-//                        }
-//
-//                        array.addNode(Node{node.id(), node.latd(), node.lond(), mask, speed, town});
-//                    }
+                    ++m_nodes.second;
+
+                    if(!highwayFilter.matches(node))
+                        continue;
+
+                    ++m_nodes.first;
+
+                    bool        hasTown = false;
+                    Byte        mask    = 0;
+                    Byte        speed   = 1;
+                    Uint16      town    = 0;
+                    std::string name;
+
+                    for(Uint32 i = 0, s = node.tagsSize(); i < s; ++i)
+                    {
+                        const auto& key = node.key(i);
+                        const auto& val = node.value(i);
+
+                        if(key == "maxspeed")
+                        {
+                            readMaxSpeed(node.value(i));
+                        }
+                        else if(key == "oneway")
+                        {
+                            mask |= NodeTypeMask::ONE_WAY;
+                        }
+                        else if(key == "name")
+                        {
+                            name = val;
+                        }
+                        else if(key == "place")
+                        {
+                            if(val == "city" || val == "town")
+                            {
+                                hasTown = true;
+                            }
+                        }
+                    }
+
+                    if(hasTown)
+                    {
+                        town = MapData::addTown(name);
+                    }
+
+                    array.addNode(Node{node.id(), node.latd(), node.lond(), mask, speed, town});
                 }
             }
 
@@ -143,7 +148,8 @@ namespace OSM
                         {
                             if(*previous >= 0)
                             {
-                                array.addIOEdge(IOEdge{static_cast<Uint64>(*previous), static_cast<Uint64>(*it)});
+                                array.addIOEdge(
+                                    Edge{static_cast<Uint64>(*previous), static_cast<Uint64>(*it)});
                                 m_edges++;
                             }
                         }
@@ -164,7 +170,11 @@ namespace OSM
             }
         }
 
+        printInfo();
+
         array.computeOffsets();
+
+        printInfo();
     }
 
     MapBounds osmpbfReader::getMapBounds()

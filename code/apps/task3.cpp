@@ -1,21 +1,20 @@
 #include "io/osmpbfReader.hpp"
-
-#include <iostream>
+#include "structures/AdjacencyArray.hpp"
 
 int main(int argc, char** argv)
 {
-    if(argc < 2)
-    {
-        std::cout << "Need in file" << std::endl;
-        return -1;
-    }
-
-    auto file_name = std::string{argv[1]};
     auto array  = OSM::AdjacencyArray{};
-    auto reader = OSM::osmpbfReader{file_name};
+    auto bounds = OSM::MapBounds();
 
-    reader.read(array);
-    reader.printInfo();
+    if(argc >= 2)
+    {
+        auto file_name = std::string{argv[1]};
+        auto reader    = OSM::osmpbfReader{file_name};
+        bounds         = reader.getMapBounds();
+
+        reader.read(array);
+        reader.printInfo();
+    }
 
     return 0;
 }

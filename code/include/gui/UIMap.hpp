@@ -33,6 +33,7 @@ namespace OSM
 
         Pair<float, Vector<Uint64>> calculateDistance(const QString& from, const QString& to);
         void                        drawEdges(const MapBounds& bounds) const;
+        void                        drawPath(const Vector<Uint64>& path) const;
     };
 
 }  // namespace OSM
