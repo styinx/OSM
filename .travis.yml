@@ -17,12 +17,9 @@ addons:
     packages:
     - python3-pip
     - cmake
-    - protobuf-compiler
-    - libprotobuf-dev
 
 install:
   - ./scripts/install.sh
 
 script:
   - ./scripts/compile.sh
-  - ./scripts/test.sh

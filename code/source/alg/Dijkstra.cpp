@@ -5,64 +5,97 @@
 namespace OSM
 {
 
-    Pair<float, Vector<Uint64>>
-    Dijkstra::compute(const AdjacencyArray& arr, const Uint64 from, const Uint64 to)
+    Dijkstra::Dijkstra(const AdjacencyArray* array)
+        : m_array(array)
+        , m_V(array->nodeCount())
+        , m_prev(array->nodeCount(), U64_max)
+        , m_dist(array->nodeCount(), U64_max)
+        , m_frontier()
+        , m_explored()
     {
-        const Uint64 U64_max = std::numeric_limits<Uint64>::max();
-
-        Uint64 n       = from;
-        float  dist_km = 0;
-
-        Vector<Uint64> V{arr.nodeCount()};
-        std::iota(V.begin(), V.end(), 0);
-        Vector<Uint64> path{arr.nodeCount(), U64_max};
-        Vector<Uint64> dV{arr.nodeCount(), U64_max};
-
-        path.emplace_back(n);
-
-        while(!V.empty() || n == to)
+        // Init Vertex set from 0 to n (index of the node in the array)
+        for(Uint64 i = 0; i < array->nodeCount(); ++i)
         {
-            // Check min distance for all neighbours
-            float  n_dist_min = std::numeric_limits<float>::max();
-            Uint64 n_min      = 0;
-            for(Uint64 i = arr.getOffsets()[n]; i < arr.getOffsets()[n + 1]; ++i)
-            {
-                const float d = dist(arr.getNodes()[n], arr.getNodes()[i]);
-                if(d < n_dist_min)
-                {
-                    n_dist_min = d;
-                    n_min      = i;
-                }
-            }
-
-            // Remove min neighbour from Q
-            V[n_min] = U64_max;
-
-            // Check neighbours of min neighbour
-            for(Uint64 i = arr.getOffsets()[n_min]; i < arr.getOffsets()[n_min + 1]; ++i)
-            {
-                if(V[i] < U64_max)
-                {
-                    Uint64 alternative = dV[n_min] + dist(arr.getNodes()[n_min], arr.getNodes()[i]);
-
-                    if(alternative < dV[i])
-                    {
-                        dV[i]   = alternative;
-                        path[i] = n_min;
-                    }
-                    break;
-                }
-            }
-
-            n = n_min;
+            m_V[i] = i;
         }
-        return {dist_km, path};
     }
 
-    nlohmann::json Dijkstra::computeGJSON(const AdjacencyArray& arr, const Uint64 from, const Uint64 to)
+    Pair<float, Vector<Uint64>> Dijkstra::compute(const Uint64 from, const Uint64 to)
     {
-        auto pair = compute(arr, from, to);
-        return nlohmann::json();
+        Vector<Uint64> path{};
+        Uint64         u       = 0;
+        float          dist_m  = -1;
+        const auto     ooffsets = m_array->getOOffsets();
+        const auto     ioffsets = m_array->getIOffsets();
+        const auto     nodes   = m_array->getNodes();
+
+        m_dist = Vector<float>(nodes.size(), U64_max);
+        m_prev = Vector<Uint64>(nodes.size(), U64_max);
+
+        m_dist[to] = 0;
+
+        while(!m_V.empty())
+        {
+            // Find node with min dist that is still in V
+            auto min       = U64_max;
+            auto min_index = 0;
+            for(Uint64 index = 0; index < m_dist.size(); ++index)
+            {
+                if(m_V[index] < U64_max)
+                {
+                    auto l_min = m_dist[index];
+                    if(l_min < min)
+                    {
+                        min       = l_min;
+                        min_index = index;
+                    }
+                }
+            }
+            if(min == U64_max)
+            {
+                return {dist_m, path};
+            }
+            u = m_V[min_index];
+
+            // Check neighbours of min neighbour
+            for(Uint64 i = ooffsets[u]; i < ooffsets[u + 1]; ++i)
+            {
+                const auto neighbour = i;
+
+                if(m_V[i] < U64_max)
+                {
+                    const float alternative = m_dist[u] + distNodes(nodes[u], nodes[neighbour]);
+
+                    if(alternative < m_dist[neighbour])
+                    {
+                        m_dist[neighbour] = alternative;
+                        m_prev[neighbour] = u;
+                    }
+                }
+            }
+
+            // Remove u from V
+            m_V[u] = U64_max;
+
+            if(u == from)
+            {
+                dist_m = m_dist[u];
+                while(u < U64_max)
+                {
+                    path.emplace_back(u);
+                    u = m_prev[u];
+                }
+            }
+        }
+
+        return {dist_m, path};
+    }
+
+    std::string Dijkstra::computeGeoJson(const Uint64 from, const Uint64 to)
+    {
+        auto pair = compute(from, to);
+
+
     }
 
 }  // namespace OSM

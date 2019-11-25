@@ -1,13 +1,18 @@
 #include "gui/Panel.hpp"
 
+#include "gui/UIMap.hpp"
+#include "gui/Window.hpp"
+#include "io/MapData.hpp"
+
 #include <QHeaderView>
 #include <QtWidgets/QMessageBox>
 
 namespace OSM
 {
 
-    Panel::Panel()
+    Panel::Panel(Window* parent)
         : QSplitter(Qt::Orientation::Vertical)
+        , m_parent(parent)
     {
         m_start = new QLineEdit();
         m_stop  = new QLineEdit();
@@ -23,15 +28,17 @@ namespace OSM
         initBottom();
 
         QObject::connect(m_go, SIGNAL(clicked()), this, SLOT(go()));
+        QObject::connect(m_start, SIGNAL(returnPressed()), this, SLOT(go()));
+        QObject::connect(m_stop, SIGNAL(returnPressed()), this, SLOT(go()));
     }
 
     void Panel::initTop()
     {
         auto grid_wrapper = new QWidget{};
-        m_grid = new QGridLayout{grid_wrapper};
+        m_grid            = new QGridLayout{grid_wrapper};
 
-        m_label_start = new QLabel{"From: "};
-        m_label_stop = new QLabel{"To: "};
+        m_label_start    = new QLabel{"From: "};
+        m_label_stop     = new QLabel{"To: "};
         auto grid_filler = new QWidget();
 
         grid_filler->setSizePolicy(m_fill_policy);
@@ -82,7 +89,34 @@ namespace OSM
 
     void Panel::go()
     {
-        QMessageBox::information(this, "Go Pressed", m_start->text() + " " + m_stop->text());
+        auto start = m_start->text();
+        auto stop  = m_stop->text();
+        if(start.isEmpty() && stop.isEmpty())
+        {
+            QString towns;
+            for(int i = 0; i < 10; ++i)
+            {
+                towns += QString(MapData::getTown(i).data()) + "\n";
+            }
+
+            QMessageBox::information(
+                this,
+                "Missing parameters",
+                "Please provide a start and target location. Here are some:\n" + towns);
+            return;
+        }
+
+        auto pair = m_parent->getMap()->calculateDistance(start, stop);
+
+        if(pair.first == -1)
+        {
+            QMessageBox::information(this, "Path not found", "No connection");
+        }
+        else
+        {
+            QMessageBox::information(this, "Path found", QString::number(pair.first) + "m");
+            m_parent->getMap()->drawPath(pair.second);
+        }
     }
 
 }  // namespace OSM

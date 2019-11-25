@@ -6,17 +6,18 @@
 namespace OSM
 {
     inline bool compareNodes(const Node& first, const Node& second);
-    inline bool compareEdges(const IOEdge& first, const IOEdge& second);
+    inline bool compareEdgesSource(const Edge& first, const Edge& second);
+    inline bool compareEdgesTarget(const Edge& first, const Edge& second);
 
     class AdjacencyArray final
     {
     private:
         Vector<Node>   m_nodes;
-        Vector<Uint64> m_edges;
-        Vector<Uint64> m_offset;
-
-        // Only for reading and constructing the real structures
-        Vector<IOEdge> m_io_edges;
+        Vector<Edge>   m_edges;
+        Vector<Uint64> m_i_edges;
+        Vector<Uint64> m_i_offset;
+        Vector<Uint64> m_o_edges;
+        Vector<Uint64> m_o_offset;
 
     public:
         explicit AdjacencyArray();
@@ -26,14 +27,19 @@ namespace OSM
         AdjacencyArray& operator=(AdjacencyArray&& other) noexcept = delete;
         virtual ~AdjacencyArray()                                  = default;
 
-        void   computeOffsets();
-        void   addNode(const Node& node);
-        void   addIOEdge(const IOEdge& edge);
-        size_t nodeCount() const;
-        size_t edgeCount() const;
-        Vector<Node> getNodes() const;
-        Vector<Uint64> getEdges() const;
-        Vector<Uint64> getOffsets() const;
+        void           computeOffsets();
+        void           addNode(const Node& node);
+        void           addIOEdge(const Edge& edge);
+        size_t         nodeCount() const;
+        size_t         edgeCount() const;
+        size_t         iEdgeCount() const;
+        size_t         oEdgeCount() const;
+        Vector<Node>   getNodes() const;
+        Vector<Edge>   getEdges() const;
+        Vector<Uint64> getIEdges() const;
+        Vector<Uint64> getOEdges() const;
+        Vector<Uint64> getIOffsets() const;
+        Vector<Uint64> getOOffsets() const;
     };
 }  // namespace OSM
 

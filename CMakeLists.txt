@@ -34,6 +34,7 @@ find_package(ZLIB REQUIRED)
 
 include_directories(
     ${DIR_INCLUDE}
+    ${GTEST_INCLUDE_DIRS}
     ${DIR_OSMPBF}
     ${Qt5Widgets_INCLUDE_DIRS}
     ${Qt5WebEngineWidgets_INCLUDE_DIRS}
@@ -141,7 +142,8 @@ set(FILES ${INCLUDES} ${SOURCES} ${GUI_FILES})
 #
 
 set(TEST_SOURCES
-    code/test/structures/test_AdjacencyArray.cpp)
+    code/test/structures/test_AdjacencyArray.cpp
+    code/test/structures/test_dijkstra.cpp)
 
 set(TEST_FILES
     ${FILES}
@@ -165,7 +167,7 @@ add_executable(${PROJECT_NAME}_Task_4 ${FILES} ${RESOURCES} ${DIR_APP}/task4.cpp
 target_link_libraries(${PROJECT_NAME}_Task_4 ${LIBRARIES})
 
 # Task 5
-add_executable(${PROJECT_NAME}_Task_5 ${FILES} ${DIR_APP}/task5.cpp)
+add_executable(${PROJECT_NAME}_Task_5 ${FILES} ${RESOURCES} ${DIR_APP}/task5.cpp)
 target_link_libraries(${PROJECT_NAME}_Task_5 ${LIBRARIES})
 
 # Main

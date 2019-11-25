@@ -10,12 +10,14 @@ namespace OSM
         if(s_towns.size() == 0xffff)
             return 0;
 
-//        auto pos = std::find(s_towns.begin(), s_towns.end(), town);
-//        if(pos != s_towns.end())
-//            return std::distance(s_towns.begin(), pos);
+        const auto result = std::find_if(
+            s_towns.begin(), s_towns.end(), [town](const auto& t) { return t.second == town; });
+
+        if(result != s_towns.end())
+            return std::distance(s_towns.begin(), result);
 
         const Uint16 id = s_towns.size();
-        s_towns[id] = town;
+        s_towns[id]     = town;
         return id;
     }
 
@@ -24,4 +26,9 @@ namespace OSM
         return s_towns[id];
     }
 
-} // namespace OSM
+    Map<Uint16, std::string> MapData::getTowns()
+    {
+        return s_towns;
+    }
+
+}  // namespace OSM

@@ -61,32 +61,32 @@ namespace OSM
         return deg * M_PI / 180;
     }
 
-    inline float dist(const Node& n1, const Node& n2)
+    inline float distNodes(const Node& n1, const Node& n2)
     {
-        const double e_rad = 6371e3;
-        const double lat1_rad = deg2rad(n1.lat);
-        const double lon1_rad = deg2rad(n1.lon);
-        const double lat2_rad = deg2rad(n2.lat);
-        const double lon2_rad = deg2rad(n2.lon);
+        const auto e_rad    = 6371000;
+        const auto lat1_rad = deg2rad(n1.lat);
+        const auto lon1_rad = deg2rad(n1.lon);
+        const auto lat2_rad = deg2rad(n2.lat);
+        const auto lon2_rad = deg2rad(n2.lon);
 
-        const double u = sin((lat1_rad - lat2_rad) / 2);
-        const double v = sin((lon1_rad - lon2_rad) / 2);
+        const auto u = sin((lat1_rad - lat2_rad) / 2);
+        const auto v = sin((lon1_rad - lon2_rad) / 2);
 
-        return 2.0 * e_rad * asin(sqrt(pow(u, 2) + cos(lat1_rad) * cos(lat2_rad) * pow(v, 2)));
+        return static_cast<float>(2.0F * e_rad * asin(sqrt(pow(u, 2) + cos(lat1_rad) * cos(lat2_rad) * pow(v, 2))));
     }
 
-    struct IOEdge
+    struct Edge
     {
         Uint64 source;
         Uint64 target;
 
-        explicit IOEdge(const Uint64 source, const Uint64 target)
+        explicit Edge(const Uint64 source, const Uint64 target)
             : source(source)
             , target(target)
         {
         }
 
-        explicit IOEdge(const Sint64 source, const Sint64 target)
+        explicit Edge(const Sint64 source, const Sint64 target)
             : source(static_cast<Uint64>(source))
             , target(static_cast<Uint64>(target))
         {

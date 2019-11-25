@@ -10,9 +10,14 @@ namespace OSM
         return first.id < second.id;
     }
 
-    bool compareEdges(const IOEdge& first, const IOEdge& second)
+    bool compareEdgesSource(const Edge& first, const Edge& second)
     {
         return first.source < second.source;
+    }
+
+    bool compareEdgesTarget(const Edge& first, const Edge& second)
+    {
+        return first.target < second.target;
     }
 
     AdjacencyArray::AdjacencyArray() = default;
@@ -20,46 +25,78 @@ namespace OSM
     void AdjacencyArray::computeOffsets()
     {
         std::sort(m_nodes.begin(), m_nodes.end(), compareNodes);
-        std::sort(m_io_edges.begin(), m_io_edges.end(), compareEdges);
+        std::sort(m_edges.begin(), m_edges.end(), compareEdgesSource);
 
-        auto node = m_nodes.begin();
-        auto edge = m_io_edges.begin();
+        // Outgoing Edges
+        m_o_offset.resize(m_nodes.size() + 1);
+        m_o_offset[0] = 0;
+
+        // Incoming edges
+        m_i_offset.resize(m_nodes.size() + 1);
+        m_i_offset[0] = 0;
+
         Uint64 offset = 1;
+        auto   node   = m_nodes.begin();
+        auto   edge   = m_edges.begin();
 
-        m_offset.resize(m_nodes.size() + 1);
-        m_offset[0] = 0;
-
-        // Compute offsets of the edges
-        while(edge != m_io_edges.end() && node != m_nodes.end())
+        // Create outgoing offsets
+        while(edge != m_edges.end() && node != m_nodes.end())
         {
-            if(node->id == edge->source)
+            if(edge->source == node->id)
             {
-                m_offset[offset] += 1;
+                m_o_offset[offset] += 1;
+                m_o_edges.emplace_back(offset - 1);
+
+                // Collect nodes we need to create incoming edges
+                m_i_edges.emplace_back(std::distance(m_edges.begin(), edge));
+
                 edge++;
             }
             else
             {
                 node++;
-                m_offset[offset + 1] += m_offset[offset];
+                m_o_offset[offset + 1] += m_o_offset[offset];
                 offset++;
             }
         }
 
-        // Fill offsets if edges at the end do not have edges
-        while(offset < m_offset.size())
+        // Creates offsets for nodes that do not have outgoing edges.
+        while(offset < m_o_offset.size())
         {
-            m_offset[offset + 1] += m_offset[offset];
+            m_o_offset[offset + 1] += m_o_offset[offset];
             offset++;
         }
 
-        // Replace IOEdge with Uint64
-        edge = m_io_edges.begin();
-        while(edge != m_io_edges.end())
+        std::sort(m_edges.begin(), m_edges.end(), compareEdgesTarget);
+
+        offset = 1;
+        node   = m_nodes.begin();
+        Uint64 edge_index = 0;
+
+        // Create incoming offsets
+        for(auto& edge : m_i_edges)
         {
-            m_edges.emplace_back((*edge).target);
-            edge++;
+            if(m_edges[edge].target == node->id)
+            {
+                m_i_offset[offset] += 1;
+                m_i_edges[edge_index++] = offset - 1;
+            }
+            else
+            {
+                node++;
+                m_i_offset[offset + 1] += m_i_offset[offset];
+                offset++;
+            }
         }
-        m_io_edges.clear();
+
+        // Creates offsets for nodes that do not have ingoing edges.
+        while(offset < m_i_offset.size())
+        {
+            m_i_offset[offset + 1] += m_i_offset[offset];
+            offset++;
+        }
+
+        m_edges.clear();
     }
 
     void AdjacencyArray::addNode(const Node& node)
@@ -67,9 +104,9 @@ namespace OSM
         m_nodes.emplace_back(node);
     }
 
-    void AdjacencyArray::addIOEdge(const IOEdge& edge)
+    void AdjacencyArray::addIOEdge(const Edge& edge)
     {
-        m_io_edges.emplace_back(edge);
+        m_edges.emplace_back(edge);
     }
 
     size_t AdjacencyArray::nodeCount() const
@@ -82,16 +119,43 @@ namespace OSM
         return m_edges.size();
     }
 
+    size_t AdjacencyArray::iEdgeCount() const
+    {
+        return m_i_edges.size();
+    }
+
+    size_t AdjacencyArray::oEdgeCount() const
+    {
+        return m_o_edges.size();
+    }
+
     Vector<Node> AdjacencyArray::getNodes() const
     {
         return m_nodes;
     }
-    Vector<Uint64> AdjacencyArray::getEdges() const
+
+    Vector<Edge> AdjacencyArray::getEdges() const
     {
         return m_edges;
     }
-    Vector<Uint64> AdjacencyArray::getOffsets() const
+
+    Vector<Uint64> AdjacencyArray::getIEdges() const
     {
-        return m_offset;
+        return m_i_edges;
     }
-}
+
+    Vector<Uint64> AdjacencyArray::getOEdges() const
+    {
+        return m_o_edges;
+    }
+
+    Vector<Uint64> AdjacencyArray::getIOffsets() const
+    {
+        return m_i_offset;
+    }
+
+    Vector<Uint64> AdjacencyArray::getOOffsets() const
+    {
+        return m_o_offset;
+    }
+}  // namespace OSM

@@ -22,6 +22,7 @@ namespace OSM
 
         static Uint16 addTown(const std::string& town);
         static std::string getTown(const Uint16 id);
+        static Map<Uint16, std::string> getTowns();
     };
 
 }  // namespace OSM
