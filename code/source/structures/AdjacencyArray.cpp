@@ -20,12 +20,16 @@ namespace OSM
         return first.target < second.target;
     }
 
+    bool compareEdgesSourceTarget(const Edge& first, const Edge& second)
+    {
+        return first.source < second.source || first.target < second.target;
+    }
+
     AdjacencyArray::AdjacencyArray() = default;
 
     void AdjacencyArray::computeOffsets()
     {
         std::sort(m_nodes.begin(), m_nodes.end(), compareNodes);
-        std::sort(m_edges.begin(), m_edges.end(), compareEdgesSource);
 
         // Outgoing Edges
         m_o_offset.resize(m_nodes.size() + 1);
@@ -35,21 +39,42 @@ namespace OSM
         m_i_offset.resize(m_nodes.size() + 1);
         m_i_offset[0] = 0;
 
-        Uint64 offset = 1;
+        Uint64 offset = 0;
         auto   node   = m_nodes.begin();
         auto   edge   = m_edges.begin();
 
-        // Create outgoing offsets
+        // Sort edges by target id and use index instead of id for nodes
+        std::sort(m_edges.begin(), m_edges.end(), compareEdgesTarget);
+        while(edge != m_edges.end() && node != m_nodes.end())
+        {
+            if(edge->target == node->id)
+            {
+                edge->target = offset;
+                edge++;
+            }
+            else
+            {
+                node++;
+                offset++;
+            }
+        }
+
+        offset = 1;
+        node = m_nodes.begin();
+        edge = m_edges.begin();
+
+        // Sort the edges by source nodes
+        std::sort(m_edges.begin(), m_edges.end(), compareEdgesSource);
         while(edge != m_edges.end() && node != m_nodes.end())
         {
             if(edge->source == node->id)
             {
+                // Add edge to the outgoing edges
                 m_o_offset[offset] += 1;
-                m_o_edges.emplace_back(offset - 1);
+                // Add edge to the ingoing edges
+                m_i_offset[edge->target + 1] += 1;
 
-                // Collect nodes we need to create incoming edges
-                m_i_edges.emplace_back(std::distance(m_edges.begin(), edge));
-
+                edge->source = offset - 1;
                 edge++;
             }
             else
@@ -60,43 +85,18 @@ namespace OSM
             }
         }
 
-        // Creates offsets for nodes that do not have outgoing edges.
+        // Creates outgoing offsets for nodes that do not have outgoing edges.
         while(offset < m_o_offset.size())
         {
             m_o_offset[offset + 1] += m_o_offset[offset];
             offset++;
         }
 
-        std::sort(m_edges.begin(), m_edges.end(), compareEdgesTarget);
-
-        offset = 1;
-        node   = m_nodes.begin();
-        Uint64 edge_index = 0;
-
-        // Create incoming offsets
-        for(auto& edge : m_i_edges)
+        // Sum up index of ingoing edges
+        for(Uint64 i = 1; i < m_i_offset.size(); ++i)
         {
-            if(m_edges[edge].target == node->id)
-            {
-                m_i_offset[offset] += 1;
-                m_i_edges[edge_index++] = offset - 1;
-            }
-            else
-            {
-                node++;
-                m_i_offset[offset + 1] += m_i_offset[offset];
-                offset++;
-            }
+            m_i_offset[i] += m_i_offset[i - 1];
         }
-
-        // Creates offsets for nodes that do not have ingoing edges.
-        while(offset < m_i_offset.size())
-        {
-            m_i_offset[offset + 1] += m_i_offset[offset];
-            offset++;
-        }
-
-        m_edges.clear();
     }
 
     void AdjacencyArray::addNode(const Node& node)
@@ -119,16 +119,6 @@ namespace OSM
         return m_edges.size();
     }
 
-    size_t AdjacencyArray::iEdgeCount() const
-    {
-        return m_i_edges.size();
-    }
-
-    size_t AdjacencyArray::oEdgeCount() const
-    {
-        return m_o_edges.size();
-    }
-
     Vector<Node> AdjacencyArray::getNodes() const
     {
         return m_nodes;
@@ -137,16 +127,6 @@ namespace OSM
     Vector<Edge> AdjacencyArray::getEdges() const
     {
         return m_edges;
-    }
-
-    Vector<Uint64> AdjacencyArray::getIEdges() const
-    {
-        return m_i_edges;
-    }
-
-    Vector<Uint64> AdjacencyArray::getOEdges() const
-    {
-        return m_o_edges;
     }
 
     Vector<Uint64> AdjacencyArray::getIOffsets() const

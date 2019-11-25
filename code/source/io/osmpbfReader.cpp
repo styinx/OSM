@@ -59,10 +59,12 @@ namespace OSM
         MapData::addTown("null");
 
         osmpbf::PrimitiveBlockInputAdaptor pbi{};
-        osmpbf::OrTagFilter highwayFilter({
-            new osmpbf::KeyOnlyTagFilter("highway"),
-            new osmpbf::KeyOnlyTagFilter("name"),
-            new osmpbf::KeyMultiValueTagFilter("place", {"city", "town"})});
+        osmpbf::OrTagFilter highwayFilter{
+            //            {
+            //                new osmpbf::KeyOnlyTagFilter("highway"),
+            //                new osmpbf::KeyOnlyTagFilter("name"),
+            //                new osmpbf::KeyMultiValueTagFilter("place", {"city", "town"})}
+        };
 
         while(m_osm_file.parseNextBlock(pbi))
         {
@@ -77,11 +79,11 @@ namespace OSM
 
             if(pbi.isNull())
                 continue;
-
-            highwayFilter.assignInputAdaptor(&pbi);
-
-            if(!highwayFilter.rebuildCache())
-                continue;
+//
+//            highwayFilter.assignInputAdaptor(&pbi);
+//
+//            if(!highwayFilter.rebuildCache())
+//                continue;
 
             if(pbi.nodesSize())
             {
@@ -89,8 +91,8 @@ namespace OSM
                 {
                     ++m_nodes.second;
 
-                    if(!highwayFilter.matches(node))
-                        continue;
+//                    if(!highwayFilter.matches(node))
+//                        continue;
 
                     ++m_nodes.first;
 

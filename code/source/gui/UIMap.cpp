@@ -25,7 +25,7 @@ namespace OSM
         }
     }
 
-    Pair<float, Vector<Uint64>> UIMap::calculateDistance(const QString& from, const QString& to)
+    Vector<Uint64> UIMap::calculateDijkstra(const QString& from, const QString& to)
     {
         const auto  max       = std::numeric_limits<Uint64>::max();
         Uint64      from_town = max;
@@ -71,26 +71,62 @@ namespace OSM
             }
         }
 
-        return {-1, {}};
+        return {};
     }
 
-    void UIMap::drawEdges(const MapBounds& bounds) const
+    void UIMap::showGraph(const MapBounds& bounds) const
     {
         const auto nodes   = m_array->getNodes();
         const auto edges   = m_array->getEdges();
-        const auto offsets = m_array->getOOffsets();
-        const auto center  = bounds.center();
+        const auto ooffsets = m_array->getOOffsets();
+        const auto ioffsets = m_array->getIOffsets();
+        //        const auto center  = bounds.center();
+
+        Uint64 n = 0;
 
         QString params;
-        for(const auto& index : m_grid.get(center.first, center.second))
+        //        for(const auto& cell : m_grid.getCells())
+        //        {
+        //            QString inner;
+        //            for(const auto& node : cell.children)
+        //            {
+        //                if(n < 100)
+        //                {
+        //                    inner += "[" + QString::number(nodes[node].lat) + "," +
+        //                             QString::number(nodes[node].lon) + "],";
+        //                    n++;
+        //                }
+        //            }
+        //            if(!inner.isEmpty())
+        //            {
+        //                params += "" + inner.left(inner.size() - 1) + ",";
+        //            }
+        //        }
+
+        for(Uint64 node = 0; node < nodes.size() && n < 1000; ++node)
         {
             QString inner;
-            for(Uint64 n = offsets[index]; n < offsets[index + 1]; ++n)
+            auto source = nodes[node];
+//            for(Uint64 neighbour = ooffsets[node]; neighbour < ooffsets[node + 1]; neighbour++)
+//            {
+//                auto target = nodes[edges[neighbour].target];
+//                inner += "[[" + QString::number(source.lat) + "," +
+//                         QString::number(source.lon) + "]," + "[" +
+//                         QString::number(target.lat) + "," + QString::number(target.lon) + "]],";
+//
+//            }
+            for(Uint64 neighbour = ioffsets[node]; neighbour < ioffsets[node + 1]; neighbour++)
             {
-                auto node = nodes[edges[n].source];
-                inner += "[" + QString::number(node.lat) + "," + QString::number(node.lon) + "],";
+                auto target = nodes[edges[neighbour].source];
+                inner += "[[" + QString::number(source.lat) + "," +
+                         QString::number(source.lon) + "]," + "[" +
+                         QString::number(target.lat) + "," + QString::number(target.lon) + "]],";
             }
-            params += "[" + inner.left(inner.size() - 1) + "],";
+            n += 1;
+            if(!inner.isEmpty())
+            {
+                params += "" + inner.left(inner.size() - 1) + ",";
+            }
         }
 
         qDebug() << params;
@@ -100,7 +136,7 @@ namespace OSM
     void UIMap::drawPath(const Vector<Uint64>& path) const
     {
         const auto nodes = m_array->getNodes();
-        QString params;
+        QString    params;
 
         for(const auto& node : path)
         {

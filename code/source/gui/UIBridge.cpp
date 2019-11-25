@@ -30,7 +30,7 @@ namespace OSM
 
         }
 
-        m_map->drawEdges(m_bounds);
+        m_map->showGraph(m_bounds);
     }
 
 }  // namespace OSM

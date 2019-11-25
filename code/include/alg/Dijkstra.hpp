@@ -26,7 +26,7 @@ namespace OSM
         explicit Dijkstra(const AdjacencyArray* array);
         virtual ~Dijkstra() = default;
 
-        Pair<float, Vector<Uint64>> compute(const Uint64 from, const Uint64 to);
+        Vector<Uint64> compute(const Uint64 from, const Uint64 to);
         std::string computeGeoJson(const Uint64 from, const Uint64 to);
     };
 

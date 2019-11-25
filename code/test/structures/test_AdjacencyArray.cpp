@@ -10,10 +10,10 @@ namespace OSMTest
     {
         AdjacencyArray array{};
 
-        Node a{5, 0.0, 0.0, 0, 0, 0};
-        Node b{1, 0.0, 0.0, 0, 0, 0};
-        Node c{2, 0.0, 0.0, 0, 0, 0};
-        Node d{3, 0.0, 0.0, 0, 0, 0};
+        Node a{50, 0.0, 0.0, 0, 0, 0};
+        Node b{10, 0.0, 0.0, 0, 0, 0};
+        Node c{20, 0.0, 0.0, 0, 0, 0};
+        Node d{30, 0.0, 0.0, 0, 0, 0};
 
         Edge ab{a.id, b.id};
         Edge ac{a.id, c.id};
@@ -39,19 +39,24 @@ namespace OSMTest
         const auto nodes   = array.getNodes();
         const auto edges   = array.getEdges();
         const auto ooffsets = array.getOOffsets();
-        const auto ioffsets = array.getOOffsets();
+        const auto ioffsets = array.getIOffsets();
+
+        ASSERT_EQ(nodes[0].id, b.id);
+        ASSERT_EQ(nodes[1].id, c.id);
+        ASSERT_EQ(nodes[2].id, d.id);
+        ASSERT_EQ(nodes[3].id, a.id);
 
         ASSERT_EQ(0U, ooffsets[0]);
-        ASSERT_EQ(3U, ooffsets[1]);  // a
-        ASSERT_EQ(5U, ooffsets[2]);  // b
-        ASSERT_EQ(5U, ooffsets[3]);  // c
-        ASSERT_EQ(5U, ooffsets[4]);  // d
+        ASSERT_EQ(2U, ooffsets[1]);  // b
+        ASSERT_EQ(2U, ooffsets[2]);  // c
+        ASSERT_EQ(2U, ooffsets[3]);  // d
+        ASSERT_EQ(5U, ooffsets[4]);  // a
 
         ASSERT_EQ(0U, ioffsets[0]);
-        ASSERT_EQ(0U, ioffsets[1]);  // a
-        ASSERT_EQ(1U, ioffsets[2]);  // b
-        ASSERT_EQ(3U, ioffsets[3]);  // c
-        ASSERT_EQ(5U, ioffsets[4]);  // d
+        ASSERT_EQ(1U, ioffsets[1]);  // b
+        ASSERT_EQ(3U, ioffsets[2]);  // c
+        ASSERT_EQ(5U, ioffsets[3]);  // d
+        ASSERT_EQ(5U, ioffsets[4]);  // a
     }
 
 }  // namespace OSMTest

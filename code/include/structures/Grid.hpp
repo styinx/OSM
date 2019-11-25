@@ -13,12 +13,13 @@ namespace OSM
         : public NonCopyable
         , public NonMoveable
     {
-    private:
+    public:
         struct Cell
         {
             Vector<Uint64> children;
         };
 
+    private:
         static const Sint16 m_x = 100;
         static const Sint16 m_y = 100;
 
@@ -35,6 +36,7 @@ namespace OSM
         Vector<Uint64>   get(const Uint16 cell) const;
         Vector<Uint64>   get(const float lat, const float lon) const;
         const MapBounds& getBounds() const;
+        Vector<Cell>     getCells() const;
     };
 
 }  // namespace OSM

@@ -49,4 +49,9 @@ namespace OSM
         return m_bounds;
     }
 
+    Vector<Grid::Cell> Grid::getCells() const
+    {
+        return m_cells;
+    }
+
 }  // namespace OSM

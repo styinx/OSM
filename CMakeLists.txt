@@ -103,7 +103,7 @@ set(INCLUDES
     code/include/NonCopyable.hpp
     code/include/NonMoveable.hpp
     code/include/io/MapData.hpp
-    code/include/structures/Grid.hpp)
+    code/include/structures/Grid.hpp code/include/io/CMD.hpp)
 
 set(GUI_INCLUDES
     code/include/gui/Window.hpp

@@ -31,9 +31,9 @@ namespace OSM
         UIMap& operator=(UIMap&& other) noexcept = delete;
         virtual ~UIMap()                         = default;
 
-        Pair<float, Vector<Uint64>> calculateDistance(const QString& from, const QString& to);
-        void                        drawEdges(const MapBounds& bounds) const;
-        void                        drawPath(const Vector<Uint64>& path) const;
+        Vector<Uint64> calculateDijkstra(const QString& from, const QString& to);
+        void           showGraph(const MapBounds& bounds) const;
+        void           drawPath(const Vector<Uint64>& path) const;
     };
 
 }  // namespace OSM

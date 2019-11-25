@@ -17,6 +17,12 @@ namespace OSM
         m_start = new QLineEdit();
         m_stop  = new QLineEdit();
         m_go    = new QPushButton("Search");
+
+        m_pedestrian       = new QCheckBox("by foot");
+        m_bike             = new QCheckBox("by bike");
+        m_car              = new QCheckBox("by car");
+        m_public_transport = new QCheckBox("by public transport");
+
         m_table = new QTableWidget(1, 2);
 
         m_fill_policy.setHorizontalPolicy(QSizePolicy::Preferred);
@@ -51,6 +57,10 @@ namespace OSM
         m_grid->addWidget(m_label_stop, 1, 0);
         m_grid->addWidget(m_stop, 1, 2);
         m_grid->addWidget(m_go, 2, 0, 1, 3, Qt::AlignRight);
+        m_grid->addWidget(m_pedestrian, 3, 0, 1, 1);
+        m_grid->addWidget(m_bike, 3, 1, 1, 1);
+        m_grid->addWidget(m_car, 4, 0, 1, 1);
+        m_grid->addWidget(m_public_transport, 4, 1, 1, 1);
         m_grid->addWidget(grid_filler);
 
         addWidget(grid_wrapper);
@@ -106,17 +116,7 @@ namespace OSM
             return;
         }
 
-        auto pair = m_parent->getMap()->calculateDistance(start, stop);
-
-        if(pair.first == -1)
-        {
-            QMessageBox::information(this, "Path not found", "No connection");
-        }
-        else
-        {
-            QMessageBox::information(this, "Path found", QString::number(pair.first) + "m");
-            m_parent->getMap()->drawPath(pair.second);
-        }
+        m_parent->getMap()->drawPath(m_parent->getMap()->calculateDijkstra(start, stop));
     }
 
 }  // namespace OSM

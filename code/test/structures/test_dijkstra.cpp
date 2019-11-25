@@ -50,11 +50,10 @@ namespace OSMTest
         array.computeOffsets();
 
         Dijkstra dijkstra{&array};
-        Pair<float, Vector<Uint64>> res_pair = dijkstra.compute(a.id, e.id);
+        Vector<Uint64> res = dijkstra.compute(a.id, e.id);
 
         Vector<Uint64> optimal_path = {a.id, b.id, e.id};
 
-        ASSERT_EQ(res_pair.first, distNodes(a, e));
-        ASSERT_EQ(res_pair.second, optimal_path);
+        ASSERT_EQ(res, optimal_path);
     }
 }  // namespace OSMTest

@@ -20,11 +20,10 @@ namespace OSM
         }
     }
 
-    Pair<float, Vector<Uint64>> Dijkstra::compute(const Uint64 from, const Uint64 to)
+    Vector<Uint64> Dijkstra::compute(const Uint64 from, const Uint64 to)
     {
         Vector<Uint64> path{};
         Uint64         u       = 0;
-        float          dist_m  = -1;
         const auto     ooffsets = m_array->getOOffsets();
         const auto     ioffsets = m_array->getIOffsets();
         const auto     nodes   = m_array->getNodes();
@@ -53,7 +52,7 @@ namespace OSM
             }
             if(min == U64_max)
             {
-                return {dist_m, path};
+                return {path};
             }
             u = m_V[min_index];
 
@@ -79,7 +78,6 @@ namespace OSM
 
             if(u == from)
             {
-                dist_m = m_dist[u];
                 while(u < U64_max)
                 {
                     path.emplace_back(u);
@@ -88,14 +86,19 @@ namespace OSM
             }
         }
 
-        return {dist_m, path};
+        return {path};
     }
 
     std::string Dijkstra::computeGeoJson(const Uint64 from, const Uint64 to)
     {
-        auto pair = compute(from, to);
+        std::string path;
+        const auto nodes = m_array->getNodes();
 
-
+        for(const auto& node : compute(from, to))
+        {
+            path += "[" + std::to_string(nodes[node].lat) + std::to_string(nodes[node].lon) + "]";
+        }
+        return path;
     }
 
 }  // namespace OSM
