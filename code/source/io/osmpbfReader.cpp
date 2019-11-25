@@ -35,9 +35,9 @@ namespace OSM
     void osmpbfReader::printInfo()
     {
         std::cout << std::right << std::setw(3) << m_duration << "s"
-                  << " | Nodes: " << std::right << std::setw(12) << m_nodes.first << "/" << std::setw(12) << m_nodes.second
-                  << " | Ways: " << std::right << std::setw(12) << m_ways
-                  << " (Edges: " << std::right << std::setw(12) << m_edges << ")"
+                  << " | Nodes: " << std::right << std::setw(12) << m_nodes.first << "/"
+                  << std::setw(12) << m_nodes.second << " | Ways: " << std::right << std::setw(12)
+                  << m_ways << " (Edges: " << std::right << std::setw(12) << m_edges << ")"
                   << " | Relations: " << std::right << std::setw(12) << m_relations << "\n";
     }
 
@@ -59,12 +59,10 @@ namespace OSM
         MapData::addTown("null");
 
         osmpbf::PrimitiveBlockInputAdaptor pbi{};
-        osmpbf::OrTagFilter highwayFilter{
-            //            {
-            //                new osmpbf::KeyOnlyTagFilter("highway"),
-            //                new osmpbf::KeyOnlyTagFilter("name"),
-            //                new osmpbf::KeyMultiValueTagFilter("place", {"city", "town"})}
-        };
+        osmpbf::OrTagFilter                highwayFilter{
+            {new osmpbf::KeyOnlyTagFilter("highway"),
+             new osmpbf::KeyOnlyTagFilter("name"),
+             new osmpbf::KeyMultiValueTagFilter("place", {"city", "town"})}};
 
         while(m_osm_file.parseNextBlock(pbi))
         {
@@ -79,11 +77,11 @@ namespace OSM
 
             if(pbi.isNull())
                 continue;
-//
-//            highwayFilter.assignInputAdaptor(&pbi);
-//
-//            if(!highwayFilter.rebuildCache())
-//                continue;
+
+            highwayFilter.assignInputAdaptor(&pbi);
+
+            if(!highwayFilter.rebuildCache())
+                continue;
 
             if(pbi.nodesSize())
             {
@@ -91,8 +89,8 @@ namespace OSM
                 {
                     ++m_nodes.second;
 
-//                    if(!highwayFilter.matches(node))
-//                        continue;
+                    if(!highwayFilter.matches(node))
+                        continue;
 
                     ++m_nodes.first;
 

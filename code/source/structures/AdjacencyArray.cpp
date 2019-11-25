@@ -39,14 +39,19 @@ namespace OSM
         m_i_offset.resize(m_nodes.size() + 1);
         m_i_offset[0] = 0;
 
-        Uint64 offset = 0;
-        auto   node   = m_nodes.begin();
-        auto   edge   = m_edges.begin();
+        Uint64       offset = 0;
+        auto         node   = m_nodes.begin();
+        auto         edge   = m_edges.begin();
 
         // Sort edges by target id and use index instead of id for nodes
         std::sort(m_edges.begin(), m_edges.end(), compareEdgesTarget);
         while(edge != m_edges.end() && node != m_nodes.end())
         {
+            while(edge->target < node->id)
+            {
+                edge++;
+            }
+
             if(edge->target == node->id)
             {
                 edge->target = offset;
@@ -60,19 +65,27 @@ namespace OSM
         }
 
         offset = 1;
-        node = m_nodes.begin();
-        edge = m_edges.begin();
+        node   = m_nodes.begin();
+        edge   = m_edges.begin();
 
         // Sort the edges by source nodes
         std::sort(m_edges.begin(), m_edges.end(), compareEdgesSource);
         while(edge != m_edges.end() && node != m_nodes.end())
         {
+            while(edge->source < node->id)
+            {
+                edge++;
+            }
+
             if(edge->source == node->id)
             {
                 // Add edge to the outgoing edges
                 m_o_offset[offset] += 1;
                 // Add edge to the ingoing edges
-                m_i_offset[edge->target + 1] += 1;
+                if(edge->target + 1 < m_i_offset.size())
+                {
+                    m_i_offset[edge->target + 1] += 1;
+                }
 
                 edge->source = offset - 1;
                 edge++;
@@ -80,16 +93,14 @@ namespace OSM
             else
             {
                 node++;
-                m_o_offset[offset + 1] += m_o_offset[offset];
                 offset++;
             }
         }
 
-        // Creates outgoing offsets for nodes that do not have outgoing edges.
-        while(offset < m_o_offset.size())
+        // Sum up index of outgoing edges
+        for(Uint64 i = 1; i < m_o_offset.size(); ++i)
         {
-            m_o_offset[offset + 1] += m_o_offset[offset];
-            offset++;
+            m_o_offset[i] += m_o_offset[i - 1];
         }
 
         // Sum up index of ingoing edges

@@ -85,25 +85,7 @@ namespace OSM
         Uint64 n = 0;
 
         QString params;
-        //        for(const auto& cell : m_grid.getCells())
-        //        {
-        //            QString inner;
-        //            for(const auto& node : cell.children)
-        //            {
-        //                if(n < 100)
-        //                {
-        //                    inner += "[" + QString::number(nodes[node].lat) + "," +
-        //                             QString::number(nodes[node].lon) + "],";
-        //                    n++;
-        //                }
-        //            }
-        //            if(!inner.isEmpty())
-        //            {
-        //                params += "" + inner.left(inner.size() - 1) + ",";
-        //            }
-        //        }
-
-        for(Uint64 node = 0; node < nodes.size() && n < 1000; ++node)
+        for(Uint64 node = 0; node < nodes.size() && n < 2000; ++node)
         {
             QString inner;
             auto source = nodes[node];
@@ -113,6 +95,7 @@ namespace OSM
 //                inner += "[[" + QString::number(source.lat) + "," +
 //                         QString::number(source.lon) + "]," + "[" +
 //                         QString::number(target.lat) + "," + QString::number(target.lon) + "]],";
+//                n += 1;
 //
 //            }
             for(Uint64 neighbour = ioffsets[node]; neighbour < ioffsets[node + 1]; neighbour++)
@@ -122,14 +105,11 @@ namespace OSM
                          QString::number(source.lon) + "]," + "[" +
                          QString::number(target.lat) + "," + QString::number(target.lon) + "]],";
             }
-            n += 1;
             if(!inner.isEmpty())
             {
                 params += "" + inner.left(inner.size() - 1) + ",";
             }
         }
-
-        qDebug() << params;
         page()->runJavaScript("showGraph([" + params.left(params.size() - 1) + "]);");
     }
 

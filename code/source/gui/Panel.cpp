@@ -116,7 +116,17 @@ namespace OSM
             return;
         }
 
-        m_parent->getMap()->drawPath(m_parent->getMap()->calculateDijkstra(start, stop));
+        auto path = m_parent->getMap()->calculateDijkstra(start, stop);
+
+        if(!path.empty())
+        {
+            QMessageBox::information(
+                this,
+                "No way found",
+                "No way was found.");
+        }
+
+        m_parent->getMap()->drawPath(path);
     }
 
 }  // namespace OSM
