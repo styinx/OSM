@@ -46,6 +46,17 @@ namespace OSMTest
         ASSERT_EQ(nodes[2].id, d.id);
         ASSERT_EQ(nodes[3].id, a.id);
 
+        ASSERT_EQ(edges[0].source, 0U);
+        ASSERT_EQ(edges[0].target, 1U);
+        ASSERT_EQ(edges[1].source, 0U);
+        ASSERT_EQ(edges[1].target, 2U);
+        ASSERT_EQ(edges[2].source, 3U);
+        ASSERT_EQ(edges[2].target, 0U);
+        ASSERT_EQ(edges[3].source, 3U);
+        ASSERT_EQ(edges[3].target, 1U);
+        ASSERT_EQ(edges[4].source, 3U);
+        ASSERT_EQ(edges[4].target, 2U);
+
         ASSERT_EQ(0U, ooffsets[0]);
         ASSERT_EQ(2U, ooffsets[1]);  // b
         ASSERT_EQ(2U, ooffsets[2]);  // c

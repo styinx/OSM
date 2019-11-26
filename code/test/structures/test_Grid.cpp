@@ -7,7 +7,7 @@ namespace OSMTest
 {
     using namespace OSM;
 
-    TEST(DijkstraTest, checkCompute)
+    TEST(GridTest, checkSet)
     {
         Grid grid{{0, 100, 0, 100}};
 

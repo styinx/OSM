@@ -170,8 +170,6 @@ namespace OSM
             }
         }
 
-        printInfo();
-
         array.computeOffsets();
 
         printInfo();

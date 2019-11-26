@@ -23,6 +23,9 @@ namespace OSM
         m_car              = new QCheckBox("by car");
         m_public_transport = new QCheckBox("by public transport");
 
+        m_car->setChecked(true);
+        m_public_transport->setCheckable(false);
+
         m_table = new QTableWidget(1, 2);
 
         m_fill_policy.setHorizontalPolicy(QSizePolicy::Preferred);

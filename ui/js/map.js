@@ -9,8 +9,8 @@ document.addEventListener("DOMContentLoaded", function () {
 let attribution = '';
 let token = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
 let map = L.map('map').setView([48.745158, 9.106606], 15);
-var geoJson = L.layerGroup([]).addTo(map);
-var graph = L.layerGroup([]).addTo(map);
+var routeLayer = L.layerGroup([]).addTo(map);
+var graphLayer = L.layerGroup([]).addTo(map);
 let popup = L.popup();
 
 L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={token}', {
@@ -21,12 +21,20 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={
 }).addTo(map);
 
 map.on("click", onMapClick);
+map.on("zoomend", onZoomEnd);
+map.on("mouseup", onMouseUp);
 
 function onMapClick(e) {
     popup.setLatLng(e.latlng)
-        .setContent("Clicked at " + e.latlng.toString())
+        .setContent("What's here?<br> " + e.latlng.toString())
         .addTo(map);
+}
 
+function onZoomEnd(e) {
+    setMapBounds();
+}
+
+function onMouseUp(e) {
     setMapBounds();
 }
 
@@ -43,29 +51,39 @@ function setMapBounds() {
 // C++ -> JS
 
 function showGraph(graph) {
-    // let g = L.layerGroup([]);
+    if(map.getZoom() >= 10) {
+        graphLayer.clearLayers();
 
-    for (let index = 0; index < graph.length; ++index) {
-        for (let edge = 0; edge < graph[index].length; ++edge) {
-            L.circle(graph[index][0], {
-                radius: 1,
-                color: 'rgba(255, 200, 0, 0.75)'
-            }).addTo(map);
+        let nodeColor = 'rgba(255, 200, 0, 0.75)';
+        let edgeColor = 'rgba(0, 100, 200, 0.25)';
 
-            L.circle(graph[index][1], {
-                radius: 1,
-                color: 'rgba(255, 0, 0, 0.75)'
-            }).addTo(map);
+        for (let index = 0; index < graph.length; ++index) {
+            for (let edge = 0; edge < graph[index].length; ++edge) {
 
-           L.polyline(graph[index], {color: 'rgba(0, 100, 200, 0.25)'}).addTo(map);
+                if (graph[index].length >= 1) {
+                    L.circle(graph[index][0], {
+                        radius: 1,
+                        color: nodeColor
+                    }).addTo(graphLayer);
+                }
+
+                if (graph[index].length === 2) {
+                    L.circle(graph[index][1], {
+                        radius: 1,
+                        color: nodeColor
+                    }).addTo(graphLayer);
+
+                    L.polyline(graph[index], {color: edgeColor}).addTo(graphLayer);
+                }
+            }
         }
     }
-
-    // g.addTo(graph);
 }
 
-function addGeoJSON(lines) {
-    geoJson.addLayer(L.geoJSON({
+function showRoute(lines) {
+    routeLayer.resetLayer();
+
+    routeLayer.addLayer(L.geoJSON({
         type: "LineString",
         coordinates: lines
     }, {

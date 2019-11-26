@@ -56,6 +56,7 @@ namespace OSM
 
             if(edge->target == node->id)
             {
+                // Set the index of the node source instead of the id
                 edge->target = offset;
                 edge++;
             }

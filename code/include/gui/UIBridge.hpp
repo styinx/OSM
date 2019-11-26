@@ -17,7 +17,6 @@ namespace OSM
         const UIMap* m_map;
 
     public slots:
-        void dummy();
         void setMapBounds(const float n_lat, const float n_lon, const float s_lat, const float s_lon);
 
     public:

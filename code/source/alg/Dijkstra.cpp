@@ -56,8 +56,25 @@ namespace OSM
             }
             u = m_V[min_index];
 
-            // Check neighbours of min neighbour
+            // Check outgoing neighbours of min neighbour
             for(Uint64 i = ooffsets[u]; i < ooffsets[u + 1]; ++i)
+            {
+                const auto neighbour = i;
+
+                if(m_V[i] < U64_max)
+                {
+                    const float alternative = m_dist[u] + distNodes(nodes[u], nodes[neighbour]);
+
+                    if(alternative < m_dist[neighbour])
+                    {
+                        m_dist[neighbour] = alternative;
+                        m_prev[neighbour] = u;
+                    }
+                }
+            }
+
+            // Check ingoing neighbours of min neighbour
+            for(Uint64 i = ioffsets[u]; i < ioffsets[u + 1]; ++i)
             {
                 const auto neighbour = i;
 

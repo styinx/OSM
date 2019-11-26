@@ -76,44 +76,43 @@ namespace OSM
 
     void UIMap::showGraph(const MapBounds& bounds) const
     {
-        const auto nodes   = m_array->getNodes();
-        const auto edges   = m_array->getEdges();
+        const auto nodes    = m_array->getNodes();
+        const auto edges    = m_array->getEdges();
         const auto ooffsets = m_array->getOOffsets();
         const auto ioffsets = m_array->getIOffsets();
-        const auto center  = bounds.center();
-        const auto cell  = m_grid.get(center.first, center.second);
 
         Uint64 n = 0;
 
         QString params;
-        for(const auto& node : cell)
+        for(const auto& node : m_grid.get(bounds))
         {
-            if(n > 500)
-                break;
-
             QString inner;
-            auto source = nodes[node];
-//            for(Uint64 neighbour = ooffsets[node]; neighbour < ooffsets[node + 1]; neighbour++)
-//            {
-//                auto target = nodes[edges[neighbour].target];
-//                inner += "[[" + QString::number(source.lat) + "," +
-//                         QString::number(source.lon) + "]," + "[" +
-//                         QString::number(target.lat) + "," + QString::number(target.lon) + "]],";
-//                n += 1;
-//
-//            }
-            for(Uint64 neighbour = ioffsets[node]; neighbour < ioffsets[node + 1]; neighbour++)
+            for(Uint64 oedge_index = ooffsets[node]; oedge_index < ooffsets[node + 1]; oedge_index++)
             {
-                auto target = nodes[edges[neighbour].source];
-                inner += "[[" + QString::number(source.lat) + "," +
-                         QString::number(source.lon) + "]," + "[" +
-                         QString::number(target.lat) + "," + QString::number(target.lon) + "]],";
+                auto edge = edges[oedge_index];
+                auto source = nodes[edge.source];
+                auto target = nodes[edge.target];
+                inner += "[[" + QString::number(source.lat) + "," + QString::number(source.lon) +
+                         "]," + "[" + QString::number(target.lat) + "," +
+                         QString::number(target.lon) + "]],";
+                n += 1;
+            }
+            for(Uint64 iedge_index = ioffsets[node]; iedge_index < ioffsets[node + 1]; iedge_index++)
+            {
+                auto edge = edges[iedge_index];
+                auto source = nodes[edge.source];
+                auto target = nodes[edge.target];
+                inner += "[[" + QString::number(source.lat) + "," + QString::number(source.lon) +
+                         "]," + "[" + QString::number(target.lat) + "," +
+                         QString::number(target.lon) + "]],";
                 n += 1;
             }
             if(!inner.isEmpty())
             {
                 params += "" + inner.left(inner.size() - 1) + ",";
             }
+            if(n > 1000)
+                break;
         }
         page()->runJavaScript("showGraph([" + params.left(params.size() - 1) + "]);");
     }
@@ -129,7 +128,7 @@ namespace OSM
             params += "[" + QString::number(n.lat) + "," + QString::number(n.lat) + "],";
         }
 
-        page()->runJavaScript("showGraph([" + params.left(params.size() - 1) + "]);");
+        page()->runJavaScript("showRoute([" + params.left(params.size() - 1) + "]);");
     }
 
 }  // namespace OSM
