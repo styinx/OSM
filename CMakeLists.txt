@@ -103,7 +103,8 @@ set(INCLUDES
     code/include/NonCopyable.hpp
     code/include/NonMoveable.hpp
     code/include/io/MapData.hpp
-    code/include/structures/Grid.hpp code/include/io/CMD.hpp)
+    code/include/structures/Grid.hpp
+    code/include/io/CMD.hpp)
 
 set(GUI_INCLUDES
     code/include/gui/Window.hpp
@@ -143,7 +144,8 @@ set(FILES ${INCLUDES} ${SOURCES} ${GUI_FILES})
 
 set(TEST_SOURCES
     code/test/structures/test_AdjacencyArray.cpp
-    code/test/structures/test_dijkstra.cpp)
+    code/test/structures/test_dijkstra.cpp
+    code/test/structures/test_Grid.cpp)
 
 set(TEST_FILES
     ${FILES}
