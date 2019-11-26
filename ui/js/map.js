@@ -47,14 +47,17 @@ function showGraph(graph) {
 
     for (let index = 0; index < graph.length; ++index) {
         for (let edge = 0; edge < graph[index].length; ++edge) {
-            for(let node = 0; node < graph[index][edge].length; ++node)
-            {
-                L.circle(graph[index][node], {
-                    radius: 1,
-                    color: 'rgba(255, 200, 0, 0.75)'
-                }).addTo(map);
-            }
-            L.polyline(graph[index], {color: 'rgba(0, 100, 200, 0.25)'}).addTo(map);
+            L.circle(graph[index][0], {
+                radius: 1,
+                color: 'rgba(255, 200, 0, 0.75)'
+            }).addTo(map);
+
+            L.circle(graph[index][1], {
+                radius: 1,
+                color: 'rgba(255, 0, 0, 0.75)'
+            }).addTo(map);
+
+           L.polyline(graph[index], {color: 'rgba(0, 100, 200, 0.25)'}).addTo(map);
         }
     }
 

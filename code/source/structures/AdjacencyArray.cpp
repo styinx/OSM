@@ -42,6 +42,8 @@ namespace OSM
         Uint64       offset = 0;
         auto         node   = m_nodes.begin();
         auto         edge   = m_edges.begin();
+        const auto max_node = m_nodes.size() -1;
+        Vector<Edge> filtered_edges;
 
         // Sort edges by target id and use index instead of id for nodes
         std::sort(m_edges.begin(), m_edges.end(), compareEdgesTarget);
@@ -77,17 +79,23 @@ namespace OSM
                 edge++;
             }
 
+            if(edge->target > max_node)
+            {
+                edge++;
+                continue;
+            }
+
             if(edge->source == node->id)
             {
-                // Add edge to the outgoing edges
-                m_o_offset[offset] += 1;
-                // Add edge to the ingoing edges
-                if(edge->target + 1 < m_i_offset.size())
-                {
-                    m_i_offset[edge->target + 1] += 1;
-                }
-
+                // Assign the index of the node to the edge source
                 edge->source = offset - 1;
+
+                // Add edge to the outgoing edges
+                m_o_offset[edge->source + 1] += 1;
+                // Add ingoing edge to the other node
+                m_i_offset[edge->target + 1] += 1;
+
+                filtered_edges.emplace_back(*edge);
                 edge++;
             }
             else
@@ -97,15 +105,15 @@ namespace OSM
             }
         }
 
-        // Sum up index of outgoing edges
+
+        m_edges.clear();
+        m_edges = filtered_edges;
+        filtered_edges.clear();
+
+        // Sum up offsets
         for(Uint64 i = 1; i < m_o_offset.size(); ++i)
         {
             m_o_offset[i] += m_o_offset[i - 1];
-        }
-
-        // Sum up index of ingoing edges
-        for(Uint64 i = 1; i < m_i_offset.size(); ++i)
-        {
             m_i_offset[i] += m_i_offset[i - 1];
         }
     }

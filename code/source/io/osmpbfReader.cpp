@@ -38,7 +38,7 @@ namespace OSM
                   << " | Nodes: " << std::right << std::setw(12) << m_nodes.first << "/"
                   << std::setw(12) << m_nodes.second << " | Ways: " << std::right << std::setw(12)
                   << m_ways << " (Edges: " << std::right << std::setw(12) << m_edges << ")"
-                  << " | Relations: " << std::right << std::setw(12) << m_relations << "\n";
+                  << " | Relations: " << std::right << std::setw(12) << m_relations << std::endl;
     }
 
     void osmpbfReader::read(OSM::AdjacencyArray& array)
@@ -175,6 +175,10 @@ namespace OSM
         array.computeOffsets();
 
         printInfo();
+
+        std::cout << "AdjacencyArray:\n"
+                  << "Nodes: " << std::setw(12) << array.nodeCount() << "/" << std::setw(12) << m_nodes.second << "\n"
+                  << "Edges: " << std::setw(12) << array.edgeCount() << "/" << std::setw(12) << m_edges << std::endl;
     }
 
     MapBounds osmpbfReader::getMapBounds()

@@ -80,13 +80,17 @@ namespace OSM
         const auto edges   = m_array->getEdges();
         const auto ooffsets = m_array->getOOffsets();
         const auto ioffsets = m_array->getIOffsets();
-        //        const auto center  = bounds.center();
+        const auto center  = bounds.center();
+        const auto cell  = m_grid.get(center.first, center.second);
 
         Uint64 n = 0;
 
         QString params;
-        for(Uint64 node = 0; node < nodes.size() && n < 2000; ++node)
+        for(const auto& node : cell)
         {
+            if(n > 500)
+                break;
+
             QString inner;
             auto source = nodes[node];
 //            for(Uint64 neighbour = ooffsets[node]; neighbour < ooffsets[node + 1]; neighbour++)
@@ -104,6 +108,7 @@ namespace OSM
                 inner += "[[" + QString::number(source.lat) + "," +
                          QString::number(source.lon) + "]," + "[" +
                          QString::number(target.lat) + "," + QString::number(target.lon) + "]],";
+                n += 1;
             }
             if(!inner.isEmpty())
             {
