@@ -7,8 +7,8 @@ namespace OSM
 
     UIMap::UIMap(const OSM::AdjacencyArray* array, const MapBounds& bounds)
         : m_array(array)
-        , m_grid(bounds)
-        , m_dijkstra(m_array)
+        , m_grid(bounds, array)
+        , m_routeSearch(m_array, &m_grid)
     {
         m_channel = new QWebChannel(this);
         m_bridge  = new UIBridge(this);
@@ -24,54 +24,83 @@ namespace OSM
             m_grid.set(node.lat, node.lon, i++);
         }
     }
-
-    Vector<Uint64> UIMap::calculateDijkstra(const QString& from, const QString& to)
+    Uint64 UIMap::townToNode(const QString& town) const
     {
-        const auto  max       = std::numeric_limits<Uint64>::max();
-        Uint64      from_town = max;
-        Uint64      from_node = max;
-        Uint64      to_town   = max;
-        Uint64      to_node   = max;
-        std::string from_name = from.toStdString();
-        std::string to_name   = to.toStdString();
+        Uint16 id = MapData::getTownID(town.toStdString());
 
-        for(const auto& o : MapData::getTowns())
+        Uint64 index = 0;
+        for(const auto& node : m_array->getNodes())
         {
-            if(o.second == from_name)
-            {
-                from_town = o.first;
-            }
-            else if(o.second == to_name)
-            {
-                to_town = o.first;
-            }
-
-            if(from_town != max && to_town != max)
-            {
-                int index = 0;
-                for(const auto& node : m_array->getNodes())
-                {
-                    if(node.town == from_town)
-                    {
-                        from_node = index;
-                    }
-                    else if(node.town == to_town)
-                    {
-                        to_node = index;
-                    }
-
-                    if(from_node != max && to_node != max)
-                    {
-                        return m_dijkstra.compute(from_node, to_node);
-                    }
-
-                    ++index;
-                }
+            if(node.town == id)
                 break;
+            ++index;
+        }
+        return index;
+    }
+
+    Uint64 UIMap::coordToNode(const float lat, const float lon) const
+    {
+        const auto nodes      = m_array->getNodes();
+        float      min        = std::numeric_limits<float>::max();
+        Uint64     node_index = 0;
+
+        for(const auto& node : m_grid.get(lat, lon))
+        {
+            auto l_min = dist(lat, lon, nodes[node].lat, nodes[node].lon);
+            if(l_min < min)
+            {
+                min        = l_min;
+                node_index = node;
             }
         }
+        return node_index;
+    }
 
-        return {};
+    Pair<float, float> UIMap::stringToLatLon(const QString& str) const
+    {
+        QStringList latlon = str.split(",");
+
+        if(latlon.size() == 2)
+        {
+            return Pair<float, float>{latlon[0].toDouble(nullptr), latlon[1].toDouble(nullptr)};
+        }
+        return {0, 0};
+    }
+
+    Vector<Uint64> UIMap::calculatePath(const QString& from, const QString& to, const int method)
+    {
+        Uint64 start = 0;
+        Uint64 stop = 0;
+
+        auto latlon1 = stringToLatLon(from);
+        auto latlon2 = stringToLatLon(to);
+
+        if(latlon1 != Pair<float, float>{0, 0})
+        {
+            start = coordToNode(latlon1.first, latlon1.second);
+        }
+        else
+        {
+            start = townToNode(from);
+        }
+
+        if(latlon2 != Pair<float, float>{0, 0})
+        {
+            stop = coordToNode(latlon2.first, latlon2.second);
+        }
+        else
+        {
+            stop = townToNode(to);
+        }
+
+        if(method == 0)
+        {
+            return m_routeSearch.computeDijkstra(start, stop);
+        }
+        else if(method == 1)
+        {
+            return m_routeSearch.UCS(start, stop);
+        }
     }
 
     void UIMap::showGraph(const MapBounds& bounds) const
@@ -81,15 +110,16 @@ namespace OSM
         const auto ooffsets = m_array->getOOffsets();
         const auto ioffsets = m_array->getIOffsets();
 
-        Uint64 n = 0;
+        Uint64 s = 0;
 
         QString params;
         for(const auto& node : m_grid.get(bounds))
         {
+            Uint64 n = 0;
             QString inner;
             for(Uint64 oedge_index = ooffsets[node]; oedge_index < ooffsets[node + 1]; oedge_index++)
             {
-                auto edge = edges[oedge_index];
+                auto edge   = edges[oedge_index];
                 auto source = nodes[edge.source];
                 auto target = nodes[edge.target];
                 inner += "[[" + QString::number(source.lat) + "," + QString::number(source.lon) +
@@ -99,7 +129,7 @@ namespace OSM
             }
             for(Uint64 iedge_index = ioffsets[node]; iedge_index < ioffsets[node + 1]; iedge_index++)
             {
-                auto edge = edges[iedge_index];
+                auto edge   = edges[iedge_index];
                 auto source = nodes[edge.source];
                 auto target = nodes[edge.target];
                 inner += "[[" + QString::number(source.lat) + "," + QString::number(source.lon) +
@@ -111,7 +141,9 @@ namespace OSM
             {
                 params += "" + inner.left(inner.size() - 1) + ",";
             }
-            if(n > 1000)
+            if(n > 0)
+                s += 1;
+            if(s > 500)
                 break;
         }
         page()->runJavaScript("showGraph([" + params.left(params.size() - 1) + "]);");
@@ -125,9 +157,10 @@ namespace OSM
         for(const auto& node : path)
         {
             const auto n = nodes[node];
-            params += "[" + QString::number(n.lat) + "," + QString::number(n.lat) + "],";
+            params += "[" + QString::number(n.lon) + "," + QString::number(n.lat) + "],";
         }
 
+        qDebug() << params;
         page()->runJavaScript("showRoute([" + params.left(params.size() - 1) + "]);");
     }
 

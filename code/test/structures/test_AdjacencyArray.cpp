@@ -27,12 +27,12 @@ namespace OSMTest
         array.addNode(c);
         array.addNode(d);
 
-        array.addIOEdge(ab);
-        array.addIOEdge(ac);
-        array.addIOEdge(ad);
+        array.addEdge(ab);
+        array.addEdge(ac);
+        array.addEdge(ad);
 
-        array.addIOEdge(bc);
-        array.addIOEdge(bd);
+        array.addEdge(bc);
+        array.addEdge(bd);
 
         array.computeOffsets();
 

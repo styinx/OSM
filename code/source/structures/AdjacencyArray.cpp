@@ -5,7 +5,7 @@
 namespace OSM
 {
 
-    bool compareNodes(const Node& first, const Node& second)
+    bool compareNodesID(const Node& first, const Node& second)
     {
         return first.id < second.id;
     }
@@ -29,7 +29,7 @@ namespace OSM
 
     void AdjacencyArray::computeOffsets()
     {
-        std::sort(m_nodes.begin(), m_nodes.end(), compareNodes);
+        std::sort(m_nodes.begin(), m_nodes.end(), compareNodesID);
 
         // Outgoing Edges
         m_o_offset.resize(m_nodes.size() + 1);
@@ -124,9 +124,23 @@ namespace OSM
         m_nodes.emplace_back(node);
     }
 
-    void AdjacencyArray::addIOEdge(const Edge& edge)
+    void AdjacencyArray::addEdge(const Edge& edge)
     {
         m_edges.emplace_back(edge);
+    }
+
+    Uint64 AdjacencyArray::neighbourCount(const Uint64 node) const
+    {
+        Uint64 neighbours = 0;
+        for(Uint64 i = m_o_offset[node]; i < m_o_offset[node + 1]; ++i)
+        {
+            ++neighbours;
+        }
+        for(Uint64 i = m_i_offset[node]; i < m_i_offset[node + 1]; ++i)
+        {
+            ++neighbours;
+        }
+        return neighbours;
     }
 
     size_t AdjacencyArray::nodeCount() const

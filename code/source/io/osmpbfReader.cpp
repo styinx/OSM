@@ -61,8 +61,9 @@ namespace OSM
         osmpbf::PrimitiveBlockInputAdaptor pbi{};
         osmpbf::OrTagFilter                highwayFilter{
             {new osmpbf::KeyOnlyTagFilter("highway"),
-             new osmpbf::KeyOnlyTagFilter("name"),
              new osmpbf::KeyMultiValueTagFilter("place", {"city", "town"})}};
+
+        std::cout << "Start reading ..." << std::endl;
 
         while(m_osm_file.parseNextBlock(pbi))
         {
@@ -148,7 +149,7 @@ namespace OSM
                         {
                             if(*previous >= 0)
                             {
-                                array.addIOEdge(
+                                array.addEdge(
                                     Edge{static_cast<Uint64>(*previous), static_cast<Uint64>(*it)});
                                 m_edges++;
                             }
@@ -170,13 +171,17 @@ namespace OSM
             }
         }
 
+        printInfo();
+        std::cout << "Finished reading" << std::endl;
+
+        std::cout << "Compute AdjacencyArray ..." << std::endl;
         array.computeOffsets();
 
-        printInfo();
-
         std::cout << "AdjacencyArray:\n"
-                  << "Nodes: " << std::setw(12) << array.nodeCount() << "/" << std::setw(12) << m_nodes.second << "\n"
-                  << "Edges: " << std::setw(12) << array.edgeCount() << "/" << std::setw(12) << m_edges << std::endl;
+                  << "Nodes: " << std::setw(12) << array.nodeCount() << "/" << std::setw(12)
+                  << m_nodes.second << "\n"
+                  << "Edges: " << std::setw(12) << array.edgeCount() << "/" << std::setw(12)
+                  << m_edges << std::endl;
     }
 
     MapBounds osmpbfReader::getMapBounds()

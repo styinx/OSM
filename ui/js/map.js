@@ -54,8 +54,8 @@ function showGraph(graph) {
     if(map.getZoom() >= 10) {
         graphLayer.clearLayers();
 
-        let nodeColor = 'rgba(255, 200, 0, 0.75)';
-        let edgeColor = 'rgba(0, 100, 200, 0.25)';
+        let nodeColor = 'rgba(255, 255, 0, 0.25)';
+        let edgeColor = 'rgba(255, 50, 0, 0.25)';
 
         for (let index = 0; index < graph.length; ++index) {
             for (let edge = 0; edge < graph[index].length; ++edge) {
@@ -81,7 +81,7 @@ function showGraph(graph) {
 }
 
 function showRoute(lines) {
-    routeLayer.resetLayer();
+    routeLayer.clearLayers();
 
     routeLayer.addLayer(L.geoJSON({
         type: "LineString",

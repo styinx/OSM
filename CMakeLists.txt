@@ -99,7 +99,7 @@ set(INCLUDES
     code/include/io/osmpbfReader.hpp
     code/include/gui/UIBridge.hpp
     code/include/gui/mapTypes.hpp
-    code/include/alg/Dijkstra.hpp
+    code/include/alg/RouteSearch.hpp
     code/include/NonCopyable.hpp
     code/include/NonMoveable.hpp
     code/include/io/MapData.hpp
@@ -121,7 +121,7 @@ set(SOURCES
     code/source/io/osmpbfReader.cpp
     code/source/io/MapData.cpp
     code/source/structures/Grid.cpp
-    code/source/alg/Dijkstra.cpp)
+    code/source/alg/RouteSearch.cpp)
 
 set(GUI_SOURCES
     code/source/gui/Window.cpp

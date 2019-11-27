@@ -7,6 +7,7 @@
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
+#include <QtWidgets/QListWidget>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSplitter>
@@ -36,10 +37,11 @@ namespace OSM
         QLineEdit*   m_stop;
         QPushButton* m_go;
 
-        QCheckBox* m_car;
-        QCheckBox* m_bike;
-        QCheckBox* m_pedestrian;
-        QCheckBox* m_public_transport;
+        QCheckBox*   m_car;
+        QCheckBox*   m_bike;
+        QCheckBox*   m_pedestrian;
+        QCheckBox*   m_public_transport;
+        QListWidget* m_search_method;
 
         QTableWidget* m_table;
 
