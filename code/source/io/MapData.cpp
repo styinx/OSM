@@ -26,6 +26,16 @@ namespace OSM
         return s_towns[id];
     }
 
+    Uint16 MapData::getTownID(const std::string& town)
+    {
+        for(const auto& pair : s_towns)
+        {
+            if(pair.second == town)
+                return pair.first;
+        }
+        return 0;
+    }
+
     Map<Uint16, std::string> MapData::getTowns()
     {
         return s_towns;

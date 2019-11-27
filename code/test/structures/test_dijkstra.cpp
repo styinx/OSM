@@ -1,4 +1,4 @@
-#include "alg/Dijkstra.hpp"
+#include "alg/RouteSearch.hpp"
 
 #include <gtest/gtest.h>
 
@@ -36,25 +36,24 @@ namespace OSMTest
         Edge eb{e.id, b.id};
         Edge ed{e.id, d.id};
 
-        array.addIOEdge(ab);
-        array.addIOEdge(ac);
-        array.addIOEdge(ba);
-        array.addIOEdge(be);
-        array.addIOEdge(ca);
-        array.addIOEdge(cd);
-        array.addIOEdge(dc);
-        array.addIOEdge(de);
-        array.addIOEdge(eb);
-        array.addIOEdge(ed);
+        array.addEdge(ab);
+        array.addEdge(ac);
+        array.addEdge(ba);
+        array.addEdge(be);
+        array.addEdge(ca);
+        array.addEdge(cd);
+        array.addEdge(dc);
+        array.addEdge(de);
+        array.addEdge(eb);
+        array.addEdge(ed);
 
         array.computeOffsets();
 
-        Dijkstra dijkstra{&array};
-        Pair<float, Vector<Uint64>> res_pair = dijkstra.compute(a.id, e.id);
+        RouteSearch    dijkstra{&array};
+        Vector<Uint64> res = dijkstra.computeDijkstra(a.id, e.id);
 
         Vector<Uint64> optimal_path = {a.id, b.id, e.id};
 
-        ASSERT_EQ(res_pair.first, distNodes(a, e));
-        ASSERT_EQ(res_pair.second, optimal_path);
+        ASSERT_EQ(res, optimal_path);
     }
 }  // namespace OSMTest

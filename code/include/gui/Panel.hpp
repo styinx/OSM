@@ -3,10 +3,13 @@
 
 #include "structures/Primitives.hpp"
 
+#include <QtWidgets/QCheckBox>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
+#include <QtWidgets/QListWidget>
 #include <QtWidgets/QPushButton>
+#include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSplitter>
 #include <QtWidgets/QTableWidget>
 
@@ -19,10 +22,27 @@ namespace OSM
         Q_OBJECT
 
     private:
-        Window*       m_parent;
-        QLineEdit*    m_start;
-        QLineEdit*    m_stop;
-        QPushButton*  m_go;
+        enum class TransportType : Byte
+        {
+            Pedestrian      = 0,
+            Bicycle         = 1,
+            Car             = 2,
+            PublicTransport = 3,
+            Any             = 4
+        };
+
+        Window* m_parent;
+
+        QLineEdit*   m_start;
+        QLineEdit*   m_stop;
+        QPushButton* m_go;
+
+        QCheckBox*   m_car;
+        QCheckBox*   m_bike;
+        QCheckBox*   m_pedestrian;
+        QCheckBox*   m_public_transport;
+        QListWidget* m_search_method;
+
         QTableWidget* m_table;
 
         QGridLayout* m_grid;

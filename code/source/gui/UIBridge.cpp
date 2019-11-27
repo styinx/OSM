@@ -11,26 +11,19 @@ namespace OSM
 
     }
 
-    void UIBridge::dummy()
-    {
-
-    }
-
     void
     UIBridge::setMapBounds(const float n_lat, const float n_lon, const float s_lat, const float s_lon)
     {
         if(m_bounds.min_lat != n_lat || m_bounds.max_lon != n_lon || m_bounds.max_lat != s_lat ||
            m_bounds.min_lon != s_lon)
         {
-            m_bounds.min_lat = n_lat;
+            m_bounds.min_lat = s_lat;
+            m_bounds.max_lat = n_lat;
             m_bounds.max_lon = n_lon;
-            m_bounds.max_lat = s_lat;
             m_bounds.min_lon = s_lon;
 
-
+            m_map->showGraph(m_bounds);
         }
-
-        m_map->drawEdges(m_bounds);
     }
 
 }  // namespace OSM

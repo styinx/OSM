@@ -5,6 +5,7 @@
 #include "NonMoveable.hpp"
 #include "gui/mapTypes.hpp"
 #include "prototypes.hpp"
+#include "structures/AdjacencyArray.hpp"
 
 namespace OSM
 {
@@ -13,28 +14,35 @@ namespace OSM
         : public NonCopyable
         , public NonMoveable
     {
-    private:
+    public:
         struct Cell
         {
             Vector<Uint64> children;
         };
 
-        static const Sint16 m_x = 100;
-        static const Sint16 m_y = 100;
+    private:
+        static const Uint16 m_x = 100;
+        static const Uint16 m_y = 100;
 
-        const MapBounds m_bounds;
-        const float     m_lat_range;
-        const float     m_lon_range;
-        Vector<Cell>    m_cells{m_x * m_y};
+        const MapBounds       m_bounds;
+        const AdjacencyArray* m_array;
+        const float           m_lat_range;
+        const float           m_lon_range;
+        Vector<Cell>          m_cells{m_x * m_y};
+
+        Uint16 nodeToCell(const float lat, const float lon) const;
 
     public:
-        explicit Grid(const MapBounds& bounds);
+        explicit Grid(const MapBounds& bounds, const AdjacencyArray* array);
         virtual ~Grid() = default;
 
         void             set(const float lat, const float lon, const Uint64 index);
         Vector<Uint64>   get(const Uint16 cell) const;
         Vector<Uint64>   get(const float lat, const float lon) const;
+        Vector<Uint64>   get(const MapBounds& bounds) const;
         const MapBounds& getBounds() const;
+        Vector<Cell>     getCells() const;
+        Uint64           getClosest(const float lat, const float lon) const;
     };
 
 }  // namespace OSM

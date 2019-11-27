@@ -1,6 +1,8 @@
 #ifndef OSM_OSMPBFREADER_HPP
 #define OSM_OSMPBFREADER_HPP
 
+#include "NonCopyable.hpp"
+#include "NonMoveable.hpp"
 #include "gui/mapTypes.hpp"
 #include "io/MapData.hpp"
 #include "prototypes.hpp"
@@ -12,6 +14,8 @@ namespace OSM
 {
 
     class osmpbfReader final
+        : public NonCopyable
+        , public NonMoveable
     {
     private:
         osmpbf::OSMFileIn m_osm_file;

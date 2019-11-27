@@ -17,6 +17,20 @@ namespace OSM
         m_start = new QLineEdit();
         m_stop  = new QLineEdit();
         m_go    = new QPushButton("Search");
+
+        m_pedestrian       = new QCheckBox("by foot");
+        m_bike             = new QCheckBox("by bike");
+        m_car              = new QCheckBox("by car");
+        m_public_transport = new QCheckBox("by public transport");
+        m_search_method    = new QListWidget();
+
+        m_car->setChecked(true);
+        m_public_transport->setCheckable(false);
+
+        m_search_method->addItems(QStringList{"dijkstra", "UCS"});
+        m_search_method->setSelectionMode(QListWidget::SelectionMode::SingleSelection);
+        m_search_method->setCurrentRow(0);
+
         m_table = new QTableWidget(1, 2);
 
         m_fill_policy.setHorizontalPolicy(QSizePolicy::Preferred);
@@ -47,10 +61,15 @@ namespace OSM
         m_stop->setPlaceholderText("destination location");
 
         m_grid->addWidget(m_label_start, 0, 0);
-        m_grid->addWidget(m_start, 0, 2);
+        m_grid->addWidget(m_start, 0, 2, 1, 2);
         m_grid->addWidget(m_label_stop, 1, 0);
-        m_grid->addWidget(m_stop, 1, 2);
+        m_grid->addWidget(m_stop, 1, 2, 1, 2);
         m_grid->addWidget(m_go, 2, 0, 1, 3, Qt::AlignRight);
+        m_grid->addWidget(m_pedestrian, 3, 0, 1, 1);
+        m_grid->addWidget(m_bike, 3, 1, 1, 1);
+        m_grid->addWidget(m_car, 4, 0, 1, 1);
+        m_grid->addWidget(m_public_transport, 4, 1, 1, 1);
+        m_grid->addWidget(m_search_method, 5, 0, 1, 2);
         m_grid->addWidget(grid_filler);
 
         addWidget(grid_wrapper);
@@ -91,6 +110,7 @@ namespace OSM
     {
         auto start = m_start->text();
         auto stop  = m_stop->text();
+
         if(start.isEmpty() && stop.isEmpty())
         {
             QString towns;
@@ -106,17 +126,15 @@ namespace OSM
             return;
         }
 
-        auto pair = m_parent->getMap()->calculateDistance(start, stop);
+        auto path = m_parent->getMap()->calculatePath(
+            start, stop, m_search_method->selectionModel()->selectedIndexes()[0].row());
 
-        if(pair.first == -1)
+        if(path.empty())
         {
-            QMessageBox::information(this, "Path not found", "No connection");
+            QMessageBox::information(this, "No way found", "No way was found.");
         }
-        else
-        {
-            QMessageBox::information(this, "Path found", QString::number(pair.first) + "m");
-            m_parent->getMap()->drawPath(pair.second);
-        }
+
+        m_parent->getMap()->drawPath(path);
     }
 
 }  // namespace OSM

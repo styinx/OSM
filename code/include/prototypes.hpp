@@ -43,6 +43,8 @@ namespace OSM
     using Pair = std::pair<K, V>;
     template<typename T>
     using Queue = std::queue<T>;
+    template<typename T>
+    using Deque = std::deque<T>;
     template<typename K, typename V>
     using Map = std::map<K, V>;
     template<typename K, typename V>

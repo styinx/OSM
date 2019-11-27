@@ -1,7 +1,7 @@
 #ifndef OSM_UIMAP_HPP
 #define OSM_UIMAP_HPP
 
-#include "alg/Dijkstra.hpp"
+#include "alg/RouteSearch.hpp"
 #include "gui/UIBridge.hpp"
 #include "gui/mapTypes.hpp"
 #include "structures/AdjacencyArray.hpp"
@@ -20,8 +20,12 @@ namespace OSM
         UIBridge*             m_bridge;
         const AdjacencyArray* m_array;
 
-        Grid     m_grid;
-        Dijkstra m_dijkstra;
+        Grid        m_grid;
+        RouteSearch m_routeSearch;
+
+        Uint64 townToNode(const QString& town) const;
+        Uint64 coordToNode(const float lat, const float lon) const;
+        Pair<float, float> stringToLatLon(const QString& str) const;
 
     public:
         explicit UIMap(const OSM::AdjacencyArray* array, const MapBounds& bounds);
@@ -31,9 +35,9 @@ namespace OSM
         UIMap& operator=(UIMap&& other) noexcept = delete;
         virtual ~UIMap()                         = default;
 
-        Pair<float, Vector<Uint64>> calculateDistance(const QString& from, const QString& to);
-        void                        drawEdges(const MapBounds& bounds) const;
-        void                        drawPath(const Vector<Uint64>& path) const;
+        Vector<Uint64> calculatePath(const QString& from, const QString& to, const int method);
+        void           showGraph(const MapBounds& bounds) const;
+        void           drawPath(const Vector<Uint64>& path) const;
     };
 
 }  // namespace OSM

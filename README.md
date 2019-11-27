@@ -55,6 +55,9 @@ sh ./build/bin/OSM_Task_5 <pbf file path>
 
 # Notes
 
+**Hamburg** 53.5503410,10.0006540
+**Stuttgart** 48.7784485,9.1800132
+
 ## Germany
 - Nodes: 307793444
 - Ways: 49974007

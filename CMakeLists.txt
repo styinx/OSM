@@ -47,7 +47,7 @@ link_directories(
 # Compiler
 #
 
-SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -fPIC -O3")
+SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -fPIC")
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COMPILE_FLAGS}")
 
@@ -99,11 +99,12 @@ set(INCLUDES
     code/include/io/osmpbfReader.hpp
     code/include/gui/UIBridge.hpp
     code/include/gui/mapTypes.hpp
-    code/include/alg/Dijkstra.hpp
+    code/include/alg/RouteSearch.hpp
     code/include/NonCopyable.hpp
     code/include/NonMoveable.hpp
     code/include/io/MapData.hpp
-    code/include/structures/Grid.hpp)
+    code/include/structures/Grid.hpp
+    code/include/io/CMD.hpp)
 
 set(GUI_INCLUDES
     code/include/gui/Window.hpp
@@ -120,7 +121,7 @@ set(SOURCES
     code/source/io/osmpbfReader.cpp
     code/source/io/MapData.cpp
     code/source/structures/Grid.cpp
-    code/source/alg/Dijkstra.cpp)
+    code/source/alg/RouteSearch.cpp)
 
 set(GUI_SOURCES
     code/source/gui/Window.cpp
@@ -143,7 +144,8 @@ set(FILES ${INCLUDES} ${SOURCES} ${GUI_FILES})
 
 set(TEST_SOURCES
     code/test/structures/test_AdjacencyArray.cpp
-    code/test/structures/test_dijkstra.cpp)
+    code/test/structures/test_dijkstra.cpp
+    code/test/structures/test_Grid.cpp)
 
 set(TEST_FILES
     ${FILES}

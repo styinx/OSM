@@ -61,18 +61,23 @@ namespace OSM
         return deg * M_PI / 180;
     }
 
-    inline float distNodes(const Node& n1, const Node& n2)
+    inline float dist(const float lat1, const float lon1, const float lat2, const float lon2)
     {
         const auto e_rad    = 6371000;
-        const auto lat1_rad = deg2rad(n1.lat);
-        const auto lon1_rad = deg2rad(n1.lon);
-        const auto lat2_rad = deg2rad(n2.lat);
-        const auto lon2_rad = deg2rad(n2.lon);
+        const auto lat1_rad = deg2rad(lat1);
+        const auto lon1_rad = deg2rad(lon1);
+        const auto lat2_rad = deg2rad(lat2);
+        const auto lon2_rad = deg2rad(lon2);
 
         const auto u = sin((lat1_rad - lat2_rad) / 2);
         const auto v = sin((lon1_rad - lon2_rad) / 2);
 
         return static_cast<float>(2.0F * e_rad * asin(sqrt(pow(u, 2) + cos(lat1_rad) * cos(lat2_rad) * pow(v, 2))));
+    }
+
+    inline float distNodes(const Node& n1, const Node& n2)
+    {
+        return dist(n1.lat, n1.lon, n2.lat, n2.lon);
     }
 
     struct Edge

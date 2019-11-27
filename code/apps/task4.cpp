@@ -16,7 +16,6 @@ int main(int argc, char** argv)
         bounds         = reader.getMapBounds();
 
         reader.read(array);
-        reader.printInfo();
     }
 
     QApplication app(argc, argv);
