@@ -1,6 +1,5 @@
 #include "gui/Panel.hpp"
 
-#include "gui/UIMap.hpp"
 #include "gui/Window.hpp"
 #include "io/MapData.hpp"
 
@@ -14,6 +13,14 @@ namespace OSM
         : QSplitter(Qt::Orientation::Vertical)
         , m_parent(parent)
     {
+        m_min_policy.setVerticalPolicy(QSizePolicy::Minimum);
+        m_min_policy.setHorizontalPolicy(QSizePolicy::Minimum);
+
+        m_fill_policy.setHorizontalPolicy(QSizePolicy::Preferred);
+        m_fill_policy.setVerticalPolicy(QSizePolicy::Preferred);
+        m_fill_policy.setVerticalStretch(1);
+        m_fill_policy.setHorizontalStretch(1);
+
         m_start = new QLineEdit();
         m_stop  = new QLineEdit();
         m_go    = new QPushButton("Search");
@@ -22,21 +29,16 @@ namespace OSM
         m_bike             = new QCheckBox("by bike");
         m_car              = new QCheckBox("by car");
         m_public_transport = new QCheckBox("by public transport");
-        m_search_method    = new QListWidget();
+        m_search_method    = new QComboBox();
+        m_street_graph     = new QCheckBox("Show street graph");
 
         m_car->setChecked(true);
         m_public_transport->setCheckable(false);
 
         m_search_method->addItems(QStringList{"dijkstra", "UCS"});
-        m_search_method->setSelectionMode(QListWidget::SelectionMode::SingleSelection);
-        m_search_method->setCurrentRow(0);
+        m_search_method->setSizePolicy(m_min_policy);
 
         m_table = new QTableWidget(1, 2);
-
-        m_fill_policy.setHorizontalPolicy(QSizePolicy::Preferred);
-        m_fill_policy.setVerticalPolicy(QSizePolicy::Preferred);
-        m_fill_policy.setVerticalStretch(1);
-        m_fill_policy.setHorizontalStretch(1);
 
         initTop();
         initBottom();
@@ -44,6 +46,7 @@ namespace OSM
         QObject::connect(m_go, SIGNAL(clicked()), this, SLOT(go()));
         QObject::connect(m_start, SIGNAL(returnPressed()), this, SLOT(go()));
         QObject::connect(m_stop, SIGNAL(returnPressed()), this, SLOT(go()));
+        QObject::connect(m_street_graph, SIGNAL(clicked()), this, SLOT(setShowGraph()));
     }
 
     void Panel::initTop()
@@ -57,8 +60,8 @@ namespace OSM
 
         grid_filler->setSizePolicy(m_fill_policy);
 
-        m_start->setPlaceholderText("starting location");
-        m_stop->setPlaceholderText("destination location");
+        m_start->setPlaceholderText("starting location | lat,lon");
+        m_stop->setPlaceholderText("destination location | lat,lon");
 
         m_grid->addWidget(m_label_start, 0, 0);
         m_grid->addWidget(m_start, 0, 2, 1, 2);
@@ -69,7 +72,8 @@ namespace OSM
         m_grid->addWidget(m_bike, 3, 1, 1, 1);
         m_grid->addWidget(m_car, 4, 0, 1, 1);
         m_grid->addWidget(m_public_transport, 4, 1, 1, 1);
-        m_grid->addWidget(m_search_method, 5, 0, 1, 2);
+        m_grid->addWidget(m_street_graph, 5, 0, 1, 1);
+        m_grid->addWidget(m_search_method, 5, 1, 1, 2);
         m_grid->addWidget(grid_filler);
 
         addWidget(grid_wrapper);
@@ -127,7 +131,7 @@ namespace OSM
         }
 
         auto path = m_parent->getMap()->calculatePath(
-            start, stop, m_search_method->selectionModel()->selectedIndexes()[0].row());
+            start, stop, m_search_method->currentIndex());
 
         if(path.empty())
         {
@@ -135,6 +139,21 @@ namespace OSM
         }
 
         m_parent->getMap()->drawPath(path);
+    }
+
+    void Panel::setShowGraph()
+    {
+        m_parent->getMap()->setShowGraph(m_street_graph->isChecked());
+    }
+
+    void Panel::setStart(const float lat, const float lon)
+    {
+        m_start->setText(QString::number(lat) + "," + QString::number(lon));
+    }
+
+    void Panel::setStop(const float lat, const float lon)
+    {
+        m_stop->setText(QString::number(lat) + "," + QString::number(lon));
     }
 
 }  // namespace OSM

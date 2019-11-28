@@ -4,6 +4,7 @@
 #include "structures/Primitives.hpp"
 
 #include <QtWidgets/QCheckBox>
+#include <QtWidgets/QComboBox>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
@@ -33,15 +34,19 @@ namespace OSM
 
         Window* m_parent;
 
+        QSizePolicy m_min_policy;
+        QSizePolicy m_fill_policy;
+
         QLineEdit*   m_start;
         QLineEdit*   m_stop;
         QPushButton* m_go;
 
-        QCheckBox*   m_car;
-        QCheckBox*   m_bike;
-        QCheckBox*   m_pedestrian;
-        QCheckBox*   m_public_transport;
-        QListWidget* m_search_method;
+        QCheckBox* m_car;
+        QCheckBox* m_bike;
+        QCheckBox* m_pedestrian;
+        QCheckBox* m_public_transport;
+        QCheckBox* m_street_graph;
+        QComboBox* m_search_method;
 
         QTableWidget* m_table;
 
@@ -49,13 +54,12 @@ namespace OSM
         QLabel*      m_label_start;
         QLabel*      m_label_stop;
 
-        QSizePolicy m_fill_policy;
-
         void initTop();
         void initBottom();
 
     public slots:
         void go();
+        void setShowGraph();
 
     signals:
         void goPressed();
@@ -69,6 +73,8 @@ namespace OSM
         virtual ~Panel()                         = default;
 
         void addNode(const Node* node);
+        void setStart(const float lat, const float lon);
+        void setStop(const float lat, const float lon);
     };
 
 }  // namespace OSM

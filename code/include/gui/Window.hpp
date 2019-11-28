@@ -27,6 +27,7 @@ namespace OSM
         virtual ~Window()                          = default;
 
         UIMap* getMap();
+        Panel* getPanel();
     };
 
 }  // namespace OSM

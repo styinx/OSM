@@ -6,7 +6,7 @@ namespace OSM
     Window::Window(const AdjacencyArray* array, const MapBounds& bounds)
     {
         m_panel = new Panel(this);
-        m_map = new UIMap(array, bounds);
+        m_map = new UIMap(this, array, bounds);
 
         m_main_splitter = new QSplitter{Qt::Orientation::Horizontal};
 
@@ -19,6 +19,11 @@ namespace OSM
     UIMap* Window::getMap()
     {
         return m_map;
+    }
+
+    Panel *Window::getPanel()
+    {
+        return m_panel;
     }
 
 } // namespace OSM

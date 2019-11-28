@@ -5,7 +5,7 @@
 namespace OSM
 {
 
-    UIBridge::UIBridge(const UIMap* map)
+    UIBridge::UIBridge(UIMap* map)
         : m_map(map)
     {
 
@@ -24,6 +24,21 @@ namespace OSM
 
             m_map->showGraph(m_bounds);
         }
+    }
+
+    void UIBridge::onLoad()
+    {
+        m_map->onLoad();
+    }
+
+    void UIBridge::setStart(const QString &latlon)
+    {
+        m_map->setStart(latlon);
+    }
+
+    void UIBridge::setStop(const QString &latlon)
+    {
+        m_map->setStop(latlon);
     }
 
 }  // namespace OSM

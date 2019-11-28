@@ -2,6 +2,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     new QWebChannel(qt.webChannelTransport, function (channel) {
         window.bridge = channel.objects.UIBridge;
+
+        bridge.setMapBounds(ne.lat, ne.lng, sw.lat, sw.lng);
+
         setMapBounds();
     });
 });
@@ -9,9 +12,14 @@ document.addEventListener("DOMContentLoaded", function () {
 let attribution = '';
 let token = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
 let map = L.map('map').setView([48.745158, 9.106606], 15);
-var routeLayer = L.layerGroup([]).addTo(map);
-var graphLayer = L.layerGroup([]).addTo(map);
+let routeLayer = L.layerGroup([]).addTo(map);
+let graphLayer = L.layerGroup([]).addTo(map);
 let popup = L.popup();
+
+let start = '';
+let stop = '';
+let graphShown = false;
+let graphData = [];
 
 L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={token}', {
     maxZoom: 20,
@@ -25,8 +33,13 @@ map.on("zoomend", onZoomEnd);
 map.on("mouseup", onMouseUp);
 
 function onMapClick(e) {
+    let latlng = e.latlng.lat.toFixed(6).toString() + "," + e.latlng.lng.toFixed(6).toString();
+
+    let start = "<button onclick='setStart(\"" + latlng + "\")'>Set start</button>";
+    let stop = "<button onclick='setStop(\"" + latlng + "\")'>Set stop</button>";
+
     popup.setLatLng(e.latlng)
-        .setContent("What's here?<br> " + e.latlng.toString())
+        .setContent("What's here?<br> " + latlng + "<br>" + start + "<br>" + stop)
         .addTo(map);
 }
 
@@ -45,13 +58,39 @@ function setMapBounds() {
     let sw = bounds["_southWest"];
     let ne = bounds["_northEast"];
 
-    bridge.setMapBounds(ne.lat, ne.lng, sw.lat, sw.lng);
+    bridge.onLoad();
+}
+
+function setStart(latlon)
+{
+    bridge.setStart(latlon);
+}
+
+function setStop(latlon)
+{
+    bridge.setStop(latlon);
 }
 
 // C++ -> JS
 
+function setView(lat, lon)
+{
+    map.setView([lat, lon], map.getZoom());
+}
+
+function setShowGraph(bool) {
+    graphShown = bool;
+
+    showGraph(graphData);
+}
+
 function showGraph(graph) {
-    if(map.getZoom() >= 10) {
+    graphData = graph;
+
+    if(!graphShown)
+        graphLayer.clearLayers();
+
+    if(graphShown && map.getZoom() >= 10) {
         graphLayer.clearLayers();
 
         let nodeColor = 'rgba(255, 255, 0, 0.25)';

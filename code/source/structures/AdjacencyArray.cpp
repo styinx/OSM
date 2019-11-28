@@ -40,10 +40,12 @@ namespace OSM
         m_i_offset[0] = 0;
 
         Uint64       offset = 0;
+        Uint64       node_edges = 0;
         auto         node   = m_nodes.begin();
         auto         edge   = m_edges.begin();
         const auto max_node = m_nodes.size() -1;
         Vector<Edge> filtered_edges;
+        Vector<Node> filtered_nodes;
 
         // Sort edges by target id and use index instead of id for nodes
         std::sort(m_edges.begin(), m_edges.end(), compareEdgesTarget);
@@ -59,13 +61,23 @@ namespace OSM
                 // Set the index of the node source instead of the id
                 edge->target = offset;
                 edge++;
+                node_edges++;
             }
             else
             {
+                if(node_edges)
+                {
+                    filtered_nodes.emplace_back(*node);
+                }
                 node++;
                 offset++;
+                node_edges = 0;
             }
         }
+
+        m_nodes.clear();
+        m_nodes = filtered_nodes;
+        filtered_nodes.clear();
 
         offset = 1;
         node   = m_nodes.begin();

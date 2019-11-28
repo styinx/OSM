@@ -54,6 +54,22 @@ namespace OSM
             , town(town)
         {
         }
+
+        explicit Node(
+            const Uint64 id,
+            const double lat,
+            const double lon,
+            const Byte   mask,
+            const Byte   speed,
+            const Uint16 town)
+            : id(id)
+              , lat(static_cast<float>(lat))
+              , lon(static_cast<float>(lon))
+              , mask(mask)
+              , max_speed(speed)
+              , town(town)
+        {
+        }
     };
 
     inline float deg2rad(const float deg)

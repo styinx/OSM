@@ -1,12 +1,14 @@
 #include "gui/UIMap.hpp"
 
 #include "io/MapData.hpp"
+#include "gui/Window.hpp"
 
 namespace OSM
 {
 
-    UIMap::UIMap(const OSM::AdjacencyArray* array, const MapBounds& bounds)
-        : m_array(array)
+    UIMap::UIMap(Window* parent, const OSM::AdjacencyArray* array, const MapBounds& bounds)
+        : m_parent(parent)
+        , m_array(array)
         , m_grid(bounds, array)
         , m_routeSearch(m_array, &m_grid)
     {
@@ -146,6 +148,18 @@ namespace OSM
             if(s > 500)
                 break;
         }
+//        Uint64 e = 0;
+//        QString params;
+//        for(Uint64 ei = 0; ei < edges.size(); ++ei)
+//        {
+//            params += "[[" + QString::number(nodes[edges[ei].source].lat) + ","
+//                + QString::number(nodes[edges[ei].source].lon) + "]," +
+//                "[" + QString::number(nodes[edges[ei].target].lat) + ","
+//                + QString::number(nodes[edges[ei].target].lon) + "]],";
+//            if(e++ > 100)
+//                break;
+//        }
+        qDebug() << params;
         page()->runJavaScript("showGraph([" + params.left(params.size() - 1) + "]);");
     }
 
@@ -162,6 +176,32 @@ namespace OSM
 
         qDebug() << params;
         page()->runJavaScript("showRoute([" + params.left(params.size() - 1) + "]);");
+    }
+
+    void UIMap::setShowGraph(const bool show)
+    {
+        QString setShow = show ? "true" : "false";
+        page()->runJavaScript("setShowGraph(" + setShow + ")");
+    }
+
+    void UIMap::onLoad()
+    {
+        const auto bounds = m_grid.getBounds();
+        const float vlat = bounds.min_lat + (bounds.max_lat - bounds.min_lat) / 2;
+        const float vlon = bounds.min_lon + (bounds.max_lon - bounds.min_lon) / 2;
+        page()->runJavaScript("setView(" + QString::number(vlat) + ", " + QString::number(vlon) + ");");
+    }
+
+    void UIMap::setStart(const QString &latlon)
+    {
+        auto pair = stringToLatLon(latlon);
+        m_parent->getPanel()->setStart(pair.first, pair.second);
+    }
+
+    void UIMap::setStop(const QString &latlon)
+    {
+        auto pair = stringToLatLon(latlon);
+        m_parent->getPanel()->setStop(pair.first, pair.second);
     }
 
 }  // namespace OSM

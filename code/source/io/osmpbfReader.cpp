@@ -37,7 +37,8 @@ namespace OSM
         std::cout << std::right << std::setw(3) << m_duration << "s"
                   << " | Nodes: " << std::right << std::setw(12) << m_nodes.first << "/"
                   << std::setw(12) << m_nodes.second << " | Ways: " << std::right << std::setw(12)
-                  << m_ways << " (Edges: " << std::right << std::setw(12) << m_edges << ")"
+                  << m_ways.first << "/" << std::setw(12) << m_ways.second
+                  << " (Edges: " << std::right << std::setw(12) << m_edges << ")"
                   << " | Relations: " << std::right << std::setw(12) << m_relations << std::endl;
     }
 
@@ -95,42 +96,42 @@ namespace OSM
 
                     ++m_nodes.first;
 
-                    bool        hasTown = false;
+//                    bool        hasTown = false;
                     Byte        mask    = 0;
                     Byte        speed   = 1;
                     Uint16      town    = 0;
-                    std::string name;
-
-                    for(Uint32 i = 0, s = node.tagsSize(); i < s; ++i)
-                    {
-                        const auto& key = node.key(i);
-                        const auto& val = node.value(i);
-
-                        if(key == "maxspeed")
-                        {
-                            readMaxSpeed(node.value(i));
-                        }
-                        else if(key == "oneway")
-                        {
-                            mask |= NodeTypeMask::ONE_WAY;
-                        }
-                        else if(key == "name")
-                        {
-                            name = val;
-                        }
-                        else if(key == "place")
-                        {
-                            if(val == "city" || val == "town")
-                            {
-                                hasTown = true;
-                            }
-                        }
-                    }
-
-                    if(hasTown)
-                    {
-                        town = MapData::addTown(name);
-                    }
+//                    std::string name;
+//
+//                    for(Uint32 i = 0, s = node.tagsSize(); i < s; ++i)
+//                    {
+//                        const auto& key = node.key(i);
+//                        const auto& val = node.value(i);
+//
+//                        if(key == "maxspeed")
+//                        {
+//                            readMaxSpeed(node.value(i));
+//                        }
+//                        else if(key == "oneway")
+//                        {
+//                            mask |= NodeTypeMask::ONE_WAY;
+//                        }
+//                        else if(key == "name")
+//                        {
+//                            name = val;
+//                        }
+//                        else if(key == "place")
+//                        {
+//                            if(val == "city" || val == "town")
+//                            {
+//                                hasTown = true;
+//                            }
+//                        }
+//                    }
+//
+//                    if(hasTown)
+//                    {
+//                        town = MapData::addTown(name);
+//                    }
 
                     array.addNode(Node{node.id(), node.latd(), node.lond(), mask, speed, town});
                 }
@@ -140,11 +141,19 @@ namespace OSM
             {
                 for(IWayStream way = pbi.getWayStream(); !way.isNull(); way.next())
                 {
-                    ++m_ways;
+                    ++m_ways.second;
+
+                    if(!highwayFilter.matches(way))
+                        continue;
+
+                    ++m_ways.second;
+
                     IWay::RefIterator previous = nullptr;
                     IWay::RefIterator it       = way.refBegin();
                     for(; it != way.refEnd(); ++it)
                     {
+//                        array.addNode(Node{static_cast<Uint64>(*it), 0, 0, 0, 0, 0});
+
                         if(previous != nullptr)
                         {
                             if(*previous >= 0)

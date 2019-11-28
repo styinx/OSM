@@ -12,10 +12,12 @@
 
 namespace OSM
 {
+    class Window;
 
     class UIMap final : public QWebEngineView
     {
     private:
+        Window*               m_parent;
         QWebChannel*          m_channel;
         UIBridge*             m_bridge;
         const AdjacencyArray* m_array;
@@ -28,7 +30,7 @@ namespace OSM
         Pair<float, float> stringToLatLon(const QString& str) const;
 
     public:
-        explicit UIMap(const OSM::AdjacencyArray* array, const MapBounds& bounds);
+        explicit UIMap(Window* parent, const OSM::AdjacencyArray* array, const MapBounds& bounds);
         UIMap(const UIMap& other)     = delete;
         UIMap(UIMap&& other) noexcept = delete;
         UIMap& operator=(const UIMap& other) = delete;
@@ -38,6 +40,11 @@ namespace OSM
         Vector<Uint64> calculatePath(const QString& from, const QString& to, const int method);
         void           showGraph(const MapBounds& bounds) const;
         void           drawPath(const Vector<Uint64>& path) const;
+
+        void setShowGraph(const bool show);
+        void onLoad();
+        void setStart(const QString& latlon);
+        void setStop(const QString& latlon);
     };
 
 }  // namespace OSM

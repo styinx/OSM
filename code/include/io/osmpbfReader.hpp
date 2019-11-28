@@ -22,7 +22,7 @@ namespace OSM
 
         Uint64               m_duration  = 0;
         Pair<Uint64, Uint64> m_nodes     = {0, 0};
-        Uint64               m_ways      = 0;
+        Pair<Uint64, Uint64> m_ways      = {0, 0};
         Uint64               m_edges     = 0;
         Uint64               m_relations = 0;
 
