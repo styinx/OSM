@@ -60,11 +60,18 @@ namespace OSM
         MapData::addTown("null");
 
         osmpbf::PrimitiveBlockInputAdaptor pbi{};
-        osmpbf::OrTagFilter                highwayFilter{
-            {new osmpbf::KeyOnlyTagFilter("highway"),
-             new osmpbf::KeyMultiValueTagFilter("place", {"city", "town"})}};
+        osmpbf::OrTagFilter               wayFilter{
+            new osmpbf::KeyOnlyTagFilter("highway")
+        };
+        osmpbf::OrTagFilter                nodeFilter{
+            new osmpbf::KeyOnlyTagFilter("highway")
+        };
 
         std::cout << "Start reading ..." << std::endl;
+
+        Vector<Node>      nodes;
+        Vector<Edge>      edges;
+        Map<Sint64, Byte> id;
 
         while(m_osm_file.parseNextBlock(pbi))
         {
@@ -80,9 +87,9 @@ namespace OSM
             if(pbi.isNull())
                 continue;
 
-            highwayFilter.assignInputAdaptor(&pbi);
+            nodeFilter.assignInputAdaptor(&pbi);
 
-            if(!highwayFilter.rebuildCache())
+            if(!nodeFilter.rebuildCache())
                 continue;
 
             if(pbi.nodesSize())
@@ -91,49 +98,49 @@ namespace OSM
                 {
                     ++m_nodes.second;
 
-                    if(!highwayFilter.matches(node))
+                    if(!nodeFilter.matches(node))
                         continue;
 
                     ++m_nodes.first;
 
-//                    bool        hasTown = false;
-                    Byte        mask    = 0;
-                    Byte        speed   = 1;
-                    Uint16      town    = 0;
-//                    std::string name;
-//
-//                    for(Uint32 i = 0, s = node.tagsSize(); i < s; ++i)
-//                    {
-//                        const auto& key = node.key(i);
-//                        const auto& val = node.value(i);
-//
-//                        if(key == "maxspeed")
-//                        {
-//                            readMaxSpeed(node.value(i));
-//                        }
-//                        else if(key == "oneway")
-//                        {
-//                            mask |= NodeTypeMask::ONE_WAY;
-//                        }
-//                        else if(key == "name")
-//                        {
-//                            name = val;
-//                        }
-//                        else if(key == "place")
-//                        {
-//                            if(val == "city" || val == "town")
-//                            {
-//                                hasTown = true;
-//                            }
-//                        }
-//                    }
-//
-//                    if(hasTown)
-//                    {
-//                        town = MapData::addTown(name);
-//                    }
+                    bool        hasTown = false;
+                    Byte   mask  = 0;
+                    Byte   speed = 1;
+                    Uint16 town  = 0;
+                    std::string name;
 
-                    array.addNode(Node{node.id(), node.latd(), node.lond(), mask, speed, town});
+                    for(Uint32 i = 0, s = node.tagsSize(); i < s; ++i)
+                    {
+                        const auto& key = node.key(i);
+                        const auto& val = node.value(i);
+
+                        if(key == "maxspeed")
+                        {
+                            readMaxSpeed(node.value(i));
+                        }
+                        else if(key == "oneway")
+                        {
+                            mask |= NodeTypeMask::ONE_WAY;
+                        }
+                        else if(key == "name")
+                        {
+                            name = val;
+                        }
+                        else if(key == "place")
+                        {
+                            if(val == "city" || val == "town")
+                            {
+                                hasTown = true;
+                            }
+                        }
+                    }
+
+                    if(hasTown)
+                    {
+                        town = MapData::addTown(name);
+                    }
+
+                    nodes.emplace_back(Node{node.id(), node.latd(), node.lond(), mask, speed, town});
                 }
             }
 
@@ -143,23 +150,22 @@ namespace OSM
                 {
                     ++m_ways.second;
 
-                    if(!highwayFilter.matches(way))
+                    if(!wayFilter.matches(way))
                         continue;
 
-                    ++m_ways.second;
+                    ++m_ways.first;
 
                     IWay::RefIterator previous = nullptr;
                     IWay::RefIterator it       = way.refBegin();
                     for(; it != way.refEnd(); ++it)
                     {
-//                        array.addNode(Node{static_cast<Uint64>(*it), 0, 0, 0, 0, 0});
-
                         if(previous != nullptr)
                         {
                             if(*previous >= 0)
                             {
-                                array.addEdge(
-                                    Edge{static_cast<Uint64>(*previous), static_cast<Uint64>(*it)});
+                                edges.emplace_back(Edge{*previous, *it});
+                                id[*previous] = 1;
+                                id[*it]       = 1;
                                 m_edges++;
                             }
                         }
@@ -182,6 +188,35 @@ namespace OSM
 
         printInfo();
         std::cout << "Finished reading" << std::endl;
+        std::cout << "Processing ..." << std::endl;
+
+        Uint64              index = 0;
+        Map<Uint64, Uint64> new_id;
+
+        for(auto& node : nodes)
+        {
+            if(id.count(node.id))
+            {
+                new_id[node.id] = index++;
+                node.id         = index - 1;
+                array.addNode(node);
+            }
+        }
+
+        nodes.clear();
+
+        for(auto& edge : edges)
+        {
+            if(new_id.count(edge.source) && new_id.count(edge.target))
+            {
+                edge.source = new_id[edge.source];
+                edge.target = new_id[edge.target];
+                array.addEdge(edge);
+                array.addEdge(Edge{edge.target, edge.source});
+            }
+        }
+
+        edges.clear();
 
         std::cout << "Compute AdjacencyArray ..." << std::endl;
         array.computeOffsets();

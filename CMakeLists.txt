@@ -176,6 +176,6 @@ target_link_libraries(${PROJECT_NAME}_Task_5 ${LIBRARIES})
 add_executable(${PROJECT_NAME} ${FILES} ${GUI_FILES} ${DIR_APP}/main.cpp)
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES} ${QT_LIBS})
 
-# Test
-add_executable(${PROJECT_NAME}_Test ${TEST_FILES} ${DIR_TEST}/test.cpp)
-target_link_libraries(${PROJECT_NAME}_Test ${TEST_LIBRARIES})
+## Test
+#add_executable(${PROJECT_NAME}_Test ${TEST_FILES} ${DIR_TEST}/test.cpp)
+#target_link_libraries(${PROJECT_NAME}_Test ${TEST_LIBRARIES})

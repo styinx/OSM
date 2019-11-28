@@ -74,33 +74,8 @@ namespace OSM
                 }
             }
 
-            // Check ingoing neighbours of min neighbour
-            for(Uint64 i = ioffsets[u]; i < ioffsets[u + 1]; ++i)
-            {
-                const auto neighbour = edges[i].source;
-
-                if(m_V[neighbour] < U64_max)
-                {
-                    const float alternative = m_dist[u] + distNodes(nodes[u], nodes[neighbour]);
-
-                    if(alternative < m_dist[neighbour])
-                    {
-                        m_dist[neighbour] = alternative;
-                        m_prev[neighbour] = u;
-                    }
-                }
-            }
-
             // Remove u from V
             m_V[u] = U64_max;
-
-//            // TODO
-//            if(!hasNeighbours)
-//            {
-//                auto neighbour = m_grid->getClosest(nodes[u].lat, nodes[u].lon);
-//                m_dist[neighbour] = m_dist[u] + distNodes(nodes[u], nodes[neighbour]);
-//                m_prev[neighbour] = u;
-//            }
 
             // we found a route
             if(u == from)
@@ -116,6 +91,69 @@ namespace OSM
         return {path};
     }
 
+    Vector<Uint64> RouteSearch::PQ(const Uint64 from, const Uint64 to)
+    {
+        const auto ooffsets = m_array->getOOffsets();
+        const auto ioffsets = m_array->getIOffsets();
+        const auto nodes    = m_array->getNodes();
+        const auto edges    = m_array->getEdges();
+
+        using Prio = Pair<Uint64, float>;
+        struct CMP
+        {
+            bool operator()(const Prio& l, const Prio& r){ return l.second < r.second; }
+        };
+        std::priority_queue<Prio, Vector<Prio>, CMP> pq;
+        Vector<Uint64> path;
+
+        m_dist = Vector<float>(nodes.size(), U64_max);
+        m_prev = Vector<Uint64>(nodes.size(), U64_max);
+        m_V = Vector<Uint64>(nodes.size(), U64_max);
+
+        m_dist[from] = 0;
+
+        for(const auto& node : nodes)
+        {
+            pq.emplace(Prio{node.id, m_dist[node.id]});
+        }
+
+        while(!pq.empty())
+        {
+            const auto t = pq.top();
+            auto u = t.first;
+            m_V[u] = U64_max;
+            pq.pop();
+
+            for(Uint64 i = ooffsets[u]; i < ooffsets[u + 1]; ++i)
+            {
+                if(m_V[i] != U64_max)
+                {
+                    const auto neighbour = edges[i].target;
+
+                    const float alternative = m_dist[u] + distNodes(nodes[u], nodes[neighbour]);
+
+                    if(alternative < m_dist[neighbour])
+                    {
+                        m_dist[neighbour] = alternative;
+                        m_prev[neighbour] = u;
+                        pq.push(Prio{u, t.second - alternative});
+                        m_V[u] = 0;
+                    }
+                }
+            }
+        }
+
+        for(const auto& n : m_prev)
+        {
+            if(n != U64_max)
+            {
+                path.emplace_back(n);
+            }
+        }
+
+        return path;
+    }
+
     Vector<Uint64> RouteSearch::UCS(const Uint64 from, const Uint64 to)
     {
         Uint64     node     = from;
@@ -123,6 +161,9 @@ namespace OSM
         const auto ioffsets = m_array->getIOffsets();
         const auto nodes    = m_array->getNodes();
         const auto edges    = m_array->getEdges();
+
+        m_frontier.clear();
+        m_explored.clear();
 
         m_frontier.emplace_back(node);
 
@@ -147,24 +188,9 @@ namespace OSM
                     m_frontier.emplace_back(neighbour);
                 }
             }
-
-            // Check ingoing neighbours of min neighbour
-            for(Uint64 i = ioffsets[node]; i < ioffsets[node + 1]; ++i)
-            {
-                const auto neighbour = edges[i].source;
-                if(std::find(m_explored.begin(), m_explored.end(), neighbour) == m_explored.end())
-                {
-                    m_frontier.emplace_back(neighbour);
-                }
-            }
-
-//            if(!hasNeighbours && m_explored.size() < m_array->nodeCount() && node != from && node != to)
-//            {
-//                m_frontier.emplace_back(m_grid->getClosest(nodes[node].lat, nodes[node].lon));
-//            }
         }
 
-        return {m_frontier.begin(), m_frontier.end()};
+        return {};
     }
 
     std::string RouteSearch::computeGeoJson(const Uint64 from, const Uint64 to)

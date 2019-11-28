@@ -20,11 +20,10 @@ namespace OSM
 
         load(QUrl{"qrc:///map_html"});
 
-        int i = 0;
-        for(const auto& node : array->getNodes())
-        {
-            m_grid.set(node.lat, node.lon, i++);
-        }
+//        for(const auto& node : array->getNodes())
+//        {
+//            m_grid.set(node.lat, node.lon, node.id);
+//        }
     }
     Uint64 UIMap::townToNode(const QString& town) const
     {
@@ -71,41 +70,20 @@ namespace OSM
 
     Vector<Uint64> UIMap::calculatePath(const QString& from, const QString& to, const int method)
     {
-        Uint64 start = 0;
-        Uint64 stop = 0;
+        const auto latlon1 = stringToLatLon(from);
+        const auto latlon2 = stringToLatLon(to);
 
-        auto latlon1 = stringToLatLon(from);
-        auto latlon2 = stringToLatLon(to);
-
-        if(latlon1 != Pair<float, float>{0, 0})
-        {
-            start = coordToNode(latlon1.first, latlon1.second);
-        }
-        else
-        {
-            start = townToNode(from);
-        }
-
-        if(latlon2 != Pair<float, float>{0, 0})
-        {
-            stop = coordToNode(latlon2.first, latlon2.second);
-        }
-        else
-        {
-            stop = townToNode(to);
-        }
+        auto start = m_grid.getFirstClosest(latlon1.first, latlon1.second);
+        auto stop = m_grid.getFirstClosest(latlon2.first, latlon2.second);
 
         if(method == 0)
-        {
             return m_routeSearch.computeDijkstra(start, stop);
-        }
         else if(method == 1)
-        {
             return m_routeSearch.UCS(start, stop);
-        }
+        return m_routeSearch.PQ(start, stop);
     }
 
-    void UIMap::showGraph(const MapBounds& bounds) const
+    void UIMap::setGraph(const MapBounds& bounds) const
     {
         const auto nodes    = m_array->getNodes();
         const auto edges    = m_array->getEdges();
@@ -115,7 +93,7 @@ namespace OSM
         Uint64 s = 0;
 
         QString params;
-        for(const auto& node : m_grid.get(bounds))
+        for(Uint64 node = 0; node < 1000; ++node)
         {
             Uint64 n = 0;
             QString inner;
@@ -129,38 +107,14 @@ namespace OSM
                          QString::number(target.lon) + "]],";
                 n += 1;
             }
-            for(Uint64 iedge_index = ioffsets[node]; iedge_index < ioffsets[node + 1]; iedge_index++)
-            {
-                auto edge   = edges[iedge_index];
-                auto source = nodes[edge.source];
-                auto target = nodes[edge.target];
-                inner += "[[" + QString::number(source.lat) + "," + QString::number(source.lon) +
-                         "]," + "[" + QString::number(target.lat) + "," +
-                         QString::number(target.lon) + "]],";
-                n += 1;
-            }
             if(!inner.isEmpty())
             {
                 params += "" + inner.left(inner.size() - 1) + ",";
             }
             if(n > 0)
                 s += 1;
-            if(s > 500)
-                break;
         }
-//        Uint64 e = 0;
-//        QString params;
-//        for(Uint64 ei = 0; ei < edges.size(); ++ei)
-//        {
-//            params += "[[" + QString::number(nodes[edges[ei].source].lat) + ","
-//                + QString::number(nodes[edges[ei].source].lon) + "]," +
-//                "[" + QString::number(nodes[edges[ei].target].lat) + ","
-//                + QString::number(nodes[edges[ei].target].lon) + "]],";
-//            if(e++ > 100)
-//                break;
-//        }
-        qDebug() << params;
-        page()->runJavaScript("showGraph([" + params.left(params.size() - 1) + "]);");
+        page()->runJavaScript("setGraph([" + params.left(params.size() - 1) + "]);");
     }
 
     void UIMap::drawPath(const Vector<Uint64>& path) const
@@ -174,7 +128,6 @@ namespace OSM
             params += "[" + QString::number(n.lon) + "," + QString::number(n.lat) + "],";
         }
 
-        qDebug() << params;
         page()->runJavaScript("showRoute([" + params.left(params.size() - 1) + "]);");
     }
 
@@ -190,6 +143,7 @@ namespace OSM
         const float vlat = bounds.min_lat + (bounds.max_lat - bounds.min_lat) / 2;
         const float vlon = bounds.min_lon + (bounds.max_lon - bounds.min_lon) / 2;
         page()->runJavaScript("setView(" + QString::number(vlat) + ", " + QString::number(vlon) + ");");
+        setGraph(bounds);
     }
 
     void UIMap::setStart(const QString &latlon)
