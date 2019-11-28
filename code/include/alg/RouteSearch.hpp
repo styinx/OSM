@@ -29,6 +29,7 @@ namespace OSM
         virtual ~RouteSearch() = default;
 
         Vector<Uint64> computeDijkstra(const Uint64 from, const Uint64 to);
+        Vector<Uint64> PQ(const Uint64 from, const Uint64 to);
         Vector<Uint64> UCS(const Uint64 from, const Uint64 to);
         std::string    computeGeoJson(const Uint64 from, const Uint64 to);
     };

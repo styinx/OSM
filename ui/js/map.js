@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     new QWebChannel(qt.webChannelTransport, function (channel) {
         window.bridge = channel.objects.UIBridge;
 
-        bridge.setMapBounds(ne.lat, ne.lng, sw.lat, sw.lng);
+        bridge.onLoad();
 
         setMapBounds();
     });
@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 let attribution = '';
 let token = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
-let map = L.map('map').setView([48.745158, 9.106606], 15);
+let map = L.map('map').setView([48.745158, 9.106606], 13);
 let routeLayer = L.layerGroup([]).addTo(map);
 let graphLayer = L.layerGroup([]).addTo(map);
 let popup = L.popup();
@@ -44,11 +44,11 @@ function onMapClick(e) {
 }
 
 function onZoomEnd(e) {
-    setMapBounds();
+    //setMapBounds();
 }
 
 function onMouseUp(e) {
-    setMapBounds();
+    //setMapBounds();
 }
 
 // JS -> C++
@@ -58,7 +58,7 @@ function setMapBounds() {
     let sw = bounds["_southWest"];
     let ne = bounds["_northEast"];
 
-    bridge.onLoad();
+    bridge.setMapBounds(ne.lat, ne.lng, sw.lat, sw.lng);
 }
 
 function setStart(latlon)
@@ -73,46 +73,46 @@ function setStop(latlon)
 
 // C++ -> JS
 
-function setView(lat, lon)
-{
+function setView(lat, lon) {
     map.setView([lat, lon], map.getZoom());
 }
 
 function setShowGraph(bool) {
     graphShown = bool;
 
-    showGraph(graphData);
+    showGraph();
 }
 
-function showGraph(graph) {
+function setGraph(graph) {
     graphData = graph;
+}
 
+function showGraph() {
     if(!graphShown)
         graphLayer.clearLayers();
 
-    if(graphShown && map.getZoom() >= 10) {
-        graphLayer.clearLayers();
-
+    if(graphShown) {
         let nodeColor = 'rgba(255, 255, 0, 0.25)';
         let edgeColor = 'rgba(255, 50, 0, 0.25)';
 
-        for (let index = 0; index < graph.length; ++index) {
-            for (let edge = 0; edge < graph[index].length; ++edge) {
+        for (let index = 0; index < graphData.length; ++index) {
+            for (let edge = 0; edge < graphData[index].length; ++edge) {
 
-                if (graph[index].length >= 1) {
-                    L.circle(graph[index][0], {
-                        radius: 1,
-                        color: nodeColor
-                    }).addTo(graphLayer);
-                }
+                // if (graph[index].length >= 1) {
+                //     L.circle(graph[index][0], {
+                //         radius: 1,
+                //         color: nodeColor,
+                //         interactive: false
+                //     }).addTo(graphLayer);
+                // }
 
-                if (graph[index].length === 2) {
-                    L.circle(graph[index][1], {
-                        radius: 1,
-                        color: nodeColor
-                    }).addTo(graphLayer);
+                if (graphData[index].length === 2) {
+                    // L.circle(graph[index][1], {
+                    //     radius: 1,
+                    //     color: nodeColor
+                    // }).addTo(graphLayer);
 
-                    L.polyline(graph[index], {color: edgeColor}).addTo(graphLayer);
+                    L.polyline(graphData[index], {color: edgeColor, interactive: false}).addTo(graphLayer);
                 }
             }
         }

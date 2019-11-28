@@ -81,27 +81,14 @@ namespace OSM
         return m_cells;
     }
 
-    Uint64 Grid::getClosest(const float lat, const float lon) const
+    Uint64 Grid::getFirstClosest(const float lat, const float lon, const float range) const
     {
-        Uint64 i = 0;
-        Uint16 cell = nodeToCell(lat, lon);
-        int dir = cell > m_x * m_y / 2 ? 1 : -1;
-        while(i == 0)
+        for(const auto& node : m_array->getNodes())
         {
-            Uint64 min = std::numeric_limits<Uint64>::max();
-            for(const auto& node : get(cell))
-            {
-                auto n = m_array->getNodes()[node];
-                auto l_min = dist(lat, lon, n.lat, n.lon);
-                if(l_min > 0 && l_min < min)
-                {
-                    min = l_min;
-                    i   = node;
-                }
-            }
-            cell += dir;
+            if(dist(lat, lon, node.lat, node.lon) < range)
+                return node.id;
         }
-        return i;
+        return 0;
     }
 
 }  // namespace OSM

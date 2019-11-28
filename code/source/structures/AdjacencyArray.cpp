@@ -35,80 +35,18 @@ namespace OSM
         m_o_offset.resize(m_nodes.size() + 1);
         m_o_offset[0] = 0;
 
-        // Incoming edges
-        m_i_offset.resize(m_nodes.size() + 1);
-        m_i_offset[0] = 0;
-
-        Uint64       offset = 0;
-        Uint64       node_edges = 0;
-        auto         node   = m_nodes.begin();
-        auto         edge   = m_edges.begin();
-        const auto max_node = m_nodes.size() -1;
-        Vector<Edge> filtered_edges;
-        Vector<Node> filtered_nodes;
-
-        // Sort edges by target id and use index instead of id for nodes
-        std::sort(m_edges.begin(), m_edges.end(), compareEdgesTarget);
-        while(edge != m_edges.end() && node != m_nodes.end())
-        {
-            while(edge->target < node->id)
-            {
-                edge++;
-            }
-
-            if(edge->target == node->id)
-            {
-                // Set the index of the node source instead of the id
-                edge->target = offset;
-                edge++;
-                node_edges++;
-            }
-            else
-            {
-                if(node_edges)
-                {
-                    filtered_nodes.emplace_back(*node);
-                }
-                node++;
-                offset++;
-                node_edges = 0;
-            }
-        }
-
-        m_nodes.clear();
-        m_nodes = filtered_nodes;
-        filtered_nodes.clear();
-
-        offset = 1;
-        node   = m_nodes.begin();
-        edge   = m_edges.begin();
+        Uint64       offset   = 1;
+        auto         node     = m_nodes.begin();
+        auto         edge     = m_edges.begin();
 
         // Sort the edges by source nodes
         std::sort(m_edges.begin(), m_edges.end(), compareEdgesSource);
         while(edge != m_edges.end() && node != m_nodes.end())
         {
-            while(edge->source < node->id)
-            {
-                edge++;
-            }
-
-            if(edge->target > max_node)
-            {
-                edge++;
-                continue;
-            }
-
             if(edge->source == node->id)
             {
-                // Assign the index of the node to the edge source
-                edge->source = offset - 1;
-
                 // Add edge to the outgoing edges
-                m_o_offset[edge->source + 1] += 1;
-                // Add ingoing edge to the other node
-                m_i_offset[edge->target + 1] += 1;
-
-                filtered_edges.emplace_back(*edge);
+                m_o_offset[node->id + 1] += 1;
                 edge++;
             }
             else
@@ -118,16 +56,10 @@ namespace OSM
             }
         }
 
-
-        m_edges.clear();
-        m_edges = filtered_edges;
-        filtered_edges.clear();
-
         // Sum up offsets
         for(Uint64 i = 1; i < m_o_offset.size(); ++i)
         {
             m_o_offset[i] += m_o_offset[i - 1];
-            m_i_offset[i] += m_i_offset[i - 1];
         }
     }
 
@@ -145,10 +77,6 @@ namespace OSM
     {
         Uint64 neighbours = 0;
         for(Uint64 i = m_o_offset[node]; i < m_o_offset[node + 1]; ++i)
-        {
-            ++neighbours;
-        }
-        for(Uint64 i = m_i_offset[node]; i < m_i_offset[node + 1]; ++i)
         {
             ++neighbours;
         }

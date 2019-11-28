@@ -1,6 +1,25 @@
 # OSM
 
-[![Build Status](https://travis-ci.com/styinx/OSM.svg?token=MRNvDQResksrdNAQddri&branch=master)](https://travis-ci.com/styinx/OSM)
+**Notes**:
+
+Filters of the [inphos42/osmpbf](https://github.com/inphos42/osmpbf) library do not provide enough
+nodes to build the street network graph, hence the shortest path algorithm does not succeed.
+
+[github repo](https://github.com/styinx/OSM)
+
+Requires: (should be installed via the install script)
+- inphos42/osmpbf
+- zlib
+- libprotobuf-dev
+- protobuf-compiler
+- libqt5webengine5
+- libqt5widgets5
+- qtwebengine5-dev
+
+
+[![Build Status](https://travis-ci.com/styinx/OSM.svg?branch=master)](https://travis-ci.com/styinx/OSM)
+
+# Instructions
 
 ```
 git clone https://github.com/styinx/OSM
@@ -56,6 +75,7 @@ sh ./build/bin/OSM_Task_5 <pbf file path>
 # Notes
 
 **Hamburg** 53.5503410,10.0006540
+
 **Stuttgart** 48.7784485,9.1800132
 
 ## Germany

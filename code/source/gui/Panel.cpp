@@ -35,8 +35,9 @@ namespace OSM
         m_car->setChecked(true);
         m_public_transport->setCheckable(false);
 
-        m_search_method->addItems(QStringList{"dijkstra", "UCS"});
+        m_search_method->addItems(QStringList{"dijkstra", "UCS", "PQ"});
         m_search_method->setSizePolicy(m_min_policy);
+        m_search_method->setCurrentIndex(2);
 
         m_table = new QTableWidget(1, 2);
 
@@ -60,20 +61,20 @@ namespace OSM
 
         grid_filler->setSizePolicy(m_fill_policy);
 
-        m_start->setPlaceholderText("starting location | lat,lon");
-        m_stop->setPlaceholderText("destination location | lat,lon");
+        m_start->setPlaceholderText("lat,lon | start");
+        m_stop->setPlaceholderText("lat,lon | stop");
 
         m_grid->addWidget(m_label_start, 0, 0);
-        m_grid->addWidget(m_start, 0, 2, 1, 2);
+        m_grid->addWidget(m_start, 0, 1, 1, 3);
         m_grid->addWidget(m_label_stop, 1, 0);
-        m_grid->addWidget(m_stop, 1, 2, 1, 2);
-        m_grid->addWidget(m_go, 2, 0, 1, 3, Qt::AlignRight);
+        m_grid->addWidget(m_stop, 1, 1, 1, 3);
+        m_grid->addWidget(m_go, 2, 0, 1, 4, Qt::AlignRight);
         m_grid->addWidget(m_pedestrian, 3, 0, 1, 1);
         m_grid->addWidget(m_bike, 3, 1, 1, 1);
         m_grid->addWidget(m_car, 4, 0, 1, 1);
         m_grid->addWidget(m_public_transport, 4, 1, 1, 1);
-        m_grid->addWidget(m_street_graph, 5, 0, 1, 1);
-        m_grid->addWidget(m_search_method, 5, 1, 1, 2);
+        m_grid->addWidget(m_street_graph, 6, 0, 1, 1);
+        m_grid->addWidget(m_search_method, 6, 1, 1, 2);
         m_grid->addWidget(grid_filler);
 
         addWidget(grid_wrapper);

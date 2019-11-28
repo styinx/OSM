@@ -22,7 +22,7 @@ namespace OSM
             m_bounds.max_lon = n_lon;
             m_bounds.min_lon = s_lon;
 
-            m_map->showGraph(m_bounds);
+            m_map->setGraph(m_bounds);
         }
     }
 
