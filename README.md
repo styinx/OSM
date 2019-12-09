@@ -1,10 +1,5 @@
 # OSM
 
-**Notes**:
-
-Filters of the [inphos42/osmpbf](https://github.com/inphos42/osmpbf) library do not provide enough
-nodes to build the street network graph, hence the shortest path algorithm does not succeed.
-
 [github repo](https://github.com/styinx/OSM)
 
 Requires: (should be installed via the install script)
