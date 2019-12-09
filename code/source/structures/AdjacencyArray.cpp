@@ -35,9 +35,9 @@ namespace OSM
         m_o_offset.resize(m_nodes.size() + 1);
         m_o_offset[0] = 0;
 
-        Uint64       offset   = 1;
-        auto         node     = m_nodes.begin();
-        auto         edge     = m_edges.begin();
+        Uint64 offset = 1;
+        auto   node   = m_nodes.begin();
+        auto   edge   = m_edges.begin();
 
         // Sort the edges by source nodes
         std::sort(m_edges.begin(), m_edges.end(), compareEdgesSource);
@@ -65,11 +65,13 @@ namespace OSM
 
     void AdjacencyArray::addNode(const Node& node)
     {
+        std::lock_guard<std::mutex> guard(m_node_mutex);
         m_nodes.emplace_back(node);
     }
 
     void AdjacencyArray::addEdge(const Edge& edge)
     {
+        std::lock_guard<std::mutex> guard(m_edge_mutex);
         m_edges.emplace_back(edge);
     }
 

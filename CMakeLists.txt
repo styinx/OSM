@@ -156,25 +156,9 @@ set(TEST_FILES
 # Builds
 #
 
-# Task 2
-add_executable(${PROJECT_NAME}_Task_2 ${FILES} ${DIR_APP}/task2.cpp)
-target_link_libraries(${PROJECT_NAME}_Task_2 ${LIBRARIES})
-
-# Task 3
-add_executable(${PROJECT_NAME}_Task_3 ${FILES} ${DIR_APP}/task3.cpp)
-target_link_libraries(${PROJECT_NAME}_Task_3 ${LIBRARIES})
-
-# Task 4
-add_executable(${PROJECT_NAME}_Task_4 ${FILES} ${RESOURCES} ${DIR_APP}/task4.cpp)
-target_link_libraries(${PROJECT_NAME}_Task_4 ${LIBRARIES})
-
-# Task 5
-add_executable(${PROJECT_NAME}_Task_5 ${FILES} ${RESOURCES} ${DIR_APP}/task5.cpp)
-target_link_libraries(${PROJECT_NAME}_Task_5 ${LIBRARIES})
-
 # Main
-add_executable(${PROJECT_NAME} ${FILES} ${GUI_FILES} ${DIR_APP}/main.cpp)
-target_link_libraries(${PROJECT_NAME} ${LIBRARIES} ${QT_LIBS})
+add_executable(${PROJECT_NAME} ${FILES} ${RESOURCES} ${DIR_APP}/main.cpp)
+target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 
 ## Test
 #add_executable(${PROJECT_NAME}_Test ${TEST_FILES} ${DIR_TEST}/test.cpp)

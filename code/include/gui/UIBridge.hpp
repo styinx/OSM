@@ -3,13 +3,18 @@
 
 #include "gui/mapTypes.hpp"
 
+#include "NonCopyable.hpp"
+#include "NonMoveable.hpp"
 #include <QtCore/QObject>
 
 namespace OSM
 {
     class UIMap;
 
-    class UIBridge final : public QObject
+    class UIBridge final
+        : public QObject
+        , public NonCopyable
+        , public NonMoveable
     {
         Q_OBJECT
     private:
@@ -24,10 +29,6 @@ namespace OSM
 
     public:
         explicit UIBridge(UIMap* map);
-        UIBridge(const UIBridge& other)     = delete;
-        UIBridge(UIBridge&& other) noexcept = delete;
-        UIBridge& operator=(const UIBridge& other) = delete;
-        UIBridge& operator=(UIBridge&& other) noexcept = delete;
         virtual ~UIBridge()                            = default;
     };
 

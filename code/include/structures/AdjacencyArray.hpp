@@ -5,6 +5,8 @@
 #include "NonMoveable.hpp"
 #include "structures/Primitives.hpp"
 
+#include <mutex>
+
 namespace OSM
 {
     inline bool compareNodesID(const Node& first, const Node& second);
@@ -21,6 +23,9 @@ namespace OSM
         Vector<Edge>   m_edges;
         Vector<Uint64> m_i_offset;
         Vector<Uint64> m_o_offset;
+
+        std::mutex m_node_mutex;
+        std::mutex m_edge_mutex;
 
     public:
         explicit AdjacencyArray();

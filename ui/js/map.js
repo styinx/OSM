@@ -1,134 +1,138 @@
-document.addEventListener("DOMContentLoaded", function () {
+class UIBridge {
+    constructor(bridge, map) {
+        this.ui_bridge = bridge;
+        this.map = map;
 
-    new QWebChannel(qt.webChannelTransport, function (channel) {
-        window.bridge = channel.objects.UIBridge;
+        this.map.l_map.on("click", this.onMapClick);
+    }
 
-        bridge.onLoad();
+    onMapClick(e) {
+        let latlng = e.latlng.lat.toFixed(6).toString() + "," + e.latlng.lng.toFixed(6).toString();
 
-        setMapBounds();
-    });
-});
+        let start = "<button onclick='this.setStart(\"" + latlng + "\")'>Set start</button>";
+        let stop = "<button onclick='this.setStop(\"" + latlng + "\")'>Set stop</button>";
 
-let attribution = '';
-let token = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
-let map = L.map('map').setView([48.745158, 9.106606], 13);
-let routeLayer = L.layerGroup([]).addTo(map);
-let graphLayer = L.layerGroup([]).addTo(map);
-let popup = L.popup();
+        this.map.l_popup.setLatLng(e.latlng)
+            .setContent("What's here?<br> " + latlng + "<br>" + start + "<br>" + stop)
+            .addTo(this.map.l_map);
+    }
 
-let start = '';
-let stop = '';
-let graphShown = false;
-let graphData = [];
+    // JS -> C++
 
-L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={token}', {
-    maxZoom: 20,
-    attribution: '',
-    id: 'mapbox.streets',
-    token: token
-}).addTo(map);
+    onLoad() {
+        this.ui_bridge.onLoad();
+    }
 
-map.on("click", onMapClick);
-map.on("zoomend", onZoomEnd);
-map.on("mouseup", onMouseUp);
+    setMapBounds() {
+        let bounds = this.map.l_map.getBounds();
+        let sw = bounds["_southWest"];
+        let ne = bounds["_northEast"];
 
-function onMapClick(e) {
-    let latlng = e.latlng.lat.toFixed(6).toString() + "," + e.latlng.lng.toFixed(6).toString();
+        this.ui_bridge.setMapBounds(ne.lat, ne.lng, sw.lat, sw.lng);
+    }
 
-    let start = "<button onclick='setStart(\"" + latlng + "\")'>Set start</button>";
-    let stop = "<button onclick='setStop(\"" + latlng + "\")'>Set stop</button>";
+    setStart(latlon) {
+        this.ui_bridge.setStart(latlon);
+    }
 
-    popup.setLatLng(e.latlng)
-        .setContent("What's here?<br> " + latlng + "<br>" + start + "<br>" + stop)
-        .addTo(map);
+    setStop(latlon) {
+        this.ui_bridge.setStop(latlon);
+    }
+
+    // C++ -> JS
+
+    setView(lat, lon) {
+        this.map.l_map.setView([lat, lon], this.l_map.getZoom());
+    }
+
+    setShowGraph(bool) {
+        this.map.showGraph = bool;
+    }
+
+    setGraph(graph) {
+        this.map.graphData = graph;
+    }
 }
 
-function onZoomEnd(e) {
-    //setMapBounds();
-}
+class Map {
+    constructor() {
+        this.l_map = L.map('map').setView([0, 0], 0);
+        this.l_popup = L.popup();
 
-function onMouseUp(e) {
-    //setMapBounds();
-}
+        this.routeLayer = L.layerGroup([]).addTo(this.l_map);
+        this.graphLayer = L.layerGroup([]).addTo(this.l_map);
 
-// JS -> C++
+        this.showGraph = false;
+        this.graphData = [];
 
-function setMapBounds() {
-    let bounds = map.getBounds();
-    let sw = bounds["_southWest"];
-    let ne = bounds["_northEast"];
+        this.style = {
+            'nodeColor': 'rgba(255, 255, 0, 0.25)',
+            'edgeColor': 'rgba(255, 50, 0, 0.25)',
+            'routeColor': 'rgba(0, 150, 255, 0.75)'
+        };
 
-    bridge.setMapBounds(ne.lat, ne.lng, sw.lat, sw.lng);
-}
+        let token = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={token}', {
+            maxZoom: 20,
+            attribution: '',
+            id: 'mapbox.streets',
+            token: token
+        }).addTo(this.l_map);
+    }
 
-function setStart(latlon)
-{
-    bridge.setStart(latlon);
-}
+    display() {
+        if (!this.showGraph) {
+            this.graphLayer.clearLayers();
+        } else {
+            for (let index = 0; index < graphData.length; ++index) {
+                for (let edge = 0; edge < graphData[index].length; ++edge) {
 
-function setStop(latlon)
-{
-    bridge.setStop(latlon);
-}
+                    // if (graph[index].length >= 1) {
+                    //     L.circle(graph[index][0], {
+                    //         radius: 1,
+                    //         color: this.style['nodeColor'],
+                    //         interactive: false
+                    //     }).addTo(graphLayer);
+                    // }
 
-// C++ -> JS
+                    if (graphData[index].length === 2) {
+                        // L.circle(graph[index][1], {
+                        //     radius: 1,
+                        //     color: this.style['nodeColor'],
+                        // }).addTo(graphLayer);
 
-function setView(lat, lon) {
-    map.setView([lat, lon], map.getZoom());
-}
-
-function setShowGraph(bool) {
-    graphShown = bool;
-
-    showGraph();
-}
-
-function setGraph(graph) {
-    graphData = graph;
-}
-
-function showGraph() {
-    if(!graphShown)
-        graphLayer.clearLayers();
-
-    if(graphShown) {
-        let nodeColor = 'rgba(255, 255, 0, 0.25)';
-        let edgeColor = 'rgba(255, 50, 0, 0.25)';
-
-        for (let index = 0; index < graphData.length; ++index) {
-            for (let edge = 0; edge < graphData[index].length; ++edge) {
-
-                // if (graph[index].length >= 1) {
-                //     L.circle(graph[index][0], {
-                //         radius: 1,
-                //         color: nodeColor,
-                //         interactive: false
-                //     }).addTo(graphLayer);
-                // }
-
-                if (graphData[index].length === 2) {
-                    // L.circle(graph[index][1], {
-                    //     radius: 1,
-                    //     color: nodeColor
-                    // }).addTo(graphLayer);
-
-                    L.polyline(graphData[index], {color: edgeColor, interactive: false}).addTo(graphLayer);
+                        L.polyline(graphData[index], {
+                            color: this.style['edgeColor'],
+                            interactive: false
+                        }).addTo(this.graphLayer);
+                    }
                 }
             }
         }
     }
+
+    showRoute(lines) {
+        this.routeLayer.clearLayers();
+
+        this.routeLayer.addLayer(L.geoJSON({
+            type: "LineString",
+            coordinates: lines
+        }, {
+            style: {
+                color: this.style['routeColor'],
+                weight: 4
+            }
+        }));
+    }
 }
 
-function showRoute(lines) {
-    routeLayer.clearLayers();
+document.addEventListener("DOMContentLoaded", function () {
 
-    routeLayer.addLayer(L.geoJSON({
-        type: "LineString",
-        coordinates: lines
-    }, {
-        style: {
-            color: "rgba(0, 150, 255, 0.75)",
-            weight: 4
-        }
-    }));
-}
+    new QWebChannel(qt.webChannelTransport, function (channel) {
+        window.map = Map();
+        window.bridge = UIBridge(channel.objects.UIBridge, map);
+
+        bridge.onLoad();
+        bridge.setMapBounds();
+    });
+});
