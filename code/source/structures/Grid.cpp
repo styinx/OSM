@@ -1,7 +1,5 @@
 #include "structures/Grid.hpp"
-
-#include <cmath>
-#include <iostream>
+#include "util/Geo.hpp"
 
 namespace OSM
 {
@@ -85,7 +83,7 @@ namespace OSM
     {
         for(const auto& node : m_array->getNodes())
         {
-            if(dist(lat, lon, node.lat, node.lon) < range)
+            if(Geo::dist(lat, lon, node.lat, node.lon) < range)
                 return node.id;
         }
         return 0;

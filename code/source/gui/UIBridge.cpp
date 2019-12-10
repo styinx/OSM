@@ -1,12 +1,14 @@
 #include "gui/UIBridge.hpp"
-#include "gui/UIMap.hpp"
 
+#include "gui/UIMap.hpp"
+#include "util/Geo.hpp"
 
 namespace OSM
 {
 
-    UIBridge::UIBridge(UIMap* map)
-        : m_map(map)
+    UIBridge::UIBridge(Window* window, UIMap* map)
+        : m_window(window)
+        , m_map(map)
     {
 
     }
@@ -33,12 +35,14 @@ namespace OSM
 
     void UIBridge::setStart(const QString &latlon)
     {
-        m_map->setStart(latlon);
+        auto pair = Geo::stringToLatLon(latlon);
+        m_window->getPanel()->setStart(pair.first, pair.second);
     }
 
     void UIBridge::setStop(const QString &latlon)
     {
-        m_map->setStop(latlon);
+        auto pair = Geo::stringToLatLon(latlon);
+        m_window->getPanel()->setStop(pair.first, pair.second);
     }
 
 }  // namespace OSM

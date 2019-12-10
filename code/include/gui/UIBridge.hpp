@@ -1,10 +1,11 @@
 #ifndef OSM_UIBRIDGE_HPP
 #define OSM_UIBRIDGE_HPP
 
-#include "gui/mapTypes.hpp"
-
 #include "NonCopyable.hpp"
 #include "NonMoveable.hpp"
+#include "gui/Window.hpp"
+#include "gui/mapTypes.hpp"
+
 #include <QtCore/QObject>
 
 namespace OSM
@@ -18,8 +19,9 @@ namespace OSM
     {
         Q_OBJECT
     private:
-        MapBounds    m_bounds;
-        UIMap*       m_map;
+        MapBounds m_bounds;
+        Window*   m_window;
+        UIMap*    m_map;
 
     public slots:
         void onLoad();
@@ -28,8 +30,8 @@ namespace OSM
         void setStop(const QString& latlon);
 
     public:
-        explicit UIBridge(UIMap* map);
-        virtual ~UIBridge()                            = default;
+        explicit UIBridge(Window* window, UIMap* map);
+        virtual ~UIBridge() = default;
     };
 
 }  // namespace OSM

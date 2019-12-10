@@ -104,7 +104,7 @@ set(INCLUDES
     code/include/NonMoveable.hpp
     code/include/io/MapData.hpp
     code/include/structures/Grid.hpp
-    code/include/io/CMD.hpp)
+    code/include/io/CMD.hpp code/include/util/Geo.hpp)
 
 set(GUI_INCLUDES
     code/include/gui/Window.hpp
@@ -121,7 +121,7 @@ set(SOURCES
     code/source/io/osmpbfReader.cpp
     code/source/io/MapData.cpp
     code/source/structures/Grid.cpp
-    code/source/alg/RouteSearch.cpp)
+    code/source/alg/RouteSearch.cpp code/source/util/Geo.cpp)
 
 set(GUI_SOURCES
     code/source/gui/Window.cpp
