@@ -4,11 +4,12 @@
 
 #include <iomanip>
 #include <iostream>
-#include <osmpbf/include/osmpbf/filter.h>
+#include <osmpbf/filter.h>
 #include <osmpbf/inode.h>
 #include <osmpbf/irelation.h>
 #include <osmpbf/iway.h>
 #include <osmpbf/osmfile.h>
+#include <osmpbf/parsehelpers.h>
 #include <osmpbf/primitiveblockinputadaptor.h>
 #include <regex>
 
@@ -32,192 +33,153 @@ namespace OSM
         return 1;
     }
 
-    void osmpbfReader::printInfo()
+    void osmpbfReader::printInfo(const bool timed)
     {
+        if(timed)
+        {
+            if(m_diff > m_second)
+            {
+                m_duration = std::chrono::duration_cast<Seconds>(Clock::now() - m_stop).count();
+                m_start    = Clock::now();
+            }
+            else
+            {
+                return;
+            }
+            m_diff = Clock::now() - m_start;
+        }
+
         std::cout << std::right << std::setw(3) << m_duration << "s"
                   << " | Nodes: " << std::right << std::setw(12) << m_nodes.first << "/"
                   << std::setw(12) << m_nodes.second << " | Ways: " << std::right << std::setw(12)
                   << m_ways.first << "/" << std::setw(12) << m_ways.second
-                  << " (Edges: " << std::right << std::setw(12) << m_edges << ")"
-                  << " | Relations: " << std::right << std::setw(12) << m_relations << std::endl;
+                  << " (Edges: " << std::right << std::setw(12) << m_edges << ")" << std::endl;
     }
 
     void osmpbfReader::read(OSM::AdjacencyArray& array)
     {
-        using namespace std::chrono;
-        using Duration = std::chrono::duration<double>;
+        using namespace osmpbf;
 
-        using osmpbf::INodeStream;
-        using osmpbf::IRelationStream;
-        using osmpbf::IWay;
-        using osmpbf::IWayStream;
+        // Used to determine the node id.
+        struct NodeHeurisitc
+        {
+            Uint64              index = 0;
+            UMap<Sint64, Uint64> id;
+        } nh{};
 
-        auto start  = system_clock::now();
-        auto stop   = system_clock::now();
-        auto diff   = Duration{0};
-        auto second = Duration{1};
+        // Start timer.
+        m_start = Clock::now();
+        m_stop  = Clock::now();
 
+        // Set default stuff.
+        WeakPtr<osmpbfReader> weakThis = shared_from_this();
         MapData::addTown("null");
 
-        osmpbf::PrimitiveBlockInputAdaptor pbi{};
-        osmpbf::OrTagFilter               wayFilter{
-            new osmpbf::KeyOnlyTagFilter("highway")
-        };
-        osmpbf::OrTagFilter                nodeFilter{
-            new osmpbf::KeyOnlyTagFilter("highway")
-        };
+        // Set filters.
+        struct Filters
+        {
+            OrTagFilter highway{new KeyOnlyTagFilter("highway")};
+            OrTagFilter max_speed{new KeyOnlyTagFilter("maxspeed")};
+            OrTagFilter oneway{new KeyOnlyTagFilter("oneway")};
+        } filters{};
 
+        // Start reading.
         std::cout << "Start reading ..." << std::endl;
 
-        Vector<Node>      nodes;
-        Vector<Edge>      edges;
-        Map<Sint64, Byte> id;
-
-        while(m_osm_file.parseNextBlock(pbi))
+        // Read all highway edges and the nodes we need.
+        std::cout << "Collect necessary nodes ..." << std::endl;
+        const auto collectNodes = [&filters, &array, &nh, weakThis](PrimitiveBlockInputAdaptor& pbi)
         {
-            if(diff > second)
+            if(const auto sharedThis = weakThis.lock())
             {
-                m_duration = duration_cast<seconds>(system_clock::now() - stop).count();
-                start      = std::chrono::system_clock::now();
+                sharedThis->printInfo(true);
 
-                printInfo();
-            }
-            diff = std::chrono::system_clock::now() - start;
+                filters.highway.assignInputAdaptor(&pbi);
 
-            if(pbi.isNull())
-                continue;
+                if(!filters.highway.rebuildCache())
+                    return;
 
-            nodeFilter.assignInputAdaptor(&pbi);
-
-            if(!nodeFilter.rebuildCache())
-                continue;
-
-            if(pbi.nodesSize())
-            {
-                for(INodeStream node = pbi.getNodeStream(); !node.isNull(); node.next())
-                {
-                    ++m_nodes.second;
-
-                    if(!nodeFilter.matches(node))
-                        continue;
-
-                    ++m_nodes.first;
-
-                    bool        hasTown = false;
-                    Byte   mask  = 0;
-                    Byte   speed = 1;
-                    Uint16 town  = 0;
-                    std::string name;
-
-                    for(Uint32 i = 0, s = node.tagsSize(); i < s; ++i)
-                    {
-                        const auto& key = node.key(i);
-                        const auto& val = node.value(i);
-
-                        if(key == "maxspeed")
-                        {
-                            readMaxSpeed(node.value(i));
-                        }
-                        else if(key == "oneway")
-                        {
-                            mask |= NodeTypeMask::ONE_WAY;
-                        }
-                        else if(key == "name")
-                        {
-                            name = val;
-                        }
-                        else if(key == "place")
-                        {
-                            if(val == "city" || val == "town")
-                            {
-                                hasTown = true;
-                            }
-                        }
-                    }
-
-                    if(hasTown)
-                    {
-                        town = MapData::addTown(name);
-                    }
-
-                    nodes.emplace_back(Node{node.id(), node.latd(), node.lond(), mask, speed, town});
-                }
-            }
-
-            if(pbi.waysSize())
-            {
                 for(IWayStream way = pbi.getWayStream(); !way.isNull(); way.next())
                 {
-                    ++m_ways.second;
+                    ++sharedThis->m_ways.second;
 
-                    if(!wayFilter.matches(way))
+                    if(!filters.highway.matches(way))
                         continue;
 
-                    ++m_ways.first;
+                    ++sharedThis->m_ways.first;
 
                     IWay::RefIterator previous = nullptr;
-                    IWay::RefIterator it       = way.refBegin();
-                    for(; it != way.refEnd(); ++it)
+                    IWay::RefIterator current  = way.refBegin();
+                    for(; current != way.refEnd(); ++current)
                     {
                         if(previous != nullptr)
                         {
-                            if(*previous >= 0)
-                            {
-                                edges.emplace_back(Edge{*previous, *it});
-                                id[*previous] = 1;
-                                id[*it]       = 1;
-                                m_edges++;
-                            }
+//                            if(!nh.id.count(*previous))
+//                            {
+//                                nh.id[*previous] = nh.index++;
+//                            }
+//                            if(!nh.id.count(*current))
+//                            {
+//                                nh.id[*current] = nh.index++;
+//                            }
+
+//                            array.addEdge(Edge{nh.id[*previous], nh.id[*current]});
+//                            array.addEdge(Edge{nh.id[*current], nh.id[*previous]});
+                            sharedThis->m_edges++;
                         }
-                        if(*it >= 0)
-                        {
-                            previous = it;
-                        }
+                        previous = current;
                     }
                 }
             }
+        };
 
-            if(pbi.relationsSize())
+        osmpbf::parseFileCPPThreads(m_osm_file, collectNodes, m_threads, 1, true);
+
+        m_osm_file.reset();
+
+        // Read all highway edges and the nodes we need.
+        std::cout << "Collect necessary nodes ..." << std::endl;
+        const auto getNodes = [&filters, &array, &nh, weakThis](PrimitiveBlockInputAdaptor& pbi)
+        {
+            if(const auto sharedThis = weakThis.lock())
             {
-                for(IRelationStream it = pbi.getRelationStream(); !it.isNull(); it.next())
+                sharedThis->printInfo(true);
+
+                filters.highway.assignInputAdaptor(&pbi);
+                if(!filters.highway.rebuildCache())
+                    return;
+
+                filters.max_speed.assignInputAdaptor(&pbi);
+                if(!filters.max_speed.rebuildCache())
+                    return;
+
+                for(INodeStream node = pbi.getNodeStream(); !node.isNull(); node.next())
                 {
-                    ++m_relations;
+                    ++sharedThis->m_nodes.second;
+
+                    if(!nh.id.count(node.id()))
+                        continue;
+
+                    ++sharedThis->m_nodes.first;
+
+                    if(filters.max_speed.matches(node))
+                    {
+                        //readMaxSpeed(node.value(filters.max_speed.matchingTag()));
+                    }
+
+                    if(filters.oneway.matches(node))
+                    {
+
+                    }
+
+                    array.addNode(Node{nh.id[node.id()], node.latd(), node.lond(), 0, 0, 0});
                 }
             }
-        }
+        };
 
         printInfo();
+
         std::cout << "Finished reading" << std::endl;
-        std::cout << "Processing ..." << std::endl;
-
-        Uint64              index = 0;
-        Map<Uint64, Uint64> new_id;
-
-        for(auto& node : nodes)
-        {
-            if(id.count(node.id))
-            {
-                new_id[node.id] = index++;
-                node.id         = index - 1;
-                array.addNode(node);
-            }
-        }
-
-        nodes.clear();
-
-        for(auto& edge : edges)
-        {
-            if(new_id.count(edge.source) && new_id.count(edge.target))
-            {
-                edge.source = new_id[edge.source];
-                edge.target = new_id[edge.target];
-                array.addEdge(edge);
-                array.addEdge(Edge{edge.target, edge.source});
-            }
-        }
-
-        edges.clear();
-
         std::cout << "Compute AdjacencyArray ..." << std::endl;
         array.computeOffsets();
 

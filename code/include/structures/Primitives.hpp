@@ -3,6 +3,8 @@
 
 #include "prototypes.hpp"
 
+#include "util/Geo.hpp"
+
 #include <cmath>
 
 namespace OSM
@@ -23,9 +25,38 @@ namespace OSM
         _3               = 0xF0
     };
 
+    enum class EdgeTypeMask : Byte
+    {
+        // Access type
+        FOOT             = 0x00,
+        BICYCLE          = 0x01,
+        CAR              = 0x02,
+        PUBLIC_TRANSPORT = 0x04,
+
+        // Street type
+        ONE_WAY     = 0x08,
+        LINK        = 0x0F,
+        RESIDENTIAL = 0x10
+    };
+
     inline Byte operator|=(Byte value, const NodeTypeMask mask)
     {
         return value |= static_cast<Byte>(mask);
+    }
+
+    inline Byte operator&=(Byte value, const NodeTypeMask mask)
+    {
+        return value &= static_cast<Byte>(mask);
+    }
+
+    inline Byte operator|=(Byte value, const EdgeTypeMask mask)
+    {
+        return value |= static_cast<Byte>(mask);
+    }
+
+    inline Byte operator&=(Byte value, const EdgeTypeMask mask)
+    {
+        return value &= static_cast<Byte>(mask);
     }
 
     struct Node
@@ -63,37 +94,18 @@ namespace OSM
             const Byte   speed,
             const Uint16 town)
             : id(id)
-              , lat(static_cast<float>(lat))
-              , lon(static_cast<float>(lon))
-              , mask(mask)
-              , max_speed(speed)
-              , town(town)
+            , lat(static_cast<float>(lat))
+            , lon(static_cast<float>(lon))
+            , mask(mask)
+            , max_speed(speed)
+            , town(town)
         {
         }
     };
 
-    inline float deg2rad(const float deg)
-    {
-        return deg * M_PI / 180;
-    }
-
-    inline float dist(const float lat1, const float lon1, const float lat2, const float lon2)
-    {
-        const auto e_rad    = 6371000;
-        const auto lat1_rad = deg2rad(lat1);
-        const auto lon1_rad = deg2rad(lon1);
-        const auto lat2_rad = deg2rad(lat2);
-        const auto lon2_rad = deg2rad(lon2);
-
-        const auto u = sin((lat1_rad - lat2_rad) / 2);
-        const auto v = sin((lon1_rad - lon2_rad) / 2);
-
-        return static_cast<float>(2.0F * e_rad * asin(sqrt(pow(u, 2) + cos(lat1_rad) * cos(lat2_rad) * pow(v, 2))));
-    }
-
     inline float distNodes(const Node& n1, const Node& n2)
     {
-        return dist(n1.lat, n1.lon, n2.lat, n2.lon);
+        return Geo::dist(n1.lat, n1.lon, n2.lat, n2.lon);
     }
 
     struct Edge

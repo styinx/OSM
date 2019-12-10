@@ -144,7 +144,7 @@ namespace OSM
 
     void Panel::setShowGraph()
     {
-        m_parent->getMap()->setShowGraph(m_street_graph->isChecked());
+        m_parent->getMap()->showGraph(m_street_graph->isChecked());
     }
 
     void Panel::setStart(const float lat, const float lon)

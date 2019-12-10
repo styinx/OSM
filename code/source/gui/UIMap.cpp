@@ -1,19 +1,19 @@
 #include "gui/UIMap.hpp"
 
 #include "io/MapData.hpp"
-#include "gui/Window.hpp"
+#include "gui/UIBridge.hpp"
+#include "util/Geo.hpp"
 
 namespace OSM
 {
 
     UIMap::UIMap(Window* parent, const OSM::AdjacencyArray* array, const MapBounds& bounds)
-        : m_parent(parent)
-        , m_array(array)
+        : m_array(array)
         , m_grid(bounds, array)
         , m_routeSearch(m_array, &m_grid)
     {
         m_channel = new QWebChannel(this);
-        m_bridge  = new UIBridge(this);
+        m_bridge  = new UIBridge(parent, this);
 
         m_channel->registerObject("UIBridge", m_bridge);
         page()->setWebChannel(m_channel);
@@ -47,7 +47,7 @@ namespace OSM
 
         for(const auto& node : m_grid.get(lat, lon))
         {
-            auto l_min = dist(lat, lon, nodes[node].lat, nodes[node].lon);
+            auto l_min = Geo::dist(lat, lon, nodes[node].lat, nodes[node].lon);
             if(l_min < min)
             {
                 min        = l_min;
@@ -57,21 +57,10 @@ namespace OSM
         return node_index;
     }
 
-    Pair<float, float> UIMap::stringToLatLon(const QString& str) const
-    {
-        QStringList latlon = str.split(",");
-
-        if(latlon.size() == 2)
-        {
-            return Pair<float, float>{latlon[0].toDouble(nullptr), latlon[1].toDouble(nullptr)};
-        }
-        return {0, 0};
-    }
-
     Vector<Uint64> UIMap::calculatePath(const QString& from, const QString& to, const int method)
     {
-        const auto latlon1 = stringToLatLon(from);
-        const auto latlon2 = stringToLatLon(to);
+        const auto latlon1 = Geo::stringToLatLon(from);
+        const auto latlon2 = Geo::stringToLatLon(to);
 
         auto start = m_grid.getFirstClosest(latlon1.first, latlon1.second);
         auto stop = m_grid.getFirstClosest(latlon2.first, latlon2.second);
@@ -131,7 +120,12 @@ namespace OSM
         page()->runJavaScript("showRoute([" + params.left(params.size() - 1) + "]);");
     }
 
-    void UIMap::setShowGraph(const bool show)
+    UIBridge* UIMap::getBridge() const
+    {
+        return m_bridge;
+    }
+
+    void UIMap::showGraph(const bool show)
     {
         QString setShow = show ? "true" : "false";
         page()->runJavaScript("setShowGraph(" + setShow + ")");
@@ -144,18 +138,6 @@ namespace OSM
         const float vlon = bounds.min_lon + (bounds.max_lon - bounds.min_lon) / 2;
         page()->runJavaScript("setView(" + QString::number(vlat) + ", " + QString::number(vlon) + ");");
         setGraph(bounds);
-    }
-
-    void UIMap::setStart(const QString &latlon)
-    {
-        auto pair = stringToLatLon(latlon);
-        m_parent->getPanel()->setStart(pair.first, pair.second);
-    }
-
-    void UIMap::setStop(const QString &latlon)
-    {
-        auto pair = stringToLatLon(latlon);
-        m_parent->getPanel()->setStop(pair.first, pair.second);
     }
 
 }  // namespace OSM

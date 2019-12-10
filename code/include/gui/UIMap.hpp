@@ -2,7 +2,6 @@
 #define OSM_UIMAP_HPP
 
 #include "alg/RouteSearch.hpp"
-#include "gui/UIBridge.hpp"
 #include "gui/mapTypes.hpp"
 #include "structures/AdjacencyArray.hpp"
 #include "structures/Grid.hpp"
@@ -13,11 +12,11 @@
 namespace OSM
 {
     class Window;
+    class UIBridge;
 
     class UIMap final : public QWebEngineView
     {
     private:
-        Window*               m_parent;
         QWebChannel*          m_channel;
         UIBridge*             m_bridge;
         const AdjacencyArray* m_array;
@@ -27,7 +26,6 @@ namespace OSM
 
         Uint64 townToNode(const QString& town) const;
         Uint64 coordToNode(const float lat, const float lon) const;
-        Pair<float, float> stringToLatLon(const QString& str) const;
 
     public:
         explicit UIMap(Window* parent, const OSM::AdjacencyArray* array, const MapBounds& bounds);
@@ -41,10 +39,9 @@ namespace OSM
         void           setGraph(const MapBounds& bounds) const;
         void           drawPath(const Vector<Uint64>& path) const;
 
-        void setShowGraph(const bool show);
+        UIBridge* getBridge() const;
+        void      showGraph(const bool show);
         void onLoad();
-        void setStart(const QString& latlon);
-        void setStop(const QString& latlon);
     };
 
 }  // namespace OSM
