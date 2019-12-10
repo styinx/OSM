@@ -37,16 +37,19 @@ namespace OSM
     {
         if(timed)
         {
+            m_timer_lock.lock();
+            m_diff = Clock::now() - m_start;
             if(m_diff > m_second)
             {
                 m_duration = std::chrono::duration_cast<Seconds>(Clock::now() - m_stop).count();
                 m_start    = Clock::now();
+                m_timer_lock.unlock();
             }
             else
             {
+                m_timer_lock.unlock();
                 return;
             }
-            m_diff = Clock::now() - m_start;
         }
 
         std::cout << std::right << std::setw(3) << m_duration << "s"
@@ -86,27 +89,36 @@ namespace OSM
         // Start reading.
         std::cout << "Start reading ..." << std::endl;
 
+        std::this_thread::sleep_for(Seconds(1));
+
         // Read all highway edges and the nodes we need.
         std::cout << "Collect necessary nodes ..." << std::endl;
         const auto collectNodes = [&filters, &array, &nh, weakThis](PrimitiveBlockInputAdaptor& pbi)
         {
+            Pair<Uint64, Uint64> local_way_count = {0, 0};
+
             if(const auto sharedThis = weakThis.lock())
             {
                 sharedThis->printInfo(true);
 
+                sharedThis->m_filter_lock.lock();
+
                 filters.highway.assignInputAdaptor(&pbi);
 
-                if(!filters.highway.rebuildCache())
+                if(!filters.highway.rebuildCache()) {
+                    sharedThis->m_filter_lock.unlock();
                     return;
+                }
+                sharedThis->m_filter_lock.unlock();
 
                 for(IWayStream way = pbi.getWayStream(); !way.isNull(); way.next())
                 {
-                    ++sharedThis->m_ways.second;
+                    ++local_way_count.second;
 
                     if(!filters.highway.matches(way))
                         continue;
 
-                    ++sharedThis->m_ways.first;
+                    ++local_way_count.first;
 
                     IWay::RefIterator previous = nullptr;
                     IWay::RefIterator current  = way.refBegin();
@@ -114,22 +126,33 @@ namespace OSM
                     {
                         if(previous != nullptr)
                         {
-//                            if(!nh.id.count(*previous))
-//                            {
-//                                nh.id[*previous] = nh.index++;
-//                            }
-//                            if(!nh.id.count(*current))
-//                            {
-//                                nh.id[*current] = nh.index++;
-//                            }
+                            sharedThis->m_node_map_lock.lock();
 
-//                            array.addEdge(Edge{nh.id[*previous], nh.id[*current]});
-//                            array.addEdge(Edge{nh.id[*current], nh.id[*previous]});
+                            if(!nh.id.count(*previous))
+                            {
+                                nh.id[*previous] = nh.index++;
+                            }
+                            if(!nh.id.count(*current))
+                            {
+                                nh.id[*current] = nh.index++;
+                            }
                             sharedThis->m_edges++;
+
+                            array.addEdge(Edge{nh.id[*previous], nh.id[*current]});
+                            array.addEdge(Edge{nh.id[*current], nh.id[*previous]});
+
+                            sharedThis->m_node_map_lock.unlock();
                         }
                         previous = current;
                     }
                 }
+
+                sharedThis->m_node_map_lock.lock();
+
+                sharedThis->m_ways.first += local_way_count.first;
+                sharedThis->m_ways.second += local_way_count.second;
+
+                sharedThis->m_node_map_lock.unlock();
             }
         };
 
@@ -138,29 +161,41 @@ namespace OSM
         m_osm_file.reset();
 
         // Read all highway edges and the nodes we need.
-        std::cout << "Collect necessary nodes ..." << std::endl;
+        std::cout << "Read necessary nodes ..." << std::endl;
         const auto getNodes = [&filters, &array, &nh, weakThis](PrimitiveBlockInputAdaptor& pbi)
         {
+            Pair<Uint64, Uint64> local_node_count = {0, 0};
+
             if(const auto sharedThis = weakThis.lock())
             {
                 sharedThis->printInfo(true);
 
-                filters.highway.assignInputAdaptor(&pbi);
-                if(!filters.highway.rebuildCache())
-                    return;
+                sharedThis->m_filter_lock.lock();
 
-                filters.max_speed.assignInputAdaptor(&pbi);
-                if(!filters.max_speed.rebuildCache())
-                    return;
+                filters.highway.assignInputAdaptor(&pbi);
+//                if(!filters.highway.rebuildCache())
+//                {
+//                    sharedThis->m_filter_lock.unlock();
+//                    return;
+//                }
+//
+//                filters.max_speed.assignInputAdaptor(&pbi);
+//                if(!filters.max_speed.rebuildCache())
+//                {
+//                    sharedThis->m_filter_lock.unlock();
+//                    return;
+//                }
+//
+                sharedThis->m_filter_lock.unlock();
 
                 for(INodeStream node = pbi.getNodeStream(); !node.isNull(); node.next())
                 {
-                    ++sharedThis->m_nodes.second;
+                    ++local_node_count.second;
 
                     if(!nh.id.count(node.id()))
                         continue;
 
-                    ++sharedThis->m_nodes.first;
+                    ++local_node_count.first;
 
                     if(filters.max_speed.matches(node))
                     {
@@ -174,8 +209,18 @@ namespace OSM
 
                     array.addNode(Node{nh.id[node.id()], node.latd(), node.lond(), 0, 0, 0});
                 }
+
+                sharedThis->m_node_map_lock.lock();
+
+                sharedThis->m_nodes.first += local_node_count.first;
+                sharedThis->m_nodes.second += local_node_count.second;
+
+                sharedThis->m_node_map_lock.unlock();
             }
         };
+
+        osmpbf::parseFileCPPThreads(m_osm_file, getNodes, m_threads, 1, true);
+
 
         printInfo();
 

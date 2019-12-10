@@ -23,8 +23,6 @@ namespace OSM
             m_bounds.max_lat = n_lat;
             m_bounds.max_lon = n_lon;
             m_bounds.min_lon = s_lon;
-
-            m_map->setGraph(m_bounds);
         }
     }
 

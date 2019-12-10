@@ -10,6 +10,10 @@ namespace OSM
         , m_lat_range(bounds.max_lat - bounds.min_lat)
         , m_lon_range(bounds.max_lon - bounds.min_lon)
     {
+        for(const auto& node : array->getNodes())
+        {
+            nodeToCell(node.lat, node.lon);
+        }
     }
 
     Uint16 Grid::nodeToCell(const float lat, const float lon) const

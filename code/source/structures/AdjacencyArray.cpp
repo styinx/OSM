@@ -43,6 +43,11 @@ namespace OSM
         std::sort(m_edges.begin(), m_edges.end(), compareEdgesSource);
         while(edge != m_edges.end() && node != m_nodes.end())
         {
+            while(edge->source < node->id)
+            {
+                edge++;
+            }
+
             if(edge->source == node->id)
             {
                 // Add edge to the outgoing edges

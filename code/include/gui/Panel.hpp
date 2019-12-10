@@ -35,7 +35,7 @@ namespace OSM
         Window* m_parent;
 
         QSizePolicy m_min_policy;
-        QSizePolicy m_fill_policy;
+        QSizePolicy m_preferred_policy;
 
         QLineEdit*   m_start;
         QLineEdit*   m_stop;

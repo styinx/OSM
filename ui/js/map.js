@@ -7,14 +7,17 @@ class UIBridge {
     }
 
     onMapClick(e) {
+        let map = window.map;
+        let bridge = window.bridge;
+
         let latlng = e.latlng.lat.toFixed(6).toString() + "," + e.latlng.lng.toFixed(6).toString();
 
-        let start = "<button onclick='this.setStart(\"" + latlng + "\")'>Set start</button>";
-        let stop = "<button onclick='this.setStop(\"" + latlng + "\")'>Set stop</button>";
+        let start = "<button onclick='bridge.setStart(\"" + latlng + "\")'>Set start</button>";
+        let stop = "<button onclick='bridge.setStop(\"" + latlng + "\")'>Set stop</button>";
 
-        this.map.l_popup.setLatLng(e.latlng)
-            .setContent("What's here?<br> " + latlng + "<br>" + start + "<br>" + stop)
-            .addTo(this.map.l_map);
+        map.l_popup.setLatLng(e.latlng)
+            .setContent(start + "&nbsp;" + stop)
+            .addTo(map.l_map);
     }
 
     // JS -> C++
@@ -42,15 +45,19 @@ class UIBridge {
     // C++ -> JS
 
     setView(lat, lon) {
-        this.map.l_map.setView([lat, lon], this.l_map.getZoom());
-    }
-
-    setShowGraph(bool) {
-        this.map.showGraph = bool;
+        this.map.setView(lat, lon);
     }
 
     setGraph(graph) {
-        this.map.graphData = graph;
+        this.map.setGraph(graph);
+    }
+
+    showGraph(bool) {
+        this.map.showGraph(bool);
+    }
+
+    showRoute(route) {
+        this.map.showRoute(route);
     }
 }
 
@@ -62,7 +69,7 @@ class Map {
         this.routeLayer = L.layerGroup([]).addTo(this.l_map);
         this.graphLayer = L.layerGroup([]).addTo(this.l_map);
 
-        this.showGraph = false;
+        this.showNetwork = false;
         this.graphData = [];
 
         this.style = {
@@ -80,12 +87,22 @@ class Map {
         }).addTo(this.l_map);
     }
 
-    display() {
-        if (!this.showGraph) {
+    setView(lat, lon) {
+        this.l_map.setView([lat, lon], this.l_map.getZoom())
+    }
+
+    setGraph(graph) {
+        this.graphData = graph
+    }
+
+    showGraph(show) {
+        this.showNetwork = show;
+
+        if (!this.showNetwork) {
             this.graphLayer.clearLayers();
         } else {
-            for (let index = 0; index < graphData.length; ++index) {
-                for (let edge = 0; edge < graphData[index].length; ++edge) {
+            for (let index = 0; index < this.graphData.length; ++index) {
+                for (let edge = 0; edge < this.graphData[index].length; ++edge) {
 
                     // if (graph[index].length >= 1) {
                     //     L.circle(graph[index][0], {
@@ -95,13 +112,13 @@ class Map {
                     //     }).addTo(graphLayer);
                     // }
 
-                    if (graphData[index].length === 2) {
+                    if (this.graphData[index].length === 2) {
                         // L.circle(graph[index][1], {
                         //     radius: 1,
                         //     color: this.style['nodeColor'],
                         // }).addTo(graphLayer);
 
-                        L.polyline(graphData[index], {
+                        L.polyline(this.graphData[index], {
                             color: this.style['edgeColor'],
                             interactive: false
                         }).addTo(this.graphLayer);
@@ -129,8 +146,8 @@ class Map {
 document.addEventListener("DOMContentLoaded", function () {
 
     new QWebChannel(qt.webChannelTransport, function (channel) {
-        window.map = Map();
-        window.bridge = UIBridge(channel.objects.UIBridge, map);
+        window.map = new Map();
+        window.bridge = new UIBridge(channel.objects.UIBridge, map);
 
         bridge.onLoad();
         bridge.setMapBounds();
