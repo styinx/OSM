@@ -41,10 +41,10 @@ namespace OSM
         QLineEdit*   m_stop;
         QPushButton* m_go;
 
-        QCheckBox* m_car;
-        QCheckBox* m_bike;
-        QCheckBox* m_pedestrian;
-        QCheckBox* m_public_transport;
+        QPushButton* m_car;
+        QPushButton* m_bike;
+        QPushButton* m_foot;
+        QPushButton* m_public_transport;
         QCheckBox* m_street_graph;
         QComboBox* m_search_method;
 

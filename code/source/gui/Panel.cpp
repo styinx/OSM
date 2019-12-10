@@ -25,10 +25,11 @@ namespace OSM
         m_stop  = new QLineEdit();
         m_go    = new QPushButton("Search");
 
-        m_pedestrian       = new QCheckBox("by foot");
-        m_bike             = new QCheckBox("by bike");
-        m_car              = new QCheckBox("by car");
-        m_public_transport = new QCheckBox("by public transport");
+        m_foot             = new QPushButton(QIcon("qrc:///icon_foot"), "");
+        m_bike             = new QPushButton(QIcon("qrc:///icon_bike"), "");
+        m_car              = new QPushButton(QIcon("qrc:///icon_car"), "");
+        m_public_transport = new QPushButton(QIcon("qrc:///icon_public_transport"), "");
+
         m_search_method    = new QComboBox();
         m_street_graph     = new QCheckBox("Show street graph");
 
@@ -58,6 +59,8 @@ namespace OSM
         m_label_start    = new QLabel{"From: "};
         m_label_stop     = new QLabel{"To: "};
         auto grid_filler = new QWidget();
+        auto icon_wrapper = new QWidget();
+        auto icon_box = new QHBoxLayout(icon_wrapper);
 
         grid_filler->setSizePolicy(m_fill_policy);
 
@@ -69,10 +72,13 @@ namespace OSM
         m_grid->addWidget(m_label_stop, 1, 0);
         m_grid->addWidget(m_stop, 1, 1, 1, 3);
         m_grid->addWidget(m_go, 2, 0, 1, 4, Qt::AlignRight);
-        m_grid->addWidget(m_pedestrian, 3, 0, 1, 1);
-        m_grid->addWidget(m_bike, 3, 1, 1, 1);
-        m_grid->addWidget(m_car, 4, 0, 1, 1);
-        m_grid->addWidget(m_public_transport, 4, 1, 1, 1);
+
+        icon_box->addWidget(m_foot);
+        icon_box->addWidget(m_bike);
+        icon_box->addWidget(m_car);
+        icon_box->addWidget(m_public_transport);
+        m_grid->addWidget(icon_wrapper, 3, 0, 1, 4);
+
         m_grid->addWidget(m_street_graph, 6, 0, 1, 1);
         m_grid->addWidget(m_search_method, 6, 1, 1, 2);
         m_grid->addWidget(grid_filler);
