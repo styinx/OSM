@@ -52,6 +52,10 @@ namespace OSM
             {
                 // Add edge to the outgoing edges
                 m_o_offset[node->id + 1] += 1;
+
+                // Update info
+                node->mask |= NodeTypeMask::HAS_EDGES;
+                edge->distance = distNodes(m_nodes[edge->source], m_nodes[edge->target]);
                 edge++;
             }
             else
@@ -80,16 +84,6 @@ namespace OSM
         m_edges.emplace_back(edge);
     }
 
-    Uint64 AdjacencyArray::neighbourCount(const Uint64 node) const
-    {
-        Uint64 neighbours = 0;
-        for(Uint64 i = m_o_offset[node]; i < m_o_offset[node + 1]; ++i)
-        {
-            ++neighbours;
-        }
-        return neighbours;
-    }
-
     size_t AdjacencyArray::nodeCount() const
     {
         return m_nodes.size();
@@ -110,13 +104,38 @@ namespace OSM
         return m_edges;
     }
 
-    Vector<Uint64> AdjacencyArray::getIOffsets() const
-    {
-        return m_i_offset;
-    }
-
     Vector<Uint64> AdjacencyArray::getOOffsets() const
     {
         return m_o_offset;
     }
+
+    Vector<Uint64> AdjacencyArray::neighbourIDs(const Uint64 node) const
+    {
+        Vector<Uint64> neighbours;
+        for(Uint64 i = m_o_offset[node]; i < m_o_offset[node + 1]; ++i)
+        {
+            neighbours.emplace_back(m_edges[i].target);
+        }
+        return neighbours;
+    }
+
+    Vector<Node> AdjacencyArray::neighbours(const Uint64 node) const
+    {
+        Vector<Node> neighbours;
+        for(Uint64 i = m_o_offset[node]; i < m_o_offset[node + 1]; ++i)
+        {
+            neighbours.emplace_back(m_nodes[m_edges[i].target]);
+        }
+        return neighbours;
+    }
+    Vector<Edge> AdjacencyArray::edges(const Uint64 node) const
+    {
+        Vector<Edge> edges;
+        for(Uint64 i = m_o_offset[node]; i < m_o_offset[node + 1]; ++i)
+        {
+            edges.emplace_back(m_edges[i]);
+        }
+        return edges;
+    }
+
 }  // namespace OSM

@@ -23,14 +23,31 @@ namespace OSM
 
     Byte osmpbfReader::readMaxSpeed(const std::string& speed)
     {
-        std::regex  r(R".*([0-9]+(\.[0-9+])?).*");
-        std::smatch match;
-        if(std::regex_search(speed.begin(), speed.end(), match, r))
+        std::string val;
+        Byte index = 0;
+        for(char c : speed)
         {
-            // TODO extract speed unit
-            return std::abs(std::stoi(match[0]));
+            if(c >= '0' && c <= '9')
+            {
+                val += c;
+                index++;
+            }
+            else
+                break;
         }
-        return 1;
+        if(val.empty())
+            return 0;
+
+        Byte speed_val = std::stoi(val);
+        std::string unit = speed.substr(index);
+        if(!unit.empty())
+        {
+            if(unit.find("km"))
+                return speed_val;
+            else if(unit.find("mp"))
+                return static_cast<Byte>(std::round((float)speed_val * 1.61F));
+        }
+        return 0;
     }
 
     void osmpbfReader::printInfo(const bool timed)
@@ -81,9 +98,9 @@ namespace OSM
         // Set filters.
         struct Filters
         {
-            OrTagFilter highway{new KeyOnlyTagFilter("highway")};
-            OrTagFilter max_speed{new KeyOnlyTagFilter("maxspeed")};
-            OrTagFilter oneway{new KeyOnlyTagFilter("oneway")};
+            KeyOnlyTagFilter highway = KeyOnlyTagFilter("highway");
+            KeyOnlyTagFilter speed = KeyOnlyTagFilter("maxspeed");
+            KeyOnlyTagFilter oneway = KeyOnlyTagFilter("oneway");
         } filters{};
 
         // Start reading.
@@ -101,8 +118,8 @@ namespace OSM
             {
                 sharedThis->printInfo(true);
 
+                // Assign the filters
                 sharedThis->m_filter_lock.lock();
-
                 filters.highway.assignInputAdaptor(&pbi);
 
                 if(!filters.highway.rebuildCache()) {
@@ -111,15 +128,44 @@ namespace OSM
                 }
                 sharedThis->m_filter_lock.unlock();
 
+                // Read all ways in the block
                 for(IWayStream way = pbi.getWayStream(); !way.isNull(); way.next())
                 {
-                    ++local_way_count.second;
+                    Byte mask = 0;
+                    Byte speed = 0;
+                    bool oneway = false;
 
+                    // Filter out not matching ways
+                    ++local_way_count.second;
                     if(!filters.highway.matches(way))
                         continue;
-
                     ++local_way_count.first;
 
+                    if(filters.speed.matches(way))
+                    {
+                        auto sp_idx = filters.speed.matchingTag();
+                        if(sp_idx > -1)
+                        {
+                            speed = readMaxSpeed(way.value(sp_idx));
+                        }
+                    }
+
+                    if(filters.oneway.matches(way))
+                    {
+                        oneway = true;
+                    }
+
+                    auto index = filters.highway.matchingTag();
+                    if(index > -1 && index < way.tagsSize() && StreetType.count(way.value(index)))
+                    {
+                        mask |= StreetType[way.value(index)].first;
+                        if(speed == 0)
+                        {
+                            speed = StreetType[way.value(index)].second;
+                        }
+                    }
+
+                    // Go through all nodes in the edges
                     IWay::RefIterator previous = nullptr;
                     IWay::RefIterator current  = way.refBegin();
                     for(; current != way.refEnd(); ++current)
@@ -127,7 +173,6 @@ namespace OSM
                         if(previous != nullptr)
                         {
                             sharedThis->m_node_map_lock.lock();
-
                             if(!nh.id.count(*previous))
                             {
                                 nh.id[*previous] = nh.index++;
@@ -136,10 +181,11 @@ namespace OSM
                             {
                                 nh.id[*current] = nh.index++;
                             }
-                            sharedThis->m_edges++;
 
-                            array.addEdge(Edge{nh.id[*previous], nh.id[*current]});
-                            array.addEdge(Edge{nh.id[*current], nh.id[*previous]});
+                            Edge e{nh.id[*previous], nh.id[*current], speed, mask, oneway};
+                            array.addEdge(e);
+                            array.addEdge(e.swap());
+                            sharedThis->m_edges += 2;
 
                             sharedThis->m_node_map_lock.unlock();
                         }
@@ -148,10 +194,8 @@ namespace OSM
                 }
 
                 sharedThis->m_node_map_lock.lock();
-
                 sharedThis->m_ways.first += local_way_count.first;
                 sharedThis->m_ways.second += local_way_count.second;
-
                 sharedThis->m_node_map_lock.unlock();
             }
         };
@@ -162,7 +206,7 @@ namespace OSM
 
         // Read all highway edges and the nodes we need.
         std::cout << "Read necessary nodes ..." << std::endl;
-        const auto getNodes = [&filters, &array, &nh, weakThis](PrimitiveBlockInputAdaptor& pbi)
+        const auto getNodes = [&array, &nh, weakThis](PrimitiveBlockInputAdaptor& pbi)
         {
             Pair<Uint64, Uint64> local_node_count = {0, 0};
 
@@ -170,51 +214,19 @@ namespace OSM
             {
                 sharedThis->printInfo(true);
 
-                sharedThis->m_filter_lock.lock();
-
-                filters.highway.assignInputAdaptor(&pbi);
-//                if(!filters.highway.rebuildCache())
-//                {
-//                    sharedThis->m_filter_lock.unlock();
-//                    return;
-//                }
-//
-//                filters.max_speed.assignInputAdaptor(&pbi);
-//                if(!filters.max_speed.rebuildCache())
-//                {
-//                    sharedThis->m_filter_lock.unlock();
-//                    return;
-//                }
-//
-                sharedThis->m_filter_lock.unlock();
-
                 for(INodeStream node = pbi.getNodeStream(); !node.isNull(); node.next())
                 {
                     ++local_node_count.second;
-
                     if(!nh.id.count(node.id()))
                         continue;
-
                     ++local_node_count.first;
-
-                    if(filters.max_speed.matches(node))
-                    {
-                        //readMaxSpeed(node.value(filters.max_speed.matchingTag()));
-                    }
-
-                    if(filters.oneway.matches(node))
-                    {
-
-                    }
 
                     array.addNode(Node{nh.id[node.id()], node.latd(), node.lond(), 0, 0, 0});
                 }
 
                 sharedThis->m_node_map_lock.lock();
-
                 sharedThis->m_nodes.first += local_node_count.first;
                 sharedThis->m_nodes.second += local_node_count.second;
-
                 sharedThis->m_node_map_lock.unlock();
             }
         };

@@ -35,7 +35,7 @@ namespace OSM
         Window* m_parent;
 
         QSizePolicy m_min_policy;
-        QSizePolicy m_preferred_policy;
+        QSizePolicy m_expanding_policy;
 
         QLineEdit*   m_start;
         QLineEdit*   m_stop;
@@ -46,7 +46,6 @@ namespace OSM
         QPushButton* m_foot;
         QPushButton* m_public_transport;
         QCheckBox* m_street_graph;
-        QComboBox* m_search_method;
 
         QTableWidget* m_table;
 

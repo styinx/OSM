@@ -3,6 +3,7 @@
 
 #include "alg/RouteSearch.hpp"
 #include "gui/mapTypes.hpp"
+#include "gui/WebPage.hpp"
 #include "structures/AdjacencyArray.hpp"
 #include "structures/Grid.hpp"
 
@@ -12,33 +13,37 @@
 namespace OSM
 {
     class Window;
-    class UIBridge;
+    class UIGraph;
 
-    class UIMap final : public QWebEngineView
+    class UIMap final
+        : public QWebEngineView
+        , public NonCopyable
+        , public NonMoveable
     {
+        Q_OBJECT
     private:
+        Window*               m_parent;
+        WebPage*              m_page;
         QWebChannel*          m_channel;
-        UIBridge*             m_bridge;
         const AdjacencyArray* m_array;
+        UIGraph*              m_graph;
 
         Grid        m_grid;
         RouteSearch m_routeSearch;
 
+    public slots:
+        void onLoad();
+        void showGraph(const bool show);
+        void setStart(const QString& latlon);
+        void setStop(const QString& latlon);
+
     public:
         explicit UIMap(Window* parent, const OSM::AdjacencyArray* array, const MapBounds& bounds);
-        UIMap(const UIMap& other)     = delete;
-        UIMap(UIMap&& other) noexcept = delete;
-        UIMap& operator=(const UIMap& other) = delete;
-        UIMap& operator=(UIMap&& other) noexcept = delete;
-        virtual ~UIMap()                         = default;
+        virtual ~UIMap() = default;
 
-        Vector<Uint64> calculatePath(const QString& from, const QString& to, const int method);
+        Vector<Uint64> calculatePath(const QString& from, const QString& to);
         void           setGraph() const;
         void           drawPath(const Vector<Uint64>& path) const;
-
-        UIBridge* getBridge() const;
-        void      showGraph(const bool show);
-        void      onLoad();
     };
 
 }  // namespace OSM
