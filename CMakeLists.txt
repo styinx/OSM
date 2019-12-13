@@ -47,7 +47,7 @@ link_directories(
 # Compiler
 #
 
-SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -fPIC")
+SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -fPIC -O3")
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COMPILE_FLAGS}")
 
@@ -104,12 +104,13 @@ set(INCLUDES
     code/include/NonMoveable.hpp
     code/include/io/MapData.hpp
     code/include/structures/Grid.hpp
-    code/include/io/CMD.hpp code/include/util/Geo.hpp)
+    code/include/io/CMD.hpp
+    code/include/util/Geo.hpp)
 
 set(GUI_INCLUDES
     code/include/gui/Window.hpp
     code/include/gui/UIMap.hpp
-    code/include/gui/Panel.hpp)
+    code/include/gui/Panel.hpp code/include/gui/UIGraph.hpp code/include/gui/WebPage.hpp)
 
 
 #
@@ -121,13 +122,14 @@ set(SOURCES
     code/source/io/osmpbfReader.cpp
     code/source/io/MapData.cpp
     code/source/structures/Grid.cpp
-    code/source/alg/RouteSearch.cpp code/source/util/Geo.cpp)
+    code/source/alg/RouteSearch.cpp
+    code/source/util/Geo.cpp code/source/gui/WebPage.cpp)
 
 set(GUI_SOURCES
     code/source/gui/Window.cpp
     code/source/gui/Panel.cpp
     code/source/gui/UIMap.cpp
-    code/source/gui/UIBridge.cpp)
+    code/source/gui/UIBridge.cpp code/source/gui/UIGraph.cpp)
 
 
 #

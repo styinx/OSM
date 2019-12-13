@@ -5,6 +5,7 @@
 
 #include <QHeaderView>
 #include <QtWidgets/QMessageBox>
+#include <QtWidgets/QToolBox>
 
 namespace OSM
 {
@@ -16,30 +17,28 @@ namespace OSM
         m_min_policy.setVerticalPolicy(QSizePolicy::Minimum);
         m_min_policy.setHorizontalPolicy(QSizePolicy::Minimum);
 
-        m_fill_policy.setHorizontalPolicy(QSizePolicy::Preferred);
-        m_fill_policy.setVerticalPolicy(QSizePolicy::Preferred);
-        m_fill_policy.setVerticalStretch(1);
-        m_fill_policy.setHorizontalStretch(1);
+        m_expanding_policy.setHorizontalPolicy(QSizePolicy::Expanding);
+        m_expanding_policy.setVerticalPolicy(QSizePolicy::Expanding);
+        m_expanding_policy.setVerticalStretch(1);
+        m_expanding_policy.setHorizontalStretch(1);
 
         m_start = new QLineEdit();
         m_stop  = new QLineEdit();
         m_go    = new QPushButton("Search");
 
-        m_pedestrian       = new QCheckBox("by foot");
-        m_bike             = new QCheckBox("by bike");
-        m_car              = new QCheckBox("by car");
-        m_public_transport = new QCheckBox("by public transport");
-        m_search_method    = new QComboBox();
+        m_foot             = new QPushButton(QIcon(":/icon_foot"), "");
+        m_bike             = new QPushButton(QIcon(":/icon_bike"), "");
+        m_car              = new QPushButton(QIcon(":/icon_car"), "");
+        m_public_transport = new QPushButton(QIcon(":/icon_public_transport"), "");
+
         m_street_graph     = new QCheckBox("Show street graph");
 
-        m_car->setChecked(true);
-        m_public_transport->setCheckable(false);
+        m_foot->setCheckable(true);
+        m_bike->setCheckable(true);
+        m_car->setCheckable(true);
+        m_public_transport->setCheckable(true);
 
-        m_search_method->addItems(QStringList{"dijkstra", "UCS", "PQ"});
-        m_search_method->setSizePolicy(m_min_policy);
-        m_search_method->setCurrentIndex(2);
-
-        m_table = new QTableWidget(1, 2);
+        m_table = new QTableWidget(0, 3);
 
         initTop();
         initBottom();
@@ -58,23 +57,29 @@ namespace OSM
         m_label_start    = new QLabel{"From: "};
         m_label_stop     = new QLabel{"To: "};
         auto grid_filler = new QWidget();
+        auto icon_wrapper = new QWidget();
+        auto icon_box = new QHBoxLayout(icon_wrapper);
 
-        grid_filler->setSizePolicy(m_fill_policy);
+        grid_filler->setSizePolicy(m_expanding_policy);
 
+        m_start->addAction(QIcon(":/icon_marker"), QLineEdit::TrailingPosition);
         m_start->setPlaceholderText("lat,lon | start");
+        m_stop->addAction(QIcon(":/icon_marker"), QLineEdit::TrailingPosition);
         m_stop->setPlaceholderText("lat,lon | stop");
 
         m_grid->addWidget(m_label_start, 0, 0);
-        m_grid->addWidget(m_start, 0, 1, 1, 3);
+        m_grid->addWidget(m_start, 0, 1, 1, 1, Qt::AlignRight);
         m_grid->addWidget(m_label_stop, 1, 0);
-        m_grid->addWidget(m_stop, 1, 1, 1, 3);
-        m_grid->addWidget(m_go, 2, 0, 1, 4, Qt::AlignRight);
-        m_grid->addWidget(m_pedestrian, 3, 0, 1, 1);
-        m_grid->addWidget(m_bike, 3, 1, 1, 1);
-        m_grid->addWidget(m_car, 4, 0, 1, 1);
-        m_grid->addWidget(m_public_transport, 4, 1, 1, 1);
-        m_grid->addWidget(m_street_graph, 6, 0, 1, 1);
-        m_grid->addWidget(m_search_method, 6, 1, 1, 2);
+        m_grid->addWidget(m_stop, 1, 1, 1, 1, Qt::AlignRight);
+
+        icon_box->addWidget(m_foot);
+        icon_box->addWidget(m_bike);
+        icon_box->addWidget(m_car);
+        icon_box->addWidget(m_public_transport);
+        icon_box->addWidget(m_go);
+        m_grid->addWidget(icon_wrapper, 2, 0, 1, 2, Qt::AlignRight);
+
+        m_grid->addWidget(m_street_graph, 4, 0);
         m_grid->addWidget(grid_filler);
 
         addWidget(grid_wrapper);
@@ -82,13 +87,10 @@ namespace OSM
 
     void Panel::initBottom()
     {
-        m_table->setSizePolicy(m_fill_policy);
+        m_table->setHorizontalHeaderLabels({"Node ID", "Lat", "Lon"});
+        m_table->setSizePolicy(m_min_policy);
         m_table->verticalHeader()->hide();
-        m_table->horizontalHeader()->hide();
 
-        auto node = std::make_shared<Node>(Node{});
-
-        addNode(node.get());
 
         addWidget(m_table);
     }
@@ -131,8 +133,7 @@ namespace OSM
             return;
         }
 
-        auto path = m_parent->getMap()->calculatePath(
-            start, stop, m_search_method->currentIndex());
+        auto path = m_parent->getMap()->calculatePath(start, stop);
 
         if(path.empty())
         {

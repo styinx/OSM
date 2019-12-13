@@ -1,68 +1,104 @@
-class UIBridge {
-    constructor(bridge, map) {
-        this.ui_bridge = bridge;
-        this.map = map;
+class UIMap {
+    constructor(cpp_ui_map, ll_map) {
+        this.cpp_ui_map = cpp_ui_map;
+        this.map = ll_map;
 
         this.map.l_map.on("click", this.onMapClick);
     }
 
     onMapClick(e) {
+        let map = window.map;
+        let ui_map = window.ui_map;
+
         let latlng = e.latlng.lat.toFixed(6).toString() + "," + e.latlng.lng.toFixed(6).toString();
 
-        let start = "<button onclick='this.setStart(\"" + latlng + "\")'>Set start</button>";
-        let stop = "<button onclick='this.setStop(\"" + latlng + "\")'>Set stop</button>";
+        let start = "<button onclick='ui_map.setStart(\"" + latlng + "\")'>Set start</button>";
+        let stop = "<button onclick='ui_map.setStop(\"" + latlng + "\")'>Set stop</button>";
 
-        this.map.l_popup.setLatLng(e.latlng)
-            .setContent("What's here?<br> " + latlng + "<br>" + start + "<br>" + stop)
-            .addTo(this.map.l_map);
+        map.l_popup.setLatLng(e.latlng)
+            .setContent(start + "&nbsp;" + stop)
+            .addTo(map.l_map);
     }
 
     // JS -> C++
 
     onLoad() {
-        this.ui_bridge.onLoad();
+        this.cpp_ui_map.onLoad();
     }
 
-    setMapBounds() {
-        let bounds = this.map.l_map.getBounds();
-        let sw = bounds["_southWest"];
-        let ne = bounds["_northEast"];
-
-        this.ui_bridge.setMapBounds(ne.lat, ne.lng, sw.lat, sw.lng);
-    }
+    // setMapBounds() {
+    //     let bounds = this.map.l_map.getBounds();
+    //     let sw = bounds["_southWest"];
+    //     let ne = bounds["_northEast"];
+    //
+    //     this.ui_bridge.setMapBounds(ne.lat, ne.lng, sw.lat, sw.lng);
+    // }
 
     setStart(latlon) {
-        this.ui_bridge.setStart(latlon);
+        this.cpp_ui_map.setStart(latlon);
     }
 
     setStop(latlon) {
-        this.ui_bridge.setStop(latlon);
+        this.cpp_ui_map.setStop(latlon);
     }
 
     // C++ -> JS
 
     setView(lat, lon) {
-        this.map.l_map.setView([lat, lon], this.l_map.getZoom());
-    }
-
-    setShowGraph(bool) {
-        this.map.showGraph = bool;
+        this.map.setView(lat, lon);
     }
 
     setGraph(graph) {
-        this.map.graphData = graph;
+        this.map.setGraph(graph);
+    }
+
+    showGraph(bool) {
+        this.map.showGraph(bool);
+    }
+
+    showRoute(route) {
+        this.map.showRoute(route);
+    }
+}
+
+class UIGraph {
+    constructor(cpp_ui_graph, map) {
+        this.cpp_ui_graph = cpp_ui_graph;
+        this.map = map;
+
+        this.graphs = {
+            "motorway" : this.cpp_ui_graph.motorway,
+            "trunk" : [],
+            "primary" : [],
+            "secondary" : [],
+            "tertiary" : [],
+        };
+    }
+
+    show() {
+        switch(this.map.l_map.getZoom())
+        {
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+
+                break;
+        }
     }
 }
 
 class Map {
     constructor() {
         this.l_map = L.map('map').setView([0, 0], 0);
+        this.l_renderer = L.canvas({ padding: 0.5 });
         this.l_popup = L.popup();
 
-        this.routeLayer = L.layerGroup([]).addTo(this.l_map);
-        this.graphLayer = L.layerGroup([]).addTo(this.l_map);
+        this.routeLayer = L.layerGroup([]);
+        this.graphLayer = L.layerGroup([]);
 
-        this.showGraph = false;
+        this.showNetwork = false;
         this.graphData = [];
 
         this.style = {
@@ -80,34 +116,51 @@ class Map {
         }).addTo(this.l_map);
     }
 
-    display() {
-        if (!this.showGraph) {
-            this.graphLayer.clearLayers();
-        } else {
-            for (let index = 0; index < graphData.length; ++index) {
-                for (let edge = 0; edge < graphData[index].length; ++edge) {
+    setView(lat, lon) {
+        this.l_map.setView([lat, lon], this.l_map.getZoom())
+    }
 
-                    // if (graph[index].length >= 1) {
-                    //     L.circle(graph[index][0], {
-                    //         radius: 1,
-                    //         color: this.style['nodeColor'],
-                    //         interactive: false
-                    //     }).addTo(graphLayer);
-                    // }
+    setGraph(graph) {
+        this.graphData = graph;
+        this.createGraph();
+    }
 
-                    if (graphData[index].length === 2) {
-                        // L.circle(graph[index][1], {
-                        //     radius: 1,
-                        //     color: this.style['nodeColor'],
-                        // }).addTo(graphLayer);
+    createGraph() {
+        for (let index = 0; index < this.graphData.length; ++index) {
+            for (let edge = 0; edge < this.graphData[index].length; ++edge) {
 
-                        L.polyline(graphData[index], {
-                            color: this.style['edgeColor'],
-                            interactive: false
-                        }).addTo(this.graphLayer);
-                    }
+                // if (graph[index].length >= 1) {
+                //     L.circle(graph[index][0], {
+                //         radius: 1,
+                //         color: this.style['nodeColor'],
+                //         interactive: false
+                //     }).addTo(graphLayer);
+                // }
+
+                if (this.graphData[index].length === 2) {
+                    // L.circle(graph[index][1], {
+                    //     radius: 1,
+                    //     color: this.style['nodeColor'],
+                    // }).addTo(graphLayer);
+
+                    L.polyline(this.graphData[index], {
+                        renderer: this.l_renderer,
+                        color: this.style['edgeColor'],
+                        smoothFactor: 500,
+                        interactive: false
+                    }).addTo(this.graphLayer);
                 }
             }
+        }
+    }
+
+    showGraph(show) {
+        this.showNetwork = show;
+
+        if (!this.showNetwork) {
+            this.l_map.removeLayer(this.graphLayer);
+        } else {
+            this.graphLayer.addTo(this.l_map);
         }
     }
 
@@ -122,17 +175,18 @@ class Map {
                 color: this.style['routeColor'],
                 weight: 4
             }
-        }));
+        })).addTo(this.l_map);
     }
 }
 
 document.addEventListener("DOMContentLoaded", function () {
 
     new QWebChannel(qt.webChannelTransport, function (channel) {
-        window.map = Map();
-        window.bridge = UIBridge(channel.objects.UIBridge, map);
+        window.map = new Map();
 
-        bridge.onLoad();
-        bridge.setMapBounds();
+        window.ui_graph = new UIGraph(channel.objects.UIGraph, map);
+        window.ui_map = new UIMap(channel.objects.UIMap, map);
+
+        window.ui_map.onLoad();
     });
 });

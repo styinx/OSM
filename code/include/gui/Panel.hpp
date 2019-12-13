@@ -35,18 +35,17 @@ namespace OSM
         Window* m_parent;
 
         QSizePolicy m_min_policy;
-        QSizePolicy m_fill_policy;
+        QSizePolicy m_expanding_policy;
 
         QLineEdit*   m_start;
         QLineEdit*   m_stop;
         QPushButton* m_go;
 
-        QCheckBox* m_car;
-        QCheckBox* m_bike;
-        QCheckBox* m_pedestrian;
-        QCheckBox* m_public_transport;
+        QPushButton* m_car;
+        QPushButton* m_bike;
+        QPushButton* m_foot;
+        QPushButton* m_public_transport;
         QCheckBox* m_street_graph;
-        QComboBox* m_search_method;
 
         QTableWidget* m_table;
 

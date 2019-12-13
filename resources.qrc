@@ -3,5 +3,10 @@
     <file alias="map_html">ui/html/main.html</file>
     <file alias="map_css">ui/css/style.css</file>
     <file alias="map_js">ui/js/map.js</file>
+    <file alias="icon_car">ui/img/car.png</file>
+    <file alias="icon_bike">ui/img/bike.png</file>
+    <file alias="icon_foot">ui/img/foot.png</file>
+    <file alias="icon_marker">ui/img/marker.png</file>
+    <file alias="icon_public_transport">ui/img/public_transport.png</file>
 </qresource>
 </RCC>

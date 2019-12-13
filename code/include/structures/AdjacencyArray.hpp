@@ -21,7 +21,6 @@ namespace OSM
     private:
         Vector<Node>   m_nodes;
         Vector<Edge>   m_edges;
-        Vector<Uint64> m_i_offset;
         Vector<Uint64> m_o_offset;
 
         std::mutex m_node_mutex;
@@ -38,13 +37,14 @@ namespace OSM
         void           computeOffsets();
         void           addNode(const Node& node);
         void           addEdge(const Edge& edge);
-        Uint64         neighbourCount(const Uint64 node) const;
         size_t         nodeCount() const;
         size_t         edgeCount() const;
         Vector<Node>   getNodes() const;
         Vector<Edge>   getEdges() const;
-        Vector<Uint64> getIOffsets() const;
         Vector<Uint64> getOOffsets() const;
+        Vector<Uint64> neighbourIDs(const Uint64 node) const;
+        Vector<Node> neighbours(const Uint64 node) const;
+        Vector<Edge> edges(const Uint64 node) const;
     };
 }  // namespace OSM
 

@@ -24,6 +24,9 @@ namespace OSM
         using Seconds  = std::chrono::seconds;
 
         Uint32            m_threads = std::max(std::thread::hardware_concurrency(), 4U);
+        std::mutex        m_node_map_lock;
+        std::mutex        m_filter_lock;
+        std::mutex        m_timer_lock;
         osmpbf::OSMFileIn m_osm_file;
 
         Uint64               m_duration = 0;
