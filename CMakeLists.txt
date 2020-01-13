@@ -110,7 +110,9 @@ set(INCLUDES
 set(GUI_INCLUDES
     code/include/gui/Window.hpp
     code/include/gui/UIMap.hpp
-    code/include/gui/Panel.hpp code/include/gui/UIGraph.hpp code/include/gui/WebPage.hpp)
+    code/include/gui/Panel.hpp
+    code/include/gui/UIGraph.hpp
+    code/include/gui/WebPage.hpp)
 
 
 #
@@ -123,13 +125,15 @@ set(SOURCES
     code/source/io/MapData.cpp
     code/source/structures/Grid.cpp
     code/source/alg/RouteSearch.cpp
-    code/source/util/Geo.cpp code/source/gui/WebPage.cpp)
+    code/source/util/Geo.cpp
+    code/source/gui/WebPage.cpp)
 
 set(GUI_SOURCES
     code/source/gui/Window.cpp
     code/source/gui/Panel.cpp
     code/source/gui/UIMap.cpp
-    code/source/gui/UIBridge.cpp code/source/gui/UIGraph.cpp)
+    code/source/gui/UIBridge.cpp
+    code/source/gui/UIGraph.cpp)
 
 
 #
@@ -163,5 +167,5 @@ add_executable(${PROJECT_NAME} ${FILES} ${RESOURCES} ${DIR_APP}/main.cpp)
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 
 ## Test
-#add_executable(${PROJECT_NAME}_Test ${TEST_FILES} ${DIR_TEST}/test.cpp)
-#target_link_libraries(${PROJECT_NAME}_Test ${TEST_LIBRARIES})
+add_executable(${PROJECT_NAME}_Test ${TEST_FILES} ${DIR_TEST}/test.cpp)
+target_link_libraries(${PROJECT_NAME}_Test ${TEST_LIBRARIES})
