@@ -23,6 +23,9 @@ namespace OSM
         Q_OBJECT
 
     private:
+        using Clock    = std::chrono::system_clock;
+        using Seconds    = std::chrono::seconds;
+
         enum class TransportType : Byte
         {
             Pedestrian      = 0,
@@ -46,12 +49,18 @@ namespace OSM
         QPushButton* m_foot;
         QPushButton* m_public_transport;
         QCheckBox* m_street_graph;
+        QSlider* m_attraction_slider;
 
         QTableWidget* m_table;
 
         QGridLayout* m_grid;
         QLabel*      m_label_start;
         QLabel*      m_label_stop;
+        QLabel*      m_label_attraction;
+        QLabel*      m_label_attraction_start;
+        QLabel*      m_label_attraction_stop;
+
+        Clock::time_point m_timer = Clock::now();
 
         void initTop();
         void initBottom();
@@ -59,6 +68,7 @@ namespace OSM
     public slots:
         void go();
         void setShowGraph();
+        void setAttractionRange();
 
     signals:
         void goPressed();

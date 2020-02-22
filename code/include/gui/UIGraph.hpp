@@ -5,6 +5,7 @@
 #include "NonMoveable.hpp"
 #include "structures/AdjacencyArray.hpp"
 
+#include <QtCore/QJsonArray>
 #include <QtCore/QJsonObject>
 #include <QtCore/QObject>
 
@@ -17,17 +18,19 @@ namespace OSM
         , public NonMoveable
     {
         Q_OBJECT
-        Q_PROPERTY(QJsonObject motorway MEMBER m_motorway)
+        Q_PROPERTY(QJsonArray motorway MEMBER m_motorway)
     private:
         const AdjacencyArray* m_array;
-        QJsonObject m_motorway;
+        QJsonArray m_motorway;
 
     public slots:
-        void buildNetwork(const EdgeTypeMask street_type);
+        QJsonArray buildNetwork(const std::string street_type);
 
     public:
         explicit UIGraph(const AdjacencyArray* array);
         virtual ~UIGraph() = default;
+
+        void buildMotorway() {m_motorway = buildNetwork("motorway");}
     };
 
 }  // namespace OSM

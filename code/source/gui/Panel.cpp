@@ -31,7 +31,9 @@ namespace OSM
         m_car              = new QPushButton(QIcon(":/icon_car"), "");
         m_public_transport = new QPushButton(QIcon(":/icon_public_transport"), "");
 
-        m_street_graph     = new QCheckBox("Show street graph");
+        m_street_graph = new QCheckBox("Show street graph");
+
+        m_attraction_slider = new QSlider(Qt::Orientation::Horizontal);
 
         m_foot->setCheckable(true);
         m_bike->setCheckable(true);
@@ -47,6 +49,7 @@ namespace OSM
         QObject::connect(m_start, SIGNAL(returnPressed()), this, SLOT(go()));
         QObject::connect(m_stop, SIGNAL(returnPressed()), this, SLOT(go()));
         QObject::connect(m_street_graph, SIGNAL(clicked()), this, SLOT(setShowGraph()));
+        QObject::connect(m_attraction_slider, SIGNAL(clicked()), this, SLOT(setAttractionRange()));
     }
 
     void Panel::initTop()
@@ -54,11 +57,16 @@ namespace OSM
         auto grid_wrapper = new QWidget{};
         m_grid            = new QGridLayout{grid_wrapper};
 
-        m_label_start    = new QLabel{"From: "};
-        m_label_stop     = new QLabel{"To: "};
-        auto grid_filler = new QWidget();
-        auto icon_wrapper = new QWidget();
-        auto icon_box = new QHBoxLayout(icon_wrapper);
+        m_label_start            = new QLabel{"From: "};
+        m_label_stop             = new QLabel{"To: "};
+        m_label_attraction       = new QLabel{"Attraction range: "};
+        m_label_attraction_start = new QLabel{"1 km"};
+        m_label_attraction_stop  = new QLabel{"100 km"};
+        auto grid_filler         = new QWidget();
+        auto icon_wrapper        = new QWidget();
+        auto icon_box            = new QHBoxLayout(icon_wrapper);
+        auto range_wrapper       = new QWidget();
+        auto range_box           = new QHBoxLayout(range_wrapper);
 
         grid_filler->setSizePolicy(m_expanding_policy);
 
@@ -66,6 +74,9 @@ namespace OSM
         m_start->setPlaceholderText("lat,lon | start");
         m_stop->addAction(QIcon(":/icon_marker"), QLineEdit::TrailingPosition);
         m_stop->setPlaceholderText("lat,lon | stop");
+
+        m_attraction_slider->setRange(1, 100);
+        m_attraction_slider->setSizePolicy(m_expanding_policy);
 
         m_grid->addWidget(m_label_start, 0, 0);
         m_grid->addWidget(m_start, 0, 1, 1, 1, Qt::AlignRight);
@@ -79,7 +90,13 @@ namespace OSM
         icon_box->addWidget(m_go);
         m_grid->addWidget(icon_wrapper, 2, 0, 1, 2, Qt::AlignRight);
 
-        m_grid->addWidget(m_street_graph, 4, 0);
+        range_box->addWidget(m_label_attraction_start);
+        range_box->addWidget(m_attraction_slider);
+        range_box->addWidget(m_label_attraction_stop);
+        // m_grid->addWidget(m_street_graph, 4, 0);
+        m_grid->addWidget(m_label_attraction, 4, 0);
+        m_grid->addWidget(range_wrapper, 4, 1);
+
         m_grid->addWidget(grid_filler);
 
         addWidget(grid_wrapper);
@@ -90,7 +107,6 @@ namespace OSM
         m_table->setHorizontalHeaderLabels({"Node ID", "Lat", "Lon"});
         m_table->setSizePolicy(m_min_policy);
         m_table->verticalHeader()->hide();
-
 
         addWidget(m_table);
     }
@@ -146,6 +162,16 @@ namespace OSM
     void Panel::setShowGraph()
     {
         m_parent->getMap()->showGraph(m_street_graph->isChecked());
+    }
+
+    void Panel::setAttractionRange()
+    {
+        // Trigger the calculation only if at least one second has expired.
+        if(std::chrono::duration_cast<Seconds>(Clock::now() - m_timer).count() > 1)
+        {
+            m_timer = Clock::now();
+            // todo do action
+        }
     }
 
     void Panel::setStart(const float lat, const float lon)
