@@ -24,7 +24,7 @@ namespace OSM
     Byte osmpbfReader::readMaxSpeed(const std::string& speed)
     {
         std::string val;
-        Byte index = 0;
+        Byte        index = 0;
         for(char c : speed)
         {
             if(c >= '0' && c <= '9')
@@ -38,8 +38,8 @@ namespace OSM
         if(val.empty())
             return 0;
 
-        Byte speed_val = std::stoi(val);
-        std::string unit = speed.substr(index);
+        Byte        speed_val = std::stoi(val);
+        std::string unit      = speed.substr(index);
         if(!unit.empty())
         {
             if(unit.find("km"))
@@ -83,7 +83,7 @@ namespace OSM
         // Used to determine the node id.
         struct NodeHeurisitc
         {
-            Uint64              index = 0;
+            Uint64               index = 0;
             UMap<Sint64, Uint64> id;
         } nh{};
 
@@ -98,9 +98,9 @@ namespace OSM
         // Set filters.
         struct Filters
         {
-            KeyOnlyTagFilter highway = KeyOnlyTagFilter("highway");
-            KeyOnlyTagFilter speed = KeyOnlyTagFilter("maxspeed");
-            KeyOnlyTagFilter oneway = KeyOnlyTagFilter("oneway");
+            KeyOnlyTagFilter  highway     = KeyOnlyTagFilter("highway");
+            KeyOnlyTagFilter  speed       = KeyOnlyTagFilter("maxspeed");
+            KeyOnlyTagFilter  oneway      = KeyOnlyTagFilter("oneway");
         } filters{};
 
         // Start reading.
@@ -110,8 +110,7 @@ namespace OSM
 
         // Read all highway edges and the nodes we need.
         std::cout << "Collect necessary nodes ..." << std::endl;
-        const auto collectNodes = [&filters, &array, &nh, weakThis](PrimitiveBlockInputAdaptor& pbi)
-        {
+        const auto collectNodes = [&filters, &array, &nh, weakThis](PrimitiveBlockInputAdaptor& pbi) {
             Pair<Uint64, Uint64> local_way_count = {0, 0};
 
             if(const auto sharedThis = weakThis.lock())
@@ -122,7 +121,8 @@ namespace OSM
                 sharedThis->m_filter_lock.lock();
                 filters.highway.assignInputAdaptor(&pbi);
 
-                if(!filters.highway.rebuildCache()) {
+                if(!filters.highway.rebuildCache())
+                {
                     sharedThis->m_filter_lock.unlock();
                     return;
                 }
@@ -131,8 +131,8 @@ namespace OSM
                 // Read all ways in the block
                 for(IWayStream way = pbi.getWayStream(); !way.isNull(); way.next())
                 {
-                    Byte mask = 0;
-                    Byte speed = 0;
+                    Byte mask   = 0;
+                    Byte speed  = 0;
                     bool oneway = false;
 
                     // Filter out not matching ways
@@ -141,6 +141,7 @@ namespace OSM
                         continue;
                     ++local_way_count.first;
 
+                    // Check if the node has a speed key.
                     if(filters.speed.matches(way))
                     {
                         auto sp_idx = filters.speed.matchingTag();
@@ -150,11 +151,13 @@ namespace OSM
                         }
                     }
 
+                    // Check if street is oneway
                     if(filters.oneway.matches(way))
                     {
                         oneway = true;
                     }
 
+                    // Determine the type of the highway
                     auto index = filters.highway.matchingTag();
                     if(index > -1 && index < way.tagsSize() && StreetType.count(way.value(index)))
                     {
@@ -206,8 +209,7 @@ namespace OSM
 
         // Read all highway edges and the nodes we need.
         std::cout << "Read necessary nodes ..." << std::endl;
-        const auto getNodes = [&array, &nh, weakThis](PrimitiveBlockInputAdaptor& pbi)
-        {
+        const auto getNodes = [&filters, &array, &nh, weakThis](PrimitiveBlockInputAdaptor& pbi) {
             Pair<Uint64, Uint64> local_node_count = {0, 0};
 
             if(const auto sharedThis = weakThis.lock())
@@ -216,9 +218,22 @@ namespace OSM
 
                 for(INodeStream node = pbi.getNodeStream(); !node.isNull(); node.next())
                 {
+                    // Check if the node is an attraction.
+                    for(auto i = 0; i < node.tagsSize(); ++i)
+                    {
+                        const auto key = node.key(i);
+                        if(key == "attractions" || key  == "tourism")
+                        {
+                            std::cout << node.value(i) << "\n";
+                        }
+                    }
+
+                    // Select the nodes that are part of a highway
                     ++local_node_count.second;
                     if(!nh.id.count(node.id()))
+                    {
                         continue;
+                    }
                     ++local_node_count.first;
 
                     array.addNode(Node{nh.id[node.id()], node.latd(), node.lond(), 0, 0, 0});
@@ -232,7 +247,6 @@ namespace OSM
         };
 
         osmpbf::parseFileCPPThreads(m_osm_file, getNodes, m_threads, 1, true);
-
 
         printInfo();
 

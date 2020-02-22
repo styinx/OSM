@@ -38,33 +38,6 @@ namespace OSM
         return m_routeSearch.route(start, stop);
     }
 
-    void UIMap::setGraph() const
-    {
-        const auto nodes    = m_array->getNodes();
-        const auto edges    = m_array->getEdges();
-        const auto ooffsets = m_array->getOOffsets();
-
-        QString params;
-        for(Uint64 node = 0; node < 10000; ++node)
-        {
-            QString inner;
-            for(Uint64 oedge_index = ooffsets[node]; oedge_index < ooffsets[node + 1]; oedge_index++)
-            {
-                auto edge   = edges[oedge_index];
-                auto source = nodes[edge.source];
-                auto target = nodes[edge.target];
-                inner += "[[" + QString::number(source.lat) + "," + QString::number(source.lon) +
-                         "]," + "[" + QString::number(target.lat) + "," +
-                         QString::number(target.lon) + "]],";
-            }
-            if(!inner.isEmpty())
-            {
-                params += "" + inner.left(inner.size() - 1) + ",";
-            }
-        }
-        page()->runJavaScript("ui_map.setGraph([" + params.left(params.size() - 1) + "]);");
-    }
-
     void UIMap::drawPath(const Vector<Uint64>& path) const
     {
         const auto nodes = m_array->getNodes();
@@ -84,14 +57,23 @@ namespace OSM
         const auto bounds = m_grid.getBounds();
         const float vlat = bounds.min_lat + (bounds.max_lat - bounds.min_lat) / 2;
         const float vlon = bounds.min_lon + (bounds.max_lon - bounds.min_lon) / 2;
-        page()->runJavaScript("ui_map.setView(" + QString::number(vlat) + ", " + QString::number(vlon) + ");");
-        setGraph();
+        const auto diff = std::abs(bounds.max_lon - bounds.min_lon);
+        const float auto_zoom = std::max(-15 * diff, -10 * std::log(diff + 12)) + 20;
+
+        page()->runJavaScript("ui_map.setView("
+            + QString::number(vlat) + ", "
+            + QString::number(vlon) + ", "
+            + QString::number(static_cast<int>(std::round(auto_zoom))) +");");
     }
 
     void UIMap::showGraph(const bool show)
     {
         QString setShow = show ? "true" : "false";
         page()->runJavaScript("ui_map.showGraph(" + setShow + ")");
+
+        m_graph->buildMotorway();
+
+        page()->runJavaScript("ui_graph.show();");
     }
 
     void UIMap::setStart(const QString &latlon)
