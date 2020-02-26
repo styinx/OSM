@@ -12,14 +12,14 @@ namespace OSM
     {
         for(const auto& node : array->getNodes())
         {
-            nodeToCell(node.lat, node.lon);
+            set(node.lat, node.lon, node.id);
         }
     }
 
     Uint16 Grid::nodeToCell(const float lat, const float lon) const
     {
-        float x = ((lon - m_bounds.min_lon) / m_lon_range) * m_x;
-        float y = ((lat - m_bounds.min_lat) / m_lat_range) * m_y;
+        float x = std::round(((lon - m_bounds.min_lon) / m_lon_range) * m_x);
+        float y = std::round(((lat - m_bounds.min_lat) / m_lat_range) * m_y);
 
         if(x < 0)
             x = 0;
@@ -32,6 +32,11 @@ namespace OSM
             y = m_y - 1;
 
         return static_cast<Uint16>(y * m_y + x);
+    }
+
+    void Grid::set(const Uint16 cell, const Uint64 index)
+    {
+        m_cells[cell].children.emplace_back(index);
     }
 
     void Grid::set(const float lat, const float lon, const Uint64 index)

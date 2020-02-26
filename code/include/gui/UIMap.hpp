@@ -42,7 +42,7 @@ namespace OSM
         virtual ~UIMap() = default;
 
         Vector<Uint64> calculatePath(const QString& from, const QString& to);
-        void           drawPath(const Vector<Uint64>& path) const;
+        void           drawPath(const Vector<Uint64>& path, const Uint8 color = 0) const;
     };
 
 }  // namespace OSM

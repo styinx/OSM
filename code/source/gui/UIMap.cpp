@@ -38,7 +38,7 @@ namespace OSM
         return m_routeSearch.route(start, stop);
     }
 
-    void UIMap::drawPath(const Vector<Uint64>& path) const
+    void UIMap::drawPath(const Vector<Uint64>& path, const Uint8 color) const
     {
         const auto nodes = m_array->getNodes();
         QString    params;
@@ -49,7 +49,7 @@ namespace OSM
             params += "[" + QString::number(n.lon) + "," + QString::number(n.lat) + "],";
         }
 
-        page()->runJavaScript("ui_map.showRoute([" + params.left(params.size() - 1) + "]);");
+        page()->runJavaScript("ui_map.showRoute([" + params.left(params.size() - 1) + "], " + QString::number(color) + ");");
     }
 
     void UIMap::onLoad()

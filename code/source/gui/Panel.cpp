@@ -70,9 +70,9 @@ namespace OSM
 
         grid_filler->setSizePolicy(m_expanding_policy);
 
-        m_start->addAction(QIcon(":/icon_marker"), QLineEdit::TrailingPosition);
+        m_start->addAction(QIcon(":/icon_marker_black"), QLineEdit::TrailingPosition);
         m_start->setPlaceholderText("lat,lon | start");
-        m_stop->addAction(QIcon(":/icon_marker"), QLineEdit::TrailingPosition);
+        m_stop->addAction(QIcon(":/icon_marker_black"), QLineEdit::TrailingPosition);
         m_stop->setPlaceholderText("lat,lon | stop");
 
         m_attraction_slider->setRange(1, 100);
