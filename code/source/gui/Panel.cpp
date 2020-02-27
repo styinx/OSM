@@ -70,9 +70,9 @@ namespace OSM
 
         grid_filler->setSizePolicy(m_expanding_policy);
 
-        m_start->addAction(QIcon(":/icon_marker_black"), QLineEdit::TrailingPosition);
+        m_start->addAction(QIcon(":/icon_marker_blue"), QLineEdit::TrailingPosition);
         m_start->setPlaceholderText("lat,lon | start");
-        m_stop->addAction(QIcon(":/icon_marker_black"), QLineEdit::TrailingPosition);
+        m_stop->addAction(QIcon(":/icon_marker_red"), QLineEdit::TrailingPosition);
         m_stop->setPlaceholderText("lat,lon | stop");
 
         m_attraction_slider->setRange(1, 100);
@@ -145,18 +145,35 @@ namespace OSM
             QMessageBox::information(
                 this,
                 "Missing parameters",
-                "Please provide a start and target location. Here are some:\n" + towns);
+                "Please provide a start and target location.\n Here are some:\n" + towns);
             return;
         }
 
-        auto path = m_parent->getMap()->calculatePath(start, stop);
+        auto pathResult = m_parent->getMap()->calculatePath(start, stop);
 
-        if(path.empty())
+        if(pathResult.route.empty())
         {
-            QMessageBox::information(this, "No way found", "No way was found.");
+            if(pathResult.start == pathResult.stop)
+            {
+                QMessageBox::information(this, "No way found", "Start and Stop are the same.");
+            }
+            else
+            {
+                QMessageBox::information(this, "No way found", "No way was found.");
+            }
+        }
+        else
+        {
+            if(pathResult.start == 0 || pathResult.stop == 0)
+            {
+                QMessageBox::information(
+                    this,
+                    "Warning",
+                    "The path search uses most likely a default value for one of your nodes.");
+            }
         }
 
-        m_parent->getMap()->drawPath(path);
+        m_parent->getMap()->drawPath(pathResult.route);
     }
 
     void Panel::setShowGraph()

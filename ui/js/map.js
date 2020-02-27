@@ -57,6 +57,7 @@ class UIMap {
 
     setStart(latlon) {
         this.cpp_ui_map.setStart(latlon);
+        this.map.routeLayer.clearLayers();
         this.map.l_map.removeLayer(this.map.l_popup);
 
         latlon = latlon.split(",");
@@ -65,6 +66,7 @@ class UIMap {
 
     setStop(latlon) {
         this.cpp_ui_map.setStop(latlon);
+        this.map.routeLayer.clearLayers();
         this.map.l_map.removeLayer(this.map.l_popup);
 
         latlon = latlon.split(",");

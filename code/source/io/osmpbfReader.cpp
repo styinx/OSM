@@ -36,7 +36,7 @@ namespace OSM
                 break;
         }
         if(val.empty())
-            return 0;
+            return 30;
 
         Byte        speed_val = std::stoi(val);
         std::string unit      = speed.substr(index);
@@ -47,7 +47,7 @@ namespace OSM
             else if(unit.find("mp"))
                 return static_cast<Byte>(std::round((float)speed_val * 1.61F));
         }
-        return 0;
+        return 30;
     }
 
     void osmpbfReader::printInfo(const bool timed)
@@ -98,9 +98,9 @@ namespace OSM
         // Set filters.
         struct Filters
         {
-            KeyOnlyTagFilter  highway     = KeyOnlyTagFilter("highway");
-            KeyOnlyTagFilter  speed       = KeyOnlyTagFilter("maxspeed");
-            KeyOnlyTagFilter  oneway      = KeyOnlyTagFilter("oneway");
+            KeyOnlyTagFilter highway = KeyOnlyTagFilter("highway");
+            KeyOnlyTagFilter speed   = KeyOnlyTagFilter("maxspeed");
+            KeyOnlyTagFilter oneway  = KeyOnlyTagFilter("oneway");
         } filters{};
 
         // Start reading.
@@ -218,14 +218,38 @@ namespace OSM
 
                 for(INodeStream node = pbi.getNodeStream(); !node.isNull(); node.next())
                 {
-                    // Check if the node is an attraction.
+                    String name;
+                    bool   isTown = false;
+                    Byte   mask = 0;
+                    Uint16 town = 0;
+
+                    // Check if the node is an attraction or place.
                     for(auto i = 0; i < node.tagsSize(); ++i)
                     {
                         const auto key = node.key(i);
-                        if(key == "attractions" || key  == "tourism")
+
+                        if(key == "attractions" || key == "tourism")
                         {
-                            std::cout << node.value(i) << "\n";
+                            mask |= NodeTypeMask::ATTRACTION;
                         }
+                        else if(key == "name")
+                        {
+                            name = node.value(i);
+                        }
+                        else if(key == "place")
+                        {
+                            const auto& val = node.value(i);
+                            if(val == "city" || val == "town")
+                            {
+                                isTown = true;
+                            }
+                        }
+                    }
+
+                    if(isTown)
+                    {
+                        town = MapData::addTown(name);
+                        mask |= NodeTypeMask::TOWN;
                     }
 
                     // Select the nodes that are part of a highway
@@ -236,7 +260,7 @@ namespace OSM
                     }
                     ++local_node_count.first;
 
-                    array.addNode(Node{nh.id[node.id()], node.latd(), node.lond(), 0, 0, 0});
+                    array.addNode(Node{nh.id[node.id()], node.latd(), node.lond(), mask, town});
                 }
 
                 sharedThis->m_node_map_lock.lock();

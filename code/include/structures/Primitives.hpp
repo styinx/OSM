@@ -9,6 +9,9 @@
 namespace OSM
 {
 
+    const static auto U64_INF = std::numeric_limits<Uint64>::infinity();
+    const static auto F32_INF = std::numeric_limits<float>::infinity();
+
     static Map<std::string, Pair<Byte, Byte>> StreetType = {
         {"living_street", {0x16, 30}},  {"service", {0x20, 10}},
         {"pedestrian", {0x33, 5}},      {"track", {0x40, 255}},
@@ -27,7 +30,9 @@ namespace OSM
 
     enum class NodeTypeMask : Byte
     {
-        HAS_EDGES = 0x01,
+        HAS_EDGES  = 0x01,
+        TOWN       = 0x02,
+        ATTRACTION = 0x04,
     };
 
     enum class EdgeTypeMask : Byte
@@ -59,26 +64,19 @@ namespace OSM
 
     struct Node
     {
-        Uint64 id    = 0;
-        float  lat   = 0;
-        float  lon   = 0;
-        Uint16 town  = 0;
-        Byte   mask  = 0;
-        Byte   speed = 0;
+        Uint64 id   = 0;
+        float  lat  = 0;
+        float  lon  = 0;
+        Uint16 town = 0;
+        Byte   mask = 0;
+        // 40 bits padding
 
-        explicit Node(
-            const Uint64 id,
-            const double lat,
-            const double lon,
-            const Byte   mask,
-            const Byte   speed,
-            const Uint16 town)
+        explicit Node(const Uint64 id, const double lat, const double lon, const Byte mask, const Uint16 town)
             : id(id)
             , lat(static_cast<float>(lat))
             , lon(static_cast<float>(lon))
             , town(town)
             , mask(mask)
-            , speed(speed)
         {
         }
     };
@@ -91,6 +89,7 @@ namespace OSM
         Byte   speed    = 0;
         Byte   mask     = 0;
         bool   oneway   = false;
+        // 8 bits padding
 
         explicit Edge(
             const Uint64 source,
@@ -118,29 +117,48 @@ namespace OSM
         }
     };
 
-    inline Byte operator|=(Byte value, const NodeTypeMask mask)
+    struct PathResult
     {
-        return value |= static_cast<Byte>(mask);
+        Uint64         start    = 0;
+        Uint64         stop     = 0;
+        float          distance = 0;
+        float          duration = 0;
+        Vector<Uint64> route;
+    };
+
+    inline bool operator&(Byte value, const NodeTypeMask mask)
+    {
+        return value & static_cast<typename std::underlying_type<NodeTypeMask>::type>(mask);
     }
 
-    inline Byte operator&=(Byte value, const NodeTypeMask mask)
+    inline bool operator|(Byte value, const NodeTypeMask mask)
     {
-        return value &= static_cast<Byte>(mask);
+        return value | static_cast<typename std::underlying_type<NodeTypeMask>::type>(mask);
+    }
+
+    inline Byte operator|=(Byte& value, const NodeTypeMask mask)
+    {
+        return value |= static_cast<typename std::underlying_type<NodeTypeMask>::type>(mask);
+    }
+
+    inline Byte operator&=(Byte& value, const NodeTypeMask mask)
+    {
+        return value &= static_cast<typename std::underlying_type<NodeTypeMask>::type>(mask);
     }
 
     inline bool operator&(Byte value, const EdgeTypeMask mask)
     {
-        return value & static_cast<Byte>(mask);
+        return value & static_cast<typename std::underlying_type<NodeTypeMask>::type>(mask);
     }
 
-    inline Byte operator|=(Byte value, const EdgeTypeMask mask)
+    inline Byte operator|=(Byte& value, const EdgeTypeMask mask)
     {
-        return value |= static_cast<Byte>(mask);
+        return value |= static_cast<typename std::underlying_type<NodeTypeMask>::type>(mask);
     }
 
-    inline Byte operator&=(Byte value, const EdgeTypeMask mask)
+    inline Byte operator&=(Byte& value, const EdgeTypeMask mask)
     {
-        return value &= static_cast<Byte>(mask);
+        return value &= static_cast<typename std::underlying_type<NodeTypeMask>::type>(mask);
     }
 
     inline float distNodes(const Node& n1, const Node& n2)

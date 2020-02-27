@@ -90,11 +90,19 @@ namespace OSM
 
     Uint64 Grid::getFirstClosest(const float lat, const float lon, const float range) const
     {
-        for(const auto& node : m_array->getNodes())
+        const auto nodes = m_array->getNodes();
+        const auto nodes_in_cell = get(lat, lon);
+
+        for(const auto& id : nodes_in_cell)
         {
+            const auto node = nodes[id];
             if(Geo::dist(lat, lon, node.lat, node.lon) < range)
                 return node.id;
         }
+
+        // If the cell has no nodes return 0;
+        if(!nodes_in_cell.empty())
+            return *nodes_in_cell.begin();
         return 0;
     }
 
