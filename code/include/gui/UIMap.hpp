@@ -2,8 +2,8 @@
 #define OSM_UIMAP_HPP
 
 #include "alg/RouteSearch.hpp"
-#include "gui/mapTypes.hpp"
 #include "gui/WebPage.hpp"
+#include "gui/mapTypes.hpp"
 #include "structures/AdjacencyArray.hpp"
 #include "structures/Grid.hpp"
 
@@ -31,6 +31,8 @@ namespace OSM
         Grid        m_grid;
         RouteSearch m_routeSearch;
 
+        Uint64 townToNode(const QString& town) const;
+
     public slots:
         void onLoad();
         void showGraph(const bool show);
@@ -41,8 +43,8 @@ namespace OSM
         explicit UIMap(Window* parent, const OSM::AdjacencyArray* array, const MapBounds& bounds);
         virtual ~UIMap() = default;
 
-        Vector<Uint64> calculatePath(const QString& from, const QString& to);
-        void           drawPath(const Vector<Uint64>& path) const;
+        PathResult calculatePath(const QString& from, const QString& to);
+        void       drawPath(const Vector<Uint64>& path, const Uint8 color = 0) const;
     };
 
 }  // namespace OSM

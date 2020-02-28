@@ -36,6 +36,7 @@ namespace OSM
         explicit Grid(const MapBounds& bounds, const AdjacencyArray* array);
         virtual ~Grid() = default;
 
+        void             set(const Uint16 cell, const Uint64 index);
         void             set(const float lat, const float lon, const Uint64 index);
         Vector<Uint64>   get(const Uint16 cell) const;
         Vector<Uint64>   get(const float lat, const float lon) const;

@@ -27,18 +27,46 @@ namespace OSM
         load(QUrl{"qrc:///map_html"});
     }
 
-    Vector<Uint64> UIMap::calculatePath(const QString& from, const QString& to)
+    Uint64 UIMap::townToNode(const QString& town) const
+    {
+        const Uint16 town_id = MapData::getTownID(town.toStdString());
+
+        for(const auto& node : m_array->getNodes())
+        {
+            if(node.id == 240094457 || node.id == 69358157 || node.id == 20833623)
+            {
+                int i = 0;
+            }
+            if(node.town == town_id)
+            {
+                return node.id;
+            }
+        }
+        return town_id;
+    }
+
+    PathResult UIMap::calculatePath(const QString& from, const QString& to)
     {
         const auto latlon1 = Geo::stringToLatLon(from);
         const auto latlon2 = Geo::stringToLatLon(to);
 
-        auto start = m_grid.getFirstClosest(latlon1.first, latlon1.second);
-        auto stop = m_grid.getFirstClosest(latlon2.first, latlon2.second);
+        if(!from.contains(',') && latlon1 == latlon2)
+        {
+            auto start = townToNode(from);
+            auto stop = townToNode(to);
 
-        return m_routeSearch.route(start, stop);
+            return m_routeSearch.route(start, stop);
+        }
+        else
+        {
+            auto start = m_grid.getFirstClosest(latlon1.first, latlon1.second);
+            auto stop = m_grid.getFirstClosest(latlon2.first, latlon2.second);
+
+            return m_routeSearch.route(start, stop);
+        }
     }
 
-    void UIMap::drawPath(const Vector<Uint64>& path) const
+    void UIMap::drawPath(const Vector<Uint64>& path, const Uint8 color) const
     {
         const auto nodes = m_array->getNodes();
         QString    params;
@@ -49,7 +77,7 @@ namespace OSM
             params += "[" + QString::number(n.lon) + "," + QString::number(n.lat) + "],";
         }
 
-        page()->runJavaScript("ui_map.showRoute([" + params.left(params.size() - 1) + "]);");
+        page()->runJavaScript("ui_map.showRoute([" + params.left(params.size() - 1) + "], " + QString::number(color) + ");");
     }
 
     void UIMap::onLoad()

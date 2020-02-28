@@ -1,8 +1,10 @@
 #ifndef OSM_MAPDATA_HPP
 #define OSM_MAPDATA_HPP
 
+#include <mutex>
 #include <prototypes.hpp>
 #include <string>
+
 namespace OSM
 {
 
@@ -12,6 +14,7 @@ namespace OSM
         MapData() = default;
 
         static Map<Uint16, std::string> s_towns;
+        static std::mutex s_map_mutex;
 
     public:
         MapData(const MapData& other)     = delete;
