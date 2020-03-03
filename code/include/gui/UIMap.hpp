@@ -3,7 +3,6 @@
 
 #include "alg/RouteSearch.hpp"
 #include "gui/WebPage.hpp"
-#include "gui/mapTypes.hpp"
 #include "structures/AdjacencyArray.hpp"
 #include "structures/Grid.hpp"
 
@@ -29,22 +28,27 @@ namespace OSM
         UIGraph*              m_graph;
 
         Grid        m_grid;
-        RouteSearch m_routeSearch;
+        RouteSearch m_route_search;
+        Queue<Node> m_route_attractions{};
 
         Uint64 townToNode(const QString& town) const;
 
     public slots:
         void onLoad();
         void showGraph(const bool show);
+        void showNodes(const bool show);
         void setStart(const QString& latlon);
         void setStop(const QString& latlon);
+        void addAttraction(const QString& id);
 
     public:
         explicit UIMap(Window* parent, const OSM::AdjacencyArray* array, const MapBounds& bounds);
         virtual ~UIMap() = default;
 
-        PathResult calculatePath(const QString& from, const QString& to);
+        PathResult calculatePath(const QString& from, const QString& to, const TransportType type);
         void       drawPath(const Vector<Uint64>& path, const Uint8 color = 0) const;
+        void       drawNodes(const Vector<Uint64>& path) const;
+        void       resetAttractions();
     };
 
 }  // namespace OSM

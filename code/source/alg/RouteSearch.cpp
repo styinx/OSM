@@ -6,23 +6,35 @@ namespace OSM
     RouteSearch::RouteSearch(const AdjacencyArray* array, const Grid* grid)
         : m_array(array)
         , m_grid(grid)
+        , m_weights(m_array->nodeCount(), F32_INF)
+        , m_distances(m_array->nodeCount(), F32_INF)
+        , m_durations(m_array->nodeCount(), F32_INF)
+        , m_previous(m_array->nodeCount(), U64_INF)
+        , m_visited(m_array->nodeCount(), false)
     {
     }
 
-    PathResult RouteSearch::route(const Uint64 from, const Uint64 to)
+    PathResult RouteSearch::route(const Uint64 from, const Uint64 to, const TransportType type)
     {
         using SearchNode = Pair<Uint64, float>;
 
-        const auto edges   = m_array->getNodes();
+        const auto comparator = [](const SearchNode& lhs, const SearchNode& rhs) {
+            return lhs.second > rhs.second;
+        };
 
-        Vector<float>  weights(m_array->nodeCount(), F32_INF);
-        Vector<Uint64> previous(m_array->nodeCount(), U64_INF);
-        Vector<bool> visited(m_array->nodeCount(), false);
-        Vector<Edge> edges_visited;
-        std::priority_queue<SearchNode, Vector<SearchNode>, std::greater<>> queue;
+        const auto edges = m_array->getNodes();
 
-        weights[from] = 0;
-        queue.push({from, weights[from]});
+        std::priority_queue<SearchNode, Vector<SearchNode>, decltype(comparator)> queue(comparator);
+        m_weights   = Vector<float>(m_array->nodeCount(), F32_INF);
+        m_distances = Vector<float>(m_array->nodeCount(), F32_INF);
+        m_durations = Vector<float>(m_array->nodeCount(), F32_INF);
+        m_visited   = Vector<bool>(m_array->nodeCount(), false);
+        m_previous  = Vector<Uint64>(m_array->nodeCount(), U64_INF);
+
+        m_weights[from]   = 0;
+        m_distances[from] = 0;
+        m_durations[from] = 0;
+        queue.push({from, m_weights[from]});
 
         while(!queue.empty())
         {
@@ -30,41 +42,42 @@ namespace OSM
             const auto weight = queue.top().second;
             queue.pop();
 
-            if(weight > weights[node] || visited[node])
+            if(weight > m_weights[node] || m_visited[node])
                 continue;
 
-            visited[node] = true;
+            m_visited[node] = true;
 
             for(const auto& e : m_array->edges(node))
             {
-                Uint64 neighbour          = e.target;
-                float  neighbour_weight   = e.weight();
-                float  new_weight         = weight + neighbour_weight;
+                // Skip roads that are not part of the chosen transportation type.
+                if(!(e.mask & type))
+                    continue;
 
-                if(new_weight < weights[neighbour])
+                Uint64 neighbour        = e.target;
+                float  neighbour_weight = e.weight();
+                float  new_weight       = weight + neighbour_weight;
+
+                if(new_weight < m_weights[neighbour])
                 {
-                    edges_visited.emplace_back(e);
-                    weights[neighbour]  = new_weight;
-                    previous[neighbour] = node;
-                    queue.push({neighbour, weights[neighbour]});
+                    m_weights[neighbour]   = new_weight;
+                    m_distances[neighbour] = e.distance;
+                    m_durations[neighbour] = e.duration();
+                    m_previous[neighbour]  = node;
+                    queue.push({neighbour, m_weights[neighbour]});
                 }
             }
         }
 
-        float distance = 0;
-        float duration = 0;
-        for(const auto& edge : edges_visited)
-        {
-            distance += edge.distance;
-            duration += edge.weight();
-        }
-
         Vector<Uint64> path;
-        auto p = previous[to];
+        float          distance = 0;
+        float          duration = 0;
+        auto           p        = m_previous[to];
         while(p != U64_INF && p != from)
         {
             path.emplace_back(p);
-            p = previous[p];
+            distance += m_distances[p];
+            duration += m_durations[p];
+            p = m_previous[p];
         }
 
         return {from, to, distance, duration, path};

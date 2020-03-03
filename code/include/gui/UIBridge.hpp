@@ -4,7 +4,6 @@
 #include "NonCopyable.hpp"
 #include "NonMoveable.hpp"
 #include "gui/Window.hpp"
-#include "gui/mapTypes.hpp"
 
 #include <QtCore/QObject>
 

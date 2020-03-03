@@ -10,6 +10,7 @@
     <file alias="icon_marker_blue">ui/img/marker_blue.png</file>
     <file alias="icon_marker_green">ui/img/marker_green.png</file>
     <file alias="icon_marker_orange">ui/img/marker_orange.png</file>
+    <file alias="icon_marker_pink">ui/img/marker_pink.png</file>
     <file alias="icon_marker_purple">ui/img/marker_purple.png</file>
     <file alias="icon_marker_red">ui/img/marker_red.png</file>
     <file alias="icon_marker_white">ui/img/marker_white.png</file>

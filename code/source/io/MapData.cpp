@@ -20,7 +20,7 @@ namespace OSM
             return std::distance(s_towns.begin(), result);
 
         {
-            std::lock_guard<std::mutex> guard(s_map_mutex);
+//            std::lock_guard<std::mutex> guard(s_map_mutex);
             const Uint16 id = s_towns.size();
             s_towns[id]     = town;
             return id;

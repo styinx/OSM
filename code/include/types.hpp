@@ -1,5 +1,5 @@
-#ifndef OSM_PROTOTYPES_HPP
-#define OSM_PROTOTYPES_HPP
+#ifndef OSM_TYPES_HPP
+#define OSM_TYPES_HPP
 
 #include <functional>
 #include <list>
@@ -64,4 +64,4 @@ namespace OSM
 
 }  // namespace OSM
 
-#endif  // OSM_PROTOTYPES_HPP
+#endif  // OSM_TYPES_HPP

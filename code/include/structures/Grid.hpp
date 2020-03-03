@@ -3,9 +3,8 @@
 
 #include "NonCopyable.hpp"
 #include "NonMoveable.hpp"
-#include "gui/mapTypes.hpp"
-#include "prototypes.hpp"
 #include "structures/AdjacencyArray.hpp"
+#include "types.hpp"
 
 namespace OSM
 {

@@ -3,7 +3,7 @@
 
 #include "NonCopyable.hpp"
 #include "NonMoveable.hpp"
-#include "prototypes.hpp"
+#include "types.hpp"
 
 #include <QtCore/QString>
 namespace OSM

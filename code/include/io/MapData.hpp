@@ -2,8 +2,8 @@
 #define OSM_MAPDATA_HPP
 
 #include <mutex>
-#include <prototypes.hpp>
 #include <string>
+#include <types.hpp>
 
 namespace OSM
 {
