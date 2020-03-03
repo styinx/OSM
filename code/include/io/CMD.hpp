@@ -1,10 +1,9 @@
 #ifndef OSM_CMD_HPP
 #define OSM_CMD_HPP
 
-#include "prototypes.hpp"
-
 #include "NonCopyable.hpp"
 #include "NonMoveable.hpp"
+#include "types.hpp"
 
 namespace OSM
 {

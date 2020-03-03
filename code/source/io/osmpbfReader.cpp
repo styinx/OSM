@@ -36,7 +36,7 @@ namespace OSM
                 break;
         }
         if(val.empty())
-            return 30;
+            return 0;
 
         Byte        speed_val = std::stoi(val);
         std::string unit      = speed.substr(index);
@@ -47,7 +47,7 @@ namespace OSM
             else if(unit.find("mp"))
                 return static_cast<Byte>(std::round((float)speed_val * 1.61F));
         }
-        return 30;
+        return 0;
     }
 
     void osmpbfReader::printInfo(const bool timed)
@@ -109,7 +109,7 @@ namespace OSM
         std::this_thread::sleep_for(Seconds(1));
 
         // Read all highway edges and the nodes we need.
-        std::cout << "Collect necessary nodes ..." << std::endl;
+        std::cout << "Collect necessary ways ..." << std::endl;
         const auto collectNodes = [&filters, &array, &nh, weakThis](PrimitiveBlockInputAdaptor& pbi) {
             Pair<Uint64, Uint64> local_way_count = {0, 0};
 
@@ -159,13 +159,32 @@ namespace OSM
 
                     // Determine the type of the highway
                     auto index = filters.highway.matchingTag();
-                    if(index > -1 && index < way.tagsSize() && StreetType.count(way.value(index)))
+                    if(index > -1 && index < way.tagsSize())
                     {
-                        mask |= StreetType[way.value(index)].first;
-                        if(speed == 0)
+                        const auto& value = way.value(index);
+                        if(StreetType.count(value))
                         {
-                            speed = StreetType[way.value(index)].second;
+                            mask |= StreetType[value].first;
+                            speed = StreetType[value].second;
                         }
+                        else if(speed == 0)
+                        {
+                            mask |= StreetType["living_street"].first;
+                            speed = 50;
+                        }
+                        else
+                        {
+                            mask |= StreetType[""].first;
+                        }
+                    }
+
+                    if(speed == 0)
+                    {
+                        speed = 50;
+                    }
+                    if(mask == 0)
+                    {
+                        mask |= StreetType[""].first;
                     }
 
                     // Go through all nodes in the edges
@@ -187,7 +206,10 @@ namespace OSM
 
                             Edge e{nh.id[*previous], nh.id[*current], speed, mask, oneway};
                             array.addEdge(e);
-                            array.addEdge(e.swap());
+                            if(!oneway)
+                            {
+                                array.addEdge(e.mirror());
+                            }
                             sharedThis->m_edges += 2;
 
                             sharedThis->m_node_map_lock.unlock();
@@ -218,19 +240,35 @@ namespace OSM
 
                 for(INodeStream node = pbi.getNodeStream(); !node.isNull(); node.next())
                 {
-                    String name;
+                    // Select the nodes that are part of a highway
+                    ++local_node_count.second;
+                    if(!nh.id.count(node.id()))
+                    {
+                        continue;
+                    }
+                    ++local_node_count.first;
+
                     bool   isTown = false;
-                    Byte   mask = 0;
-                    Uint16 town = 0;
+                    Byte   mask   = 0;
+                    Uint16 town   = 0;
+                    String name;
 
                     // Check if the node is an attraction or place.
                     for(auto i = 0; i < node.tagsSize(); ++i)
                     {
-                        const auto key = node.key(i);
+                        const auto& key = node.key(i);
 
                         if(key == "attractions" || key == "tourism")
                         {
-                            mask |= NodeTypeMask::ATTRACTION;
+                            const auto& value = node.value(i);
+                            if(AttractionType.count(value))
+                            {
+                                mask |= AttractionType.at(value);
+                            }
+                            else
+                            {
+                                mask |= NodeTypeMask::TOURISM;
+                            }
                         }
                         else if(key == "name")
                         {
@@ -251,14 +289,6 @@ namespace OSM
                         town = MapData::addTown(name);
                         mask |= NodeTypeMask::TOWN;
                     }
-
-                    // Select the nodes that are part of a highway
-                    ++local_node_count.second;
-                    if(!nh.id.count(node.id()))
-                    {
-                        continue;
-                    }
-                    ++local_node_count.first;
 
                     array.addNode(Node{nh.id[node.id()], node.latd(), node.lond(), mask, town});
                 }

@@ -47,10 +47,12 @@ link_directories(
 # Compiler
 #
 
+#SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -fPIC -O3")
 SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -fPIC")
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COMPILE_FLAGS}")
 
+#set(CMAKE_BUILD_TYPE RELEASE)
 
 #
 # Libraries
@@ -93,12 +95,11 @@ set(RESOURCES
 #
 
 set(INCLUDES
-    code/include/prototypes.hpp
+    code/include/types.hpp
     code/include/structures/AdjacencyArray.hpp
     code/include/structures/Primitives.hpp
     code/include/io/osmpbfReader.hpp
     code/include/gui/UIBridge.hpp
-    code/include/gui/mapTypes.hpp
     code/include/alg/RouteSearch.hpp
     code/include/NonCopyable.hpp
     code/include/NonMoveable.hpp

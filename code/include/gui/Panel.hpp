@@ -23,52 +23,60 @@ namespace OSM
         Q_OBJECT
 
     private:
-        using Clock    = std::chrono::system_clock;
-        using Seconds    = std::chrono::seconds;
-
-        enum class TransportType : Byte
-        {
-            Pedestrian      = 0,
-            Bicycle         = 1,
-            Car             = 2,
-            PublicTransport = 3,
-            Any             = 4
-        };
+        using Clock   = std::chrono::system_clock;
+        using Seconds = std::chrono::seconds;
 
         Window* m_parent;
 
         QSizePolicy m_min_policy;
         QSizePolicy m_expanding_policy;
 
+        QGridLayout* m_grid;
         QLineEdit*   m_start;
         QLineEdit*   m_stop;
         QPushButton* m_go;
-
         QPushButton* m_car;
         QPushButton* m_bike;
         QPushButton* m_foot;
         QPushButton* m_public_transport;
-        QCheckBox* m_street_graph;
-        QSlider* m_attraction_slider;
-
-        QTableWidget* m_table;
-
-        QGridLayout* m_grid;
+        QPushButton* m_reset_attraction;
+        QCheckBox*   m_street_graph;
+        QCheckBox*   m_show_attractions;
+        QSlider*     m_attraction_slider;
+        QSlider*     m_attraction_slider_distance;
+        QLabel*      m_label_config_info;
         QLabel*      m_label_start;
         QLabel*      m_label_stop;
+        QLabel*      m_label_show_attraction;
         QLabel*      m_label_attraction;
+        QLabel*      m_label_attraction_distance;
         QLabel*      m_label_attraction_start;
         QLabel*      m_label_attraction_stop;
 
+        QGridLayout* m_info_grid;
+        QLabel*      m_label_route_info;
+        QLabel*      m_label_distance_info;
+        QLabel*      m_distance_info;
+        QLabel*      m_label_duration_info;
+        QLabel*      m_duration_info;
+        QLabel*      m_label_calculation;
+        QLabel*      m_calculation_info;
+
         Clock::time_point m_timer = Clock::now();
 
-        void initTop();
-        void initBottom();
+        void           initTop();
+        void           initBottom();
+        TransportType  transportation();
+        static QString duration(const float duration);
+        static QString distance(const float distance);
 
     public slots:
         void go();
         void setShowGraph();
-        void setAttractionRange();
+        void setShowAttractions();
+        void resetAttractions();
+        void setAttractionRange(int);
+        void setAttractionNumber(int);
 
     signals:
         void goPressed();
@@ -81,9 +89,9 @@ namespace OSM
         Panel& operator=(Panel&& other) noexcept = delete;
         virtual ~Panel()                         = default;
 
-        void addNode(const Node* node);
         void setStart(const float lat, const float lon);
         void setStop(const float lat, const float lon);
+        void addAttraction(const int size);
     };
 
 }  // namespace OSM

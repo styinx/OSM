@@ -3,9 +3,8 @@
 
 #include "NonCopyable.hpp"
 #include "NonMoveable.hpp"
-#include "gui/mapTypes.hpp"
-#include "prototypes.hpp"
 #include "structures/AdjacencyArray.hpp"
+#include "types.hpp"
 
 namespace OSM
 {
@@ -43,7 +42,7 @@ namespace OSM
         Vector<Uint64>   get(const MapBounds& bounds) const;
         const MapBounds& getBounds() const;
         Vector<Cell>     getCells() const;
-        Uint64           getFirstClosest(const float lat, const float lon, const float range = 100) const;
+        Uint64           getFirstClosest(const float lat, const float lon, const float range = 500) const;
     };
 
 }  // namespace OSM
