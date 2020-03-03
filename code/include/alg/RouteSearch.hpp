@@ -18,8 +18,8 @@ namespace OSM
         const Grid*           m_grid;
 
         Vector<float>  m_weights;
-        Vector<float> m_distances;
-        Vector<float> m_durations;
+        Vector<float>  m_distances;
+        Vector<float>  m_durations;
         Vector<Uint64> m_previous;
         Vector<bool>   m_visited;
 
@@ -27,7 +27,8 @@ namespace OSM
         explicit RouteSearch(const AdjacencyArray* array, const Grid* grid);
         virtual ~RouteSearch() = default;
 
-        PathResult route(const Uint64 from, const Uint64 to, const TransportType type);
+        PathResult
+        route(const Uint64 from, const Uint64 to, const TransportType type, const Vector<Node>& attractions);
     };
 
 }  // namespace OSM

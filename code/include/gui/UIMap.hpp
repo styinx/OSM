@@ -27,9 +27,9 @@ namespace OSM
         const AdjacencyArray* m_array;
         UIGraph*              m_graph;
 
-        Grid        m_grid;
-        RouteSearch m_route_search;
-        Queue<Node> m_route_attractions{};
+        Grid         m_grid;
+        RouteSearch  m_route_search;
+        Vector<Node> m_route_attractions{};
 
         Uint64 townToNode(const QString& town) const;
 

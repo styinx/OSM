@@ -62,12 +62,17 @@ namespace OSM
 
     static Map<std::string, Pair<Byte, Byte>> StreetType = {
         {"living_street", {0x17, 30}},  {"service", {0x24, 30}},
-        {"pedestrian", {0x37, 5}},      {"track", {0x43, 255}},
-        {"bus_guideway", {0x5C, 50}},   {"escape", {0x64, 10}},
-        {"raceway", {0x70, 255}},
+        {"driveway", {0x17, 15}},       {"road", {0x2F, 30}},
+        {"pedestrian", {0x37, 5}},      {"track", {0x47, 20}},
+        {"footway", {0x43, 5}},         {"corridor", {0x41, 5}},
+        {"sidewalk", {0x43, 5}},        {"path", {0x43, 5}},
+        {"steps", {0x43, 5}},           {"cycleway", {0x43, 15}},
+        {"bridleway", {0x43, 15}},      {"construction", {0x43, 5}},
+        {"proposed", {0x43, 5}},        {"bus_guideway", {0x5C, 50}},
+        {"escape", {0x64, 10}},         {"raceway", {0x70, 255}},
 
         {"motorway_link", {0xF4, 110}}, {"trunk_link", {0xF4, 110}},
-        {"primary_link", {0xF4, 90}},  {"secondary_link", {0xF4, 90}},
+        {"primary_link", {0xF4, 90}},   {"secondary_link", {0xF4, 90}},
         {"tertiary_link", {0xF4, 60}},
 
         {"motorway", {0x84, 120}},      {"trunk", {0x94, 120}},
@@ -203,10 +208,12 @@ namespace OSM
         {
         }
 
-        Edge& swap()
+        Edge mirror()
         {
-            std::swap(source, target);
-            return *this;
+            Edge e   = *this;
+            e.source = this->target;
+            e.target = this->source;
+            return e;
         }
 
         bool oneWay() const
@@ -232,6 +239,7 @@ namespace OSM
         float          distance = 0;
         float          duration = 0;
         Vector<Uint64> route;
+        Uint64         calculation = 0;
     };
 
     inline float distNodes(const Node& n1, const Node& n2)

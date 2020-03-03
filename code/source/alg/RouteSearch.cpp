@@ -14,15 +14,23 @@ namespace OSM
     {
     }
 
-    PathResult RouteSearch::route(const Uint64 from, const Uint64 to, const TransportType type)
+    PathResult
+    RouteSearch::route(const Uint64 from, const Uint64 to, const TransportType type, const Vector<Node>& attractions)
     {
-        using SearchNode = Pair<Uint64, float>;
+        using SearchNode   = Pair<Uint64, float>;
+        using Clock        = std::chrono::system_clock;
+        using Milliseconds = std::chrono::milliseconds;
+
+        const auto start = Clock::now();
 
         const auto comparator = [](const SearchNode& lhs, const SearchNode& rhs) {
             return lhs.second > rhs.second;
         };
 
-        const auto edges = m_array->getNodes();
+        const auto nodes        = m_array->getNodes();
+        const auto node_from    = nodes[from];
+        const auto node_to      = nodes[to];
+        const auto from_to_dist = Geo::dist(node_from.lat, node_from.lon, node_to.lat, node_to.lon);
 
         std::priority_queue<SearchNode, Vector<SearchNode>, decltype(comparator)> queue(comparator);
         m_weights   = Vector<float>(m_array->nodeCount(), F32_INF);
@@ -35,6 +43,12 @@ namespace OSM
         m_distances[from] = 0;
         m_durations[from] = 0;
         queue.push({from, m_weights[from]});
+
+        for(Uint64 i = 0; i < nodes.size(); ++i)
+        {
+            const auto& other = nodes[i];
+            m_weights[i]      = Geo::dist(node_from.lat, node_from.lon, other.lat, other.lon);
+        }
 
         while(!queue.empty())
         {
@@ -80,7 +94,9 @@ namespace OSM
             p = m_previous[p];
         }
 
-        return {from, to, distance, duration, path};
+        const Uint64 calculation =
+            std::chrono::duration_cast<Milliseconds>(Clock::now() - start).count();
+        return {from, to, distance, duration, path, calculation};
     }
 
 }  // namespace OSM

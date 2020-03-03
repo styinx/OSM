@@ -57,7 +57,7 @@ namespace OSM
         const float vlat      = bounds.min_lat + (bounds.max_lat - bounds.min_lat) / 2;
         const float vlon      = bounds.min_lon + (bounds.max_lon - bounds.min_lon) / 2;
         const auto  diff      = std::abs(bounds.max_lon - bounds.min_lon);
-        const float auto_zoom = std::max(-15 * diff, -0.4F * diff - 10) + 20;
+        const float auto_zoom = std::max(-15 * diff, -0.45F * diff - 10) + 20;
 
         page()->runJavaScript(
             "ui_map.setView(" + QString::number(vlat) + ", " + QString::number(vlon) + ", " +
@@ -119,9 +119,9 @@ namespace OSM
         const auto node = m_array->getNodes()[id.toInt()];
         if(m_route_attractions.size() == 10)
         {
-            m_route_attractions.pop();
+            m_route_attractions.erase(m_route_attractions.begin());
         }
-        m_route_attractions.push(node);
+        m_route_attractions.emplace_back(node);
         m_parent->getPanel()->addAttraction(m_route_attractions.size());
     }
 
@@ -135,14 +135,14 @@ namespace OSM
             auto start = townToNode(from);
             auto stop  = townToNode(to);
 
-            return m_route_search.route(start, stop, type);
+            return m_route_search.route(start, stop, type, m_route_attractions);
         }
         else
         {
             auto start = m_grid.getFirstClosest(latlon1.first, latlon1.second);
             auto stop  = m_grid.getFirstClosest(latlon2.first, latlon2.second);
 
-            return m_route_search.route(start, stop, type);
+            return m_route_search.route(start, stop, type, m_route_attractions);
         }
     }
 
@@ -177,8 +177,7 @@ namespace OSM
 
     void UIMap::resetAttractions()
     {
-        Queue<Node> empty;
-        std::swap(m_route_attractions, empty);
+        m_route_attractions.clear();
 
         page()->runJavaScript("ui_map.resetAttractions();");
     }

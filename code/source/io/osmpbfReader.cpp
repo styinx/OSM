@@ -109,7 +109,7 @@ namespace OSM
         std::this_thread::sleep_for(Seconds(1));
 
         // Read all highway edges and the nodes we need.
-        std::cout << "Collect necessary nodes ..." << std::endl;
+        std::cout << "Collect necessary ways ..." << std::endl;
         const auto collectNodes = [&filters, &array, &nh, weakThis](PrimitiveBlockInputAdaptor& pbi) {
             Pair<Uint64, Uint64> local_way_count = {0, 0};
 
@@ -159,20 +159,32 @@ namespace OSM
 
                     // Determine the type of the highway
                     auto index = filters.highway.matchingTag();
-                    if(index > -1 && index < way.tagsSize() && StreetType.count(way.value(index)))
+                    if(index > -1 && index < way.tagsSize())
                     {
-                        mask |= StreetType[way.value(index)].first;
-                        if(speed == 0)
+                        const auto& value = way.value(index);
+                        if(StreetType.count(value))
                         {
-                            if(StreetType.count(way.value(index)))
-                            {
-                                speed = StreetType[way.value(index)].second;
-                            }
-                            else
-                            {
-                                speed = 30;
-                            }
+                            mask |= StreetType[value].first;
+                            speed = StreetType[value].second;
                         }
+                        else if(speed == 0)
+                        {
+                            mask |= StreetType["living_street"].first;
+                            speed = 50;
+                        }
+                        else
+                        {
+                            mask |= StreetType[""].first;
+                        }
+                    }
+
+                    if(speed == 0)
+                    {
+                        speed = 50;
+                    }
+                    if(mask == 0)
+                    {
+                        mask |= StreetType[""].first;
                     }
 
                     // Go through all nodes in the edges
@@ -196,7 +208,7 @@ namespace OSM
                             array.addEdge(e);
                             if(!oneway)
                             {
-                                array.addEdge(e.swap());
+                                array.addEdge(e.mirror());
                             }
                             sharedThis->m_edges += 2;
 

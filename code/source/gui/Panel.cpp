@@ -19,8 +19,8 @@ namespace OSM
 
         m_expanding_policy.setHorizontalPolicy(QSizePolicy::Expanding);
         m_expanding_policy.setVerticalPolicy(QSizePolicy::Expanding);
-        m_expanding_policy.setVerticalStretch(1);
         m_expanding_policy.setHorizontalStretch(1);
+        m_expanding_policy.setVerticalStretch(1);
 
         m_start            = new QLineEdit();
         m_stop             = new QLineEdit();
@@ -54,9 +54,9 @@ namespace OSM
         QObject::connect(m_show_attractions, SIGNAL(clicked()), this, SLOT(setShowAttractions()));
         QObject::connect(m_reset_attraction, SIGNAL(clicked()), this, SLOT(resetAttractions()));
         QObject::connect(
-            m_attraction_slider, SIGNAL(valueChanged()), this, SLOT(setAttractionNumber()));
+            m_attraction_slider, SIGNAL(valueChanged(int)), this, SLOT(setAttractionNumber(int)));
         QObject::connect(
-            m_attraction_slider_distance, SIGNAL(valueChanged()), this, SLOT(setAttractionRange()));
+            m_attraction_slider_distance, SIGNAL(valueChanged(int)), this, SLOT(setAttractionRange(int)));
     }
 
     void Panel::initTop()
@@ -67,17 +67,16 @@ namespace OSM
         m_label_start               = new QLabel{"From: "};
         m_label_stop                = new QLabel{"To: "};
         m_label_show_attraction     = new QLabel{"Show tourism: "};
+        m_label_config_info         = new QLabel{"<b>Configuration</b>"};
         m_label_attraction          = new QLabel{"Number of attraction: "};
         m_label_attraction_distance = new QLabel{"Attraction range: "};
         m_label_attraction_start    = new QLabel{"1 km"};
         m_label_attraction_stop     = new QLabel{"10 km"};
-        auto grid_filler            = new QWidget();
+
         auto icon_wrapper           = new QWidget();
         auto icon_box               = new QHBoxLayout(icon_wrapper);
         auto range_wrapper          = new QWidget();
         auto range_box              = new QHBoxLayout(range_wrapper);
-
-        grid_filler->setSizePolicy(m_expanding_policy);
 
         m_start->addAction(QIcon(":/icon_marker_blue"), QLineEdit::TrailingPosition);
         m_start->setPlaceholderText("lat,lon | start");
@@ -87,33 +86,44 @@ namespace OSM
         m_attraction_slider->setRange(0, 10);
         m_attraction_slider_distance->setRange(1, 10);
 
-        m_grid->addWidget(m_label_start, 0, 0);
-        m_grid->addWidget(m_start, 0, 1, 1, 1, Qt::AlignRight);
-        m_grid->addWidget(m_label_stop, 1, 0);
-        m_grid->addWidget(m_stop, 1, 1, 1, 1, Qt::AlignRight);
+        int row = 0;
+
+        m_grid->addWidget(m_label_start, row, 0);
+        m_grid->addWidget(m_start, row++, 1, 1, 1, Qt::AlignRight);
+        m_grid->addWidget(m_label_stop, row, 0);
+        m_grid->addWidget(m_stop, row++, 1, 1, 1, Qt::AlignRight);
 
         icon_box->addWidget(m_foot);
         icon_box->addWidget(m_bike);
         icon_box->addWidget(m_car);
         icon_box->addWidget(m_public_transport);
         icon_box->addWidget(m_go);
-        m_grid->addWidget(icon_wrapper, 2, 0, 1, 2, Qt::AlignRight);
+        m_grid->addWidget(icon_wrapper, row++, 0, 1, 2, Qt::AlignRight);
 
-        m_grid->addWidget(m_label_attraction, 4, 0);
-        m_grid->addWidget(m_attraction_slider, 4, 1);
+        auto grid_filler1 = new QWidget();
+        grid_filler1->setSizePolicy(m_expanding_policy);
+        m_grid->addWidget(grid_filler1);
+
+        row++;
+
+        m_grid->addWidget(m_label_config_info, row++, 0, 1, 2, Qt::AlignCenter);
+        m_grid->addWidget(m_label_attraction, row, 0);
+        m_grid->addWidget(m_attraction_slider, row++, 1);
 
         range_box->addWidget(m_label_attraction_start);
         range_box->addWidget(m_attraction_slider_distance);
         range_box->addWidget(m_label_attraction_stop);
-        m_grid->addWidget(m_label_attraction_distance, 5, 0);
-        m_grid->addWidget(range_wrapper, 5, 1);
-        m_grid->addWidget(m_reset_attraction, 6, 1);
-        m_grid->addWidget(m_label_show_attraction, 7, 0);
-        m_grid->addWidget(m_show_attractions, 7, 1);
+        m_grid->addWidget(m_label_attraction_distance, row, 0);
+        m_grid->addWidget(range_wrapper, row++, 1);
+        m_grid->addWidget(m_reset_attraction, row, 1);
+        m_grid->addWidget(m_label_show_attraction, row++, 0);
+        m_grid->addWidget(m_show_attractions, row++, 1);
 
-        m_grid->addWidget(m_street_graph, 8, 1);
+        //m_grid->addWidget(m_street_graph, row++, 1);
 
-        m_grid->addWidget(grid_filler);
+        auto grid_filler2 = new QWidget();
+        grid_filler2->setSizePolicy(m_expanding_policy);
+        m_grid->addWidget(grid_filler2);
 
         addWidget(grid_wrapper);
     }
@@ -123,15 +133,31 @@ namespace OSM
         auto grid_wrapper = new QWidget{};
         m_info_grid       = new QGridLayout{grid_wrapper};
 
+        m_label_route_info    = new QLabel("<b>Route information</b>");
         m_label_distance_info = new QLabel("Estimated distance: ");
+        m_distance_info       = new QLabel("0.0 km");
         m_label_duration_info = new QLabel("Estiated duration: ");
         m_duration_info       = new QLabel("0.0 h");
-        m_distance_info       = new QLabel("0.0 km");
+        m_label_calculation   = new QLabel("Calculation:");
+        m_calculation_info    = new QLabel("0.0 s");
 
-        m_info_grid->addWidget(m_label_distance_info, 0, 0);
-        m_info_grid->addWidget(m_distance_info, 0, 1);
-        m_info_grid->addWidget(m_label_duration_info, 1, 0);
-        m_info_grid->addWidget(m_duration_info, 1, 1);
+        auto grid_filler1 = new QWidget();
+        grid_filler1->setSizePolicy(m_expanding_policy);
+        m_grid->addWidget(grid_filler1);
+
+        int row = 1;
+
+        m_info_grid->addWidget(m_label_route_info, row++, 0, 1, 2, Qt::AlignCenter);
+        m_info_grid->addWidget(m_label_distance_info, row, 0);
+        m_info_grid->addWidget(m_distance_info, row++, 1);
+        m_info_grid->addWidget(m_label_duration_info, row, 0);
+        m_info_grid->addWidget(m_duration_info, row++, 1);
+        m_info_grid->addWidget(m_label_calculation, row, 0);
+        m_info_grid->addWidget(m_calculation_info, row++, 1);
+
+        auto grid_filler2 = new QWidget();
+        grid_filler2->setSizePolicy(m_expanding_policy);
+        m_grid->addWidget(grid_filler2);
 
         addWidget(grid_wrapper);
     }
@@ -162,11 +188,11 @@ namespace OSM
         float minutes = duration;
         if(minutes < 60)
         {
-            return QString::number(minutes) + " min";
+            return QString::number(minutes, 'g', 2) + " min";
         }
         else
         {
-            return QString::number(minutes / 60) + " h";
+            return QString::number(minutes / 60, 'g', 2) + " h";
         }
     }
 
@@ -175,11 +201,11 @@ namespace OSM
         float meters = distance;
         if(meters < 1000)
         {
-            return QString::number(meters) + " m";
+            return QString::number(meters, 'g', 2) + " m";
         }
         else
         {
-            return QString::number(meters / 1000) + " km";
+            return QString::number(meters / 1000, 'g', 2) + " km";
         }
     }
 
@@ -235,6 +261,7 @@ namespace OSM
 
         m_duration_info->setText(duration(pathResult.duration));
         m_distance_info->setText(distance(pathResult.distance));
+        m_calculation_info->setText(QString::number(pathResult.calculation / 1000, 'g', 4) + " s");
     }
 
     void Panel::setShowGraph()
@@ -253,7 +280,7 @@ namespace OSM
         m_attraction_slider->setValue(0);
     }
 
-    void Panel::setAttractionNumber()
+    void Panel::setAttractionNumber(int)
     {
         // Trigger the calculation only if at least three seconds have expired.
         if(std::chrono::duration_cast<Seconds>(Clock::now() - m_timer).count() > 3)
@@ -263,7 +290,7 @@ namespace OSM
         }
     }
 
-    void Panel::setAttractionRange()
+    void Panel::setAttractionRange(int)
     {
         // Trigger the calculation only if at least three seconds have expired.
         if(std::chrono::duration_cast<Seconds>(Clock::now() - m_timer).count() > 3)

@@ -44,6 +44,7 @@ namespace OSM
         QCheckBox*   m_show_attractions;
         QSlider*     m_attraction_slider;
         QSlider*     m_attraction_slider_distance;
+        QLabel*      m_label_config_info;
         QLabel*      m_label_start;
         QLabel*      m_label_stop;
         QLabel*      m_label_show_attraction;
@@ -58,22 +59,24 @@ namespace OSM
         QLabel*      m_distance_info;
         QLabel*      m_label_duration_info;
         QLabel*      m_duration_info;
+        QLabel*      m_label_calculation;
+        QLabel*      m_calculation_info;
 
         Clock::time_point m_timer = Clock::now();
 
-        void          initTop();
-        void          initBottom();
-        TransportType transportation();
-        static QString       duration(const float duration) ;
-        static QString       distance(const float distance) ;
+        void           initTop();
+        void           initBottom();
+        TransportType  transportation();
+        static QString duration(const float duration);
+        static QString distance(const float distance);
 
     public slots:
         void go();
         void setShowGraph();
         void setShowAttractions();
         void resetAttractions();
-        void setAttractionRange();
-        void setAttractionNumber();
+        void setAttractionRange(int);
+        void setAttractionNumber(int);
 
     signals:
         void goPressed();
