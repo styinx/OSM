@@ -44,11 +44,11 @@ namespace OSM
         m_durations[from] = 0;
         queue.push({from, m_weights[from]});
 
-        for(Uint64 i = 0; i < nodes.size(); ++i)
-        {
-            const auto& other = nodes[i];
-            m_weights[i]      = Geo::dist(node_from.lat, node_from.lon, other.lat, other.lon);
-        }
+//        for(Uint64 i = 0; i < nodes.size(); ++i)
+//        {
+//            const auto& other = nodes[i];
+//            m_weights[i]      = Geo::dist(node_from.lat, node_from.lon, other.lat, other.lon);
+//        }
 
         while(!queue.empty())
         {
