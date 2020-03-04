@@ -14,7 +14,7 @@ namespace OSM
 
     enum class TransportType : Byte
     {
-        PEDESTRIAN       = 0x01,
+        FOOT             = 0x01,
         BICYCLE          = 0x02,
         CAR              = 0x04,
         PUBLIC_TRANSPORT = 0x08,
@@ -113,15 +113,35 @@ namespace OSM
     };
 
     template<typename E>
-    inline bool operator&(Byte value, const E mask)
+    inline bool operator&(const Byte value, const E mask)
     {
         return value & static_cast<typename std::underlying_type<E>::type>(mask);
     }
 
     template<typename E>
-    inline bool operator|(Byte value, const E mask)
+    inline bool operator&(const E mask, const Byte value)
+    {
+        return value & static_cast<typename std::underlying_type<E>::type>(mask);
+    }
+
+    template<typename E>
+    inline bool operator&(const E mask1, const E mask2)
+    {
+        return static_cast<typename std::underlying_type<E>::type>(mask1) &
+               static_cast<typename std::underlying_type<E>::type>(mask2);
+    }
+
+    template<typename E>
+    inline bool operator|(const Byte value, const E mask)
     {
         return value | static_cast<typename std::underlying_type<E>::type>(mask);
+    }
+
+    template<typename E>
+    inline bool operator|(const E mask1, const E mask2)
+    {
+        return static_cast<typename std::underlying_type<E>::type>(mask1) |
+               static_cast<typename std::underlying_type<E>::type>(mask2);
     }
 
     template<typename E>
@@ -216,19 +236,18 @@ namespace OSM
             return e;
         }
 
-        bool oneWay() const
+        float duration(const Uint8 alt_speed = 0) const
         {
-            return oneway;
+            if(alt_speed > 0)
+            {
+                return distance / 1000 / static_cast<float>(alt_speed);
+            }
+            return distance / 1000 / static_cast<float>(speed);
         }
 
-        float duration() const
+        float weight(const int speed_factor = 1) const
         {
-            return distance / static_cast<float>(speed);
-        }
-
-        float weight() const
-        {
-            return distance / static_cast<float>(speed);
+            return distance / (static_cast<float>(speed) * speed_factor);
         }
     };
 

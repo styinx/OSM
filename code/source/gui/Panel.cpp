@@ -73,10 +73,10 @@ namespace OSM
         m_label_attraction_start    = new QLabel{"1 km"};
         m_label_attraction_stop     = new QLabel{"10 km"};
 
-        auto icon_wrapper           = new QWidget();
-        auto icon_box               = new QHBoxLayout(icon_wrapper);
-        auto range_wrapper          = new QWidget();
-        auto range_box              = new QHBoxLayout(range_wrapper);
+        auto icon_wrapper  = new QWidget();
+        auto icon_box      = new QHBoxLayout(icon_wrapper);
+        auto range_wrapper = new QWidget();
+        auto range_box     = new QHBoxLayout(range_wrapper);
 
         m_start->addAction(QIcon(":/icon_marker_blue"), QLineEdit::TrailingPosition);
         m_start->setPlaceholderText("lat,lon | start");
@@ -119,7 +119,7 @@ namespace OSM
         m_grid->addWidget(m_label_show_attraction, row++, 0);
         m_grid->addWidget(m_show_attractions, row++, 1);
 
-        //m_grid->addWidget(m_street_graph, row++, 1);
+        // m_grid->addWidget(m_street_graph, row++, 1);
 
         auto grid_filler2 = new QWidget();
         grid_filler2->setSizePolicy(m_expanding_policy);
@@ -166,7 +166,7 @@ namespace OSM
     {
         if(m_foot->isChecked())
         {
-            return TransportType::PEDESTRIAN;
+            return TransportType::FOOT;
         }
         else if(m_bike->isChecked())
         {
@@ -185,14 +185,14 @@ namespace OSM
 
     QString Panel::duration(const float duration)
     {
-        float minutes = duration;
-        if(minutes < 60)
+        float hours = duration;
+        if(hours < 1)
         {
-            return QString::number(minutes, 'g', 2) + " min";
+            return QString::number(hours * 60, 'f', 2) + " min";
         }
         else
         {
-            return QString::number(minutes / 60, 'g', 2) + " h";
+            return QString::number(hours, 'f', 2) + " h";
         }
     }
 
@@ -201,11 +201,11 @@ namespace OSM
         float meters = distance;
         if(meters < 1000)
         {
-            return QString::number(meters, 'g', 2) + " m";
+            return QString::number(meters, 'f', 2) + " m";
         }
         else
         {
-            return QString::number(meters / 1000, 'g', 2) + " km";
+            return QString::number(meters / 1000, 'f', 2) + " km";
         }
     }
 
@@ -261,7 +261,7 @@ namespace OSM
 
         m_duration_info->setText(duration(pathResult.duration));
         m_distance_info->setText(distance(pathResult.distance));
-        m_calculation_info->setText(QString::number(pathResult.calculation / 1000, 'g', 4) + " s");
+        m_calculation_info->setText(QString::number(pathResult.calculation / 1000, 'f', 2) + " s");
     }
 
     void Panel::setShowGraph()

@@ -17,9 +17,9 @@ namespace OSM
     PathResult
     RouteSearch::route(const Uint64 from, const Uint64 to, const TransportType type, const Vector<Node>& attractions)
     {
-        using SearchNode   = Pair<Uint64, float>;
-        using Clock        = std::chrono::system_clock;
-        using Milliseconds = std::chrono::milliseconds;
+        using SearchNode = Pair<Uint64, float>;
+        using Clock      = std::chrono::system_clock;
+        using MS         = std::chrono::milliseconds;
 
         const auto start = Clock::now();
 
@@ -31,11 +31,12 @@ namespace OSM
         const auto node_from    = nodes[from];
         const auto node_to      = nodes[to];
         const auto from_to_dist = Geo::dist(node_from.lat, node_from.lon, node_to.lat, node_to.lon);
+        const auto alt_speed    = (type & 0x01) ? 5 : ((type & 0x02) ? 15 : 0);
 
         std::priority_queue<SearchNode, Vector<SearchNode>, decltype(comparator)> queue(comparator);
         m_weights   = Vector<float>(m_array->nodeCount(), F32_INF);
-        m_distances = Vector<float>(m_array->nodeCount(), F32_INF);
-        m_durations = Vector<float>(m_array->nodeCount(), F32_INF);
+        m_distances = Vector<float>(m_array->nodeCount(), 0);
+        m_durations = Vector<float>(m_array->nodeCount(), 0);
         m_visited   = Vector<bool>(m_array->nodeCount(), false);
         m_previous  = Vector<Uint64>(m_array->nodeCount(), U64_INF);
 
@@ -44,15 +45,10 @@ namespace OSM
         m_durations[from] = 0;
         queue.push({from, m_weights[from]});
 
-//        for(Uint64 i = 0; i < nodes.size(); ++i)
-//        {
-//            const auto& other = nodes[i];
-//            m_weights[i]      = Geo::dist(node_from.lat, node_from.lon, other.lat, other.lon);
-//        }
-
-        while(!queue.empty())
+        Uint64 node = from;
+        while(!queue.empty() && node != to)
         {
-            const auto node   = queue.top().first;
+            node              = queue.top().first;
             const auto weight = queue.top().second;
             queue.pop();
 
@@ -68,16 +64,19 @@ namespace OSM
                     continue;
 
                 Uint64 neighbour        = e.target;
-                float  neighbour_weight = e.weight();
+                float  neighbour_weight = e.weight(100);
                 float  new_weight       = weight + neighbour_weight;
 
-                if(new_weight < m_weights[neighbour])
+                // if(new_weight < from_to_dist)
                 {
-                    m_weights[neighbour]   = new_weight;
-                    m_distances[neighbour] = e.distance;
-                    m_durations[neighbour] = e.duration();
-                    m_previous[neighbour]  = node;
-                    queue.push({neighbour, m_weights[neighbour]});
+                    if(new_weight < m_weights[neighbour])
+                    {
+                        m_weights[neighbour]   = new_weight;
+                        m_distances[neighbour] = e.distance;
+                        m_durations[neighbour] = e.duration(alt_speed);
+                        m_previous[neighbour]  = node;
+                        queue.push({neighbour, m_weights[neighbour]});
+                    }
                 }
             }
         }
@@ -94,8 +93,7 @@ namespace OSM
             p = m_previous[p];
         }
 
-        const Uint64 calculation =
-            std::chrono::duration_cast<Milliseconds>(Clock::now() - start).count();
+        const Uint64 calculation = std::chrono::duration_cast<MS>(Clock::now() - start).count();
         return {from, to, distance, duration, path, calculation};
     }
 
