@@ -10,10 +10,10 @@ namespace OSMTest
     {
         AdjacencyArray array{};
 
-        Node a{50U, 0.0, 0.0, 0, 0, 0};
-        Node b{10U, 0.0, 0.0, 0, 0, 0};
-        Node c{20U, 0.0, 0.0, 0, 0, 0};
-        Node d{30U, 0.0, 0.0, 0, 0, 0};
+        Node a{50U, 0.0, 0.0, 0, 0};
+        Node b{10U, 0.0, 0.0, 0, 0};
+        Node c{20U, 0.0, 0.0, 0, 0};
+        Node d{30U, 0.0, 0.0, 0, 0};
 
         Edge ab{a.id, b.id};
         Edge ac{a.id, c.id};

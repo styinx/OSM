@@ -282,18 +282,21 @@ namespace OSM
 
     void Panel::setAttractionNumber(int)
     {
-        // Trigger the calculation only if at least three seconds have expired.
-        if(std::chrono::duration_cast<Seconds>(Clock::now() - m_timer).count() > 3)
+        if(std::chrono::duration_cast<MS>(Clock::now() - m_timer).count() > 5)
         {
             m_timer = Clock::now();
-            // todo do action
+            const auto val = m_attraction_slider->value();
+            if(val == 0)
+            {
+                m_parent->getMap()->resetAttractions();
+            }
         }
     }
 
     void Panel::setAttractionRange(int)
     {
         // Trigger the calculation only if at least three seconds have expired.
-        if(std::chrono::duration_cast<Seconds>(Clock::now() - m_timer).count() > 3)
+        if(std::chrono::duration_cast<MS>(Clock::now() - m_timer).count() > 5)
         {
             m_timer = Clock::now();
             // todo do action

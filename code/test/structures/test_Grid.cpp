@@ -9,14 +9,15 @@ namespace OSMTest
 
     TEST(GridTest, checkSet)
     {
-        Grid grid{{0, 100, 0, 100}};
+        AdjacencyArray array{};
+        Grid grid{{0, 100, 0, 100}, &array};
 
         Vector<Node> nodes;
-        Node a{0, 1, 0, 0, 0, 0};
-        Node b{1, 1, 1, 0, 0, 0};
-        Node c{2, 0, 1, 0, 0, 0};
-        Node d{3, 0, 2, 0, 0, 0};
-        Node e{4, 1, 3, 0, 0, 0};
+        Node a{0, 1, 0, 0, 0};
+        Node b{1, 1, 1, 0, 0};
+        Node c{2, 0, 1, 0, 0};
+        Node d{3, 0, 2, 0, 0};
+        Node e{4, 1, 3, 0, 0};
 
         nodes.emplace_back(a);
         nodes.emplace_back(b);

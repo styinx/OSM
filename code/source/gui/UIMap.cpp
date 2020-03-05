@@ -121,7 +121,7 @@ namespace OSM
         {
             m_route_attractions.erase(m_route_attractions.begin());
         }
-        m_route_attractions.emplace_back(node);
+        m_route_attractions.emplace(node);
         m_parent->getPanel()->addAttraction(m_route_attractions.size());
     }
 
@@ -129,21 +129,26 @@ namespace OSM
     {
         const auto latlon1 = Geo::stringToLatLon(from);
         const auto latlon2 = Geo::stringToLatLon(to);
+        Uint64 start = 0;
+        Uint64 stop = 0;
 
         if(!from.contains(',') && latlon1 == latlon2)
         {
-            auto start = townToNode(from);
-            auto stop  = townToNode(to);
-
-            return m_route_search.route(start, stop, type, m_route_attractions);
+            start = townToNode(from);
+            stop  = townToNode(to);
         }
         else
         {
-            auto start = m_grid.getFirstClosest(latlon1.first, latlon1.second);
-            auto stop  = m_grid.getFirstClosest(latlon2.first, latlon2.second);
-
-            return m_route_search.route(start, stop, type, m_route_attractions);
+            start = m_grid.getFirstClosest(latlon1.first, latlon1.second);
+            stop  = m_grid.getFirstClosest(latlon2.first, latlon2.second);
         }
+
+        page()->runJavaScript("ui_map.showRoute(false);");
+
+        if(m_route_attractions.empty())
+            return m_route_search.route(start, stop, type);
+        else
+            return m_route_search.route(start, stop, type, m_route_attractions);
     }
 
     void UIMap::drawPath(const Vector<Uint64>& path, const Uint8 color) const
@@ -158,7 +163,7 @@ namespace OSM
         }
 
         page()->runJavaScript(
-            "ui_map.showRoute([" + params.left(params.size() - 1) + "], " + QString::number(color) +
+            "ui_map.showRoute(true, [" + params.left(params.size() - 1) + "], " + QString::number(color) +
             ");");
     }
 

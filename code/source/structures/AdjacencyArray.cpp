@@ -55,6 +55,7 @@ namespace OSM
 
                 // Update info
                 node->mask |= NodeTypeMask::HAS_EDGES;
+                node->mask |= edge->tourism;
                 edge->distance = distNodes(m_nodes[edge->source], m_nodes[edge->target]);
                 edge++;
             }

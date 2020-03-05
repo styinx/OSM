@@ -15,7 +15,7 @@ namespace OSM
     }
 
     PathResult
-    RouteSearch::route(const Uint64 from, const Uint64 to, const TransportType type, const Vector<Node>& attractions)
+    RouteSearch::route(const Uint64 from, const Uint64 to, const TransportType type, const bool reset)
     {
         using SearchNode = Pair<Uint64, float>;
         using Clock      = std::chrono::system_clock;
@@ -30,19 +30,21 @@ namespace OSM
         const auto nodes        = m_array->getNodes();
         const auto node_from    = nodes[from];
         const auto node_to      = nodes[to];
-        const auto from_to_dist = Geo::dist(node_from.lat, node_from.lon, node_to.lat, node_to.lon);
+        const auto from_to_dist = distNodes(node_from, node_to);
         const auto alt_speed    = (type & 0x01) ? 5 : ((type & 0x02) ? 15 : 0);
 
+        if(reset)
+        {
+            m_weights   = Vector<float>(m_array->nodeCount(), F32_INF);
+            m_distances = Vector<float>(m_array->nodeCount(), 0);
+            m_durations = Vector<float>(m_array->nodeCount(), 0);
+            m_visited   = Vector<bool>(m_array->nodeCount(), false);
+            m_previous  = Vector<Uint64>(m_array->nodeCount(), U64_INF);
+            m_weights[from]   = 0;
+            m_distances[from] = 0;
+            m_durations[from] = 0;
+        }
         std::priority_queue<SearchNode, Vector<SearchNode>, decltype(comparator)> queue(comparator);
-        m_weights   = Vector<float>(m_array->nodeCount(), F32_INF);
-        m_distances = Vector<float>(m_array->nodeCount(), 0);
-        m_durations = Vector<float>(m_array->nodeCount(), 0);
-        m_visited   = Vector<bool>(m_array->nodeCount(), false);
-        m_previous  = Vector<Uint64>(m_array->nodeCount(), U64_INF);
-
-        m_weights[from]   = 0;
-        m_distances[from] = 0;
-        m_durations[from] = 0;
         queue.push({from, m_weights[from]});
 
         Uint64 node = from;
@@ -64,7 +66,7 @@ namespace OSM
                     continue;
 
                 Uint64 neighbour        = e.target;
-                float  neighbour_weight = e.weight(100);
+                float  neighbour_weight = e.weight(50);
                 float  new_weight       = weight + neighbour_weight;
 
                 // if(new_weight < from_to_dist)
@@ -94,7 +96,44 @@ namespace OSM
         }
 
         const Uint64 calculation = std::chrono::duration_cast<MS>(Clock::now() - start).count();
-        return {from, to, distance, duration, path, calculation};
+        return {from, to, distance, duration, path, calculation, !path.empty()};
+    }
+
+    PathResult
+    RouteSearch::route(const Uint64 from, const Uint64 to, const TransportType type, Set<Node> attractions)
+    {
+        const auto nodes = m_array->getNodes();
+        const auto node_from = nodes[from];
+        const auto node_to = nodes[to];
+
+        PathResult result{};
+        result.start = from;
+        result.stop = to;
+
+        Node start = node_to;
+        Node stop = Node{0, 0, 0, 0, 0};
+
+        while(!attractions.empty())
+        {
+            stop = closestNode(start, attractions);
+            attractions.erase(stop);
+
+            PathResult temp = route(start.id, stop.id, type);
+            if(temp.way_found)
+            {
+                std::reverse(temp.route.begin(), temp.route.end());
+                result.route.insert(result.route.end(), temp.route.begin(), temp.route.end());
+                start = stop;
+            }
+        }
+
+        stop = node_from;
+
+        PathResult last = route(start.id, stop.id, type);
+        std::reverse(last.route.begin(), last.route.end());
+        result.route.insert(result.route.end(), last.route.begin(), last.route.end());
+
+        return result;
     }
 
 }  // namespace OSM

@@ -28,7 +28,9 @@ namespace OSM
         virtual ~RouteSearch() = default;
 
         PathResult
-        route(const Uint64 from, const Uint64 to, const TransportType type, const Vector<Node>& attractions);
+        route(const Uint64 from, const Uint64 to, const TransportType type, const bool reset = true);
+        PathResult
+        route(const Uint64 from, const Uint64 to, const TransportType type, Set<Node> attractions);
     };
 
 }  // namespace OSM

@@ -25,6 +25,7 @@ namespace OSM
     private:
         using Clock   = std::chrono::system_clock;
         using Seconds = std::chrono::seconds;
+        using MS      = std::chrono::milliseconds;
 
         Window* m_parent;
 

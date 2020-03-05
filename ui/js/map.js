@@ -118,8 +118,8 @@ class UIMap {
         this.map.showGraph(bool);
     }
 
-    showRoute(route, color) {
-        this.map.showRoute(route, color);
+    showRoute(clear, route=[], color=0) {
+        this.map.showRoute(clear, route, color);
     }
 
     showNodes(show, nodes) {
@@ -206,6 +206,7 @@ class Map {
         }).addTo(this.l_map);
 
         this.nodeLayer.addTo(this.l_map);
+        L.control.scale().addTo(this.l_map);
     }
 
     setView(lat, lon, zoom = -1) {
@@ -224,18 +225,21 @@ class Map {
         }
     }
 
-    showRoute(lines, color) {
+    showRoute(clear, lines, color) {
         this.routeLayer.clearLayers();
 
-        this.routeLayer.addLayer(L.geoJSON({
-            type: "LineString",
-            coordinates: lines
-        }, {
-            style: {
-                color: color ? colors[color] : style['routeColor'],
-                weight: 4
-            }
-        })).addTo(this.l_map);
+        if(clear)
+        {
+            this.routeLayer.addLayer(L.geoJSON({
+                type: "LineString",
+                coordinates: lines
+            }, {
+                style: {
+                    color: color ? colors[color] : style['routeColor'],
+                    weight: 4
+                }
+            })).addTo(this.l_map);
+        }
     }
 
     showNodes(show, nodes) {
@@ -245,13 +249,17 @@ class Map {
             let button = document.createElement('button');
             button.innerHTML = 'Add to route';
             button.onclick = function () {
-                ui_map.addAttraction(id);
-                if (obj.attractions.length === 10) {
-                    let change_marker = obj.attractions.pop();
-                    change_marker.setIcon(newIcon(change_marker.type));
+                if(obj.attractions.indexOf(marker) === -1)
+                {
+                    ui_map.addAttraction(id);
+                    if (obj.attractions.length === 10) {
+                        let change_marker = obj.attractions.pop();
+                        change_marker.setIcon(newIcon(change_marker.type));
+                    }
+
+                    marker.setIcon(newIcon('green'));
+                    obj.attractions.push(marker);
                 }
-                marker.setIcon(newIcon('green'));
-                obj.attractions.push(marker);
             };
             let p = document.createElement('p');
             p.innerHTML = text;
