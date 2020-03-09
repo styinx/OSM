@@ -179,6 +179,11 @@ namespace OSM
             return id < other.id;
         }
 
+        bool operator==(const Node& other) const
+        {
+            return id == other.id;
+        }
+
         Byte tourism() const
         {
             if(mask & NodeTypeMask::TOURISM)
@@ -253,9 +258,14 @@ namespace OSM
             return distance / 1000 / static_cast<float>(speed);
         }
 
-        float weight(const int speed_factor = 1) const
+        /*
+         * Distance: m
+         * Speed: km/h
+         * Weight: s
+         */
+        float weight() const
         {
-            return distance / (static_cast<float>(speed * speed_factor));
+            return distance / (static_cast<float>(speed * speed));
         }
     };
 
@@ -270,9 +280,18 @@ namespace OSM
         bool           way_found   = false;
     };
 
-    inline float distNodes(const Node& n1, const Node& n2)
+    inline float distNodes(const Node& n1, const Node& n2, const String& unit = "m")
     {
-        return Geo::dist(n1.lat, n1.lon, n2.lat, n2.lon);
+        if(unit == "m")
+            return Geo::dist(n1.lat, n1.lon, n2.lat, n2.lon);
+        else
+            return Geo::dist(n1.lat, n1.lon, n2.lat, n2.lon) / 1000;
+    }
+
+    inline Node midpointNode(const Node& n1, const Node& n2)
+    {
+        const auto result = Geo::midpoint(n1.lat, n1.lon, n2.lat, n2.lon);
+        return Node{0, result.first, result.second, 0, 0};
     }
 
     template<typename C>

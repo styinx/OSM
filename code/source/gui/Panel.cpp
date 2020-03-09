@@ -35,8 +35,7 @@ namespace OSM
         m_street_graph     = new QCheckBox("Show street graph");
         m_show_attractions = new QCheckBox("Show attractions");
 
-        m_attraction_slider          = new QSlider(Qt::Orientation::Horizontal);
-        m_attraction_slider_distance = new QSlider(Qt::Orientation::Horizontal);
+        m_attraction_slider = new QSlider(Qt::Orientation::Horizontal);
 
         m_foot->setCheckable(true);
         m_bike->setCheckable(true);
@@ -53,10 +52,7 @@ namespace OSM
         QObject::connect(m_street_graph, SIGNAL(clicked()), this, SLOT(setShowGraph()));
         QObject::connect(m_show_attractions, SIGNAL(clicked()), this, SLOT(setShowAttractions()));
         QObject::connect(m_reset_attraction, SIGNAL(clicked()), this, SLOT(resetAttractions()));
-        QObject::connect(
-            m_attraction_slider, SIGNAL(valueChanged(int)), this, SLOT(setAttractionNumber(int)));
-        QObject::connect(
-            m_attraction_slider_distance, SIGNAL(valueChanged(int)), this, SLOT(setAttractionRange(int)));
+        QObject::connect(m_attraction_slider, &QSlider::valueChanged, this, &Panel::setAttractionNumber);
     }
 
     void Panel::initTop()
@@ -64,19 +60,13 @@ namespace OSM
         auto grid_wrapper = new QWidget{};
         m_grid            = new QGridLayout{grid_wrapper};
 
-        m_label_start               = new QLabel{"From: "};
-        m_label_stop                = new QLabel{"To: "};
-        m_label_show_attraction     = new QLabel{"Show tourism: "};
-        m_label_config_info         = new QLabel{"<b>Configuration</b>"};
-        m_label_attraction          = new QLabel{"Number of attraction: "};
-        m_label_attraction_distance = new QLabel{"Attraction range: "};
-        m_label_attraction_start    = new QLabel{"1 km"};
-        m_label_attraction_stop     = new QLabel{"10 km"};
+        m_label_start       = new QLabel{"From: "};
+        m_label_stop        = new QLabel{"To: "};
+        m_label_config_info = new QLabel{"<b>Configuration</b>"};
+        m_label_attraction  = new QLabel{"Number of attraction: "};
 
-        auto icon_wrapper  = new QWidget();
-        auto icon_box      = new QHBoxLayout(icon_wrapper);
-        auto range_wrapper = new QWidget();
-        auto range_box     = new QHBoxLayout(range_wrapper);
+        auto icon_wrapper = new QWidget();
+        auto icon_box     = new QHBoxLayout(icon_wrapper);
 
         m_start->addAction(QIcon(":/icon_marker_blue"), QLineEdit::TrailingPosition);
         m_start->setPlaceholderText("lat,lon | start");
@@ -84,7 +74,6 @@ namespace OSM
         m_stop->setPlaceholderText("lat,lon | stop");
 
         m_attraction_slider->setRange(0, 10);
-        m_attraction_slider_distance->setRange(1, 10);
 
         int row = 0;
 
@@ -110,14 +99,8 @@ namespace OSM
         m_grid->addWidget(m_label_attraction, row, 0);
         m_grid->addWidget(m_attraction_slider, row++, 1);
 
-        range_box->addWidget(m_label_attraction_start);
-        range_box->addWidget(m_attraction_slider_distance);
-        range_box->addWidget(m_label_attraction_stop);
-        m_grid->addWidget(m_label_attraction_distance, row, 0);
-        m_grid->addWidget(range_wrapper, row++, 1);
-        m_grid->addWidget(m_reset_attraction, row, 1);
-        m_grid->addWidget(m_label_show_attraction, row++, 0);
-        m_grid->addWidget(m_show_attractions, row++, 1);
+        m_grid->addWidget(m_reset_attraction, row, 0);
+        m_grid->addWidget(m_show_attractions, row, 1);
 
         // m_grid->addWidget(m_street_graph, row++, 1);
 
@@ -282,24 +265,14 @@ namespace OSM
 
     void Panel::setAttractionNumber(int)
     {
-        if(std::chrono::duration_cast<MS>(Clock::now() - m_timer).count() > 5)
+        const auto val = m_attraction_slider->value();
+        if(val == 0)
         {
-            m_timer = Clock::now();
-            const auto val = m_attraction_slider->value();
-            if(val == 0)
-            {
-                m_parent->getMap()->resetAttractions();
-            }
+            m_parent->getMap()->resetAttractions();
         }
-    }
-
-    void Panel::setAttractionRange(int)
-    {
-        // Trigger the calculation only if at least three seconds have expired.
-        if(std::chrono::duration_cast<MS>(Clock::now() - m_timer).count() > 5)
+        else
         {
-            m_timer = Clock::now();
-            // todo do action
+            m_parent->getMap()->setAttractions(val);
         }
     }
 

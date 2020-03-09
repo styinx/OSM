@@ -23,10 +23,6 @@ namespace OSM
         Q_OBJECT
 
     private:
-        using Clock   = std::chrono::system_clock;
-        using Seconds = std::chrono::seconds;
-        using MS      = std::chrono::milliseconds;
-
         Window* m_parent;
 
         QSizePolicy m_min_policy;
@@ -44,15 +40,10 @@ namespace OSM
         QCheckBox*   m_street_graph;
         QCheckBox*   m_show_attractions;
         QSlider*     m_attraction_slider;
-        QSlider*     m_attraction_slider_distance;
         QLabel*      m_label_config_info;
         QLabel*      m_label_start;
         QLabel*      m_label_stop;
-        QLabel*      m_label_show_attraction;
         QLabel*      m_label_attraction;
-        QLabel*      m_label_attraction_distance;
-        QLabel*      m_label_attraction_start;
-        QLabel*      m_label_attraction_stop;
 
         QGridLayout* m_info_grid;
         QLabel*      m_label_route_info;
@@ -62,8 +53,6 @@ namespace OSM
         QLabel*      m_duration_info;
         QLabel*      m_label_calculation;
         QLabel*      m_calculation_info;
-
-        Clock::time_point m_timer = Clock::now();
 
         void           initTop();
         void           initBottom();
@@ -76,7 +65,6 @@ namespace OSM
         void setShowGraph();
         void setShowAttractions();
         void resetAttractions();
-        void setAttractionRange(int);
         void setAttractionNumber(int);
 
     signals:

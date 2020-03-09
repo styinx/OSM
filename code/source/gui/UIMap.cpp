@@ -5,6 +5,8 @@
 #include "io/MapData.hpp"
 #include "util/Geo.hpp"
 
+#include <iostream>
+
 namespace OSM
 {
 
@@ -121,7 +123,7 @@ namespace OSM
         {
             m_route_attractions.erase(m_route_attractions.begin());
         }
-        m_route_attractions.emplace(node);
+        m_route_attractions.push_back(node);
         m_parent->getPanel()->addAttraction(m_route_attractions.size());
     }
 
@@ -185,6 +187,26 @@ namespace OSM
         m_route_attractions.clear();
 
         page()->runJavaScript("ui_map.resetAttractions();");
+    }
+
+    void UIMap::setAttractions(const int val)
+    {
+        const int diff = val - (int)m_route_attractions.size();
+
+        std::cout << diff << "\n";
+
+        if(diff > 0)
+        {
+            page()->runJavaScript("ui_map.addAttractions(" + QString::number(diff) + ");");
+        }
+        else if(diff < 0)
+        {
+            for(int i = 0; i < std::abs(diff); ++i)
+            {
+                m_route_attractions.pop_back();
+            }
+            page()->runJavaScript("ui_map.removeAttractions(" + QString::number(std::abs(diff)) + ");");
+        }
     }
 
 }  // namespace OSM

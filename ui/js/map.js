@@ -129,6 +129,14 @@ class UIMap {
     resetAttractions() {
         this.map.resetAttractions();
     }
+
+    addAttractions(n) {
+        this.map.addAttractions(n);
+    }
+
+    removeAttractions(n) {
+        this.map.removeAttractions(n);
+    }
 }
 
 class UIGraph {
@@ -178,6 +186,7 @@ class Map {
         this.l_map = L.map('map').setView([0, 0], 10);
 
         this.attractions = [];
+        this.markers = {};
         this.l_popup = L.popup();
         this.l_start = L.marker([0, 0], {
             icon: newIcon('blue'),
@@ -275,6 +284,7 @@ class Map {
                 let marker = L.marker([n[1], n[2]], {icon: newIcon(t.color)});
                 marker.type = t.color;
                 marker.bindPopup(button(this, t.text, n[3], marker)).addTo(this.nodeLayer);
+                this.markers[n[3]] = marker;
             }
         }
     }
@@ -285,6 +295,19 @@ class Map {
             a.setIcon(newIcon(a.type));
         }
         this.attractions = [];
+    }
+
+    addAttractions(n) {
+        console.log("add " + n);
+    }
+
+    removeAttractions(n) {
+        console.log("rem " + n);
+        while(n > 0) {
+            let change_marker = this.attractions.pop();
+            change_marker.setIcon(newIcon(change_marker.type));
+            n--;
+        }
     }
 }
 

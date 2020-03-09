@@ -17,6 +17,12 @@ namespace OSM
         return {0, 0};
     }
 
+    Pair<float, float>
+    Geo::midpoint(const float lat1, const float lon1, const float lat2, const float lon2)
+    {
+        return OSM::Pair<float, float>{(lat1 + lat2) / 2, (lon1 + lon2) / 2};
+    }
+
     float Geo::deg2rad(const float deg)
     {
         return deg * M_PI / 180;
