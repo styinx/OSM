@@ -5,6 +5,8 @@
 #include "io/MapData.hpp"
 #include "util/Geo.hpp"
 
+#include <iostream>
+
 namespace OSM
 {
 
@@ -121,7 +123,7 @@ namespace OSM
         {
             m_route_attractions.erase(m_route_attractions.begin());
         }
-        m_route_attractions.emplace_back(node);
+        m_route_attractions.push_back(node);
         m_parent->getPanel()->addAttraction(m_route_attractions.size());
     }
 
@@ -129,21 +131,26 @@ namespace OSM
     {
         const auto latlon1 = Geo::stringToLatLon(from);
         const auto latlon2 = Geo::stringToLatLon(to);
+        Uint64 start = 0;
+        Uint64 stop = 0;
 
         if(!from.contains(',') && latlon1 == latlon2)
         {
-            auto start = townToNode(from);
-            auto stop  = townToNode(to);
-
-            return m_route_search.route(start, stop, type, m_route_attractions);
+            start = townToNode(from);
+            stop  = townToNode(to);
         }
         else
         {
-            auto start = m_grid.getFirstClosest(latlon1.first, latlon1.second);
-            auto stop  = m_grid.getFirstClosest(latlon2.first, latlon2.second);
-
-            return m_route_search.route(start, stop, type, m_route_attractions);
+            start = m_grid.getFirstClosest(latlon1.first, latlon1.second);
+            stop  = m_grid.getFirstClosest(latlon2.first, latlon2.second);
         }
+
+        page()->runJavaScript("ui_map.showRoute(false);");
+
+        if(m_route_attractions.empty())
+            return m_route_search.route(start, stop, type);
+        else
+            return m_route_search.route(start, stop, type, m_route_attractions);
     }
 
     void UIMap::drawPath(const Vector<Uint64>& path, const Uint8 color) const
@@ -158,7 +165,7 @@ namespace OSM
         }
 
         page()->runJavaScript(
-            "ui_map.showRoute([" + params.left(params.size() - 1) + "], " + QString::number(color) +
+            "ui_map.showRoute(true, [" + params.left(params.size() - 1) + "], " + QString::number(color) +
             ");");
     }
 
@@ -180,6 +187,26 @@ namespace OSM
         m_route_attractions.clear();
 
         page()->runJavaScript("ui_map.resetAttractions();");
+    }
+
+    void UIMap::setAttractions(const int val)
+    {
+        const int diff = val - (int)m_route_attractions.size();
+
+        std::cout << diff << "\n";
+
+        if(diff > 0)
+        {
+            page()->runJavaScript("ui_map.addAttractions(" + QString::number(diff) + ");");
+        }
+        else if(diff < 0)
+        {
+            for(int i = 0; i < std::abs(diff); ++i)
+            {
+                m_route_attractions.pop_back();
+            }
+            page()->runJavaScript("ui_map.removeAttractions(" + QString::number(std::abs(diff)) + ");");
+        }
     }
 
 }  // namespace OSM

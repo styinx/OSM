@@ -128,12 +128,15 @@ namespace OSM
                 }
                 sharedThis->m_filter_lock.unlock();
 
+                String previous = "";
+
                 // Read all ways in the block
                 for(IWayStream way = pbi.getWayStream(); !way.isNull(); way.next())
                 {
-                    Byte mask   = 0;
-                    Byte speed  = 0;
-                    bool oneway = false;
+                    Byte mask    = 0;
+                    Byte tourism = 0;
+                    Byte speed   = 0;
+                    bool oneway  = false;
 
                     // Filter out not matching ways
                     ++local_way_count.second;
@@ -157,6 +160,25 @@ namespace OSM
                         oneway = true;
                     }
 
+                    // Check if the edge is an attraction or place.
+                    for(auto i = 0; i < way.tagsSize(); ++i)
+                    {
+                        const auto& key = way.key(i);
+
+                        if(key == "attractions" || key == "tourism")
+                        {
+                            const auto& value = way.value(i);
+                            if(AttractionType.count(value))
+                            {
+                                tourism |= AttractionType.at(value);
+                            }
+                            else
+                            {
+                                tourism |= NodeTypeMask::TOURISM;
+                            }
+                        }
+                    }
+
                     // Determine the type of the highway
                     auto index = filters.highway.matchingTag();
                     if(index > -1 && index < way.tagsSize())
@@ -164,27 +186,19 @@ namespace OSM
                         const auto& value = way.value(index);
                         if(StreetType.count(value))
                         {
+                            previous = value;
                             mask |= StreetType[value].first;
                             speed = StreetType[value].second;
                         }
-                        else if(speed == 0)
-                        {
-                            mask |= StreetType["living_street"].first;
-                            speed = 50;
-                        }
-                        else
-                        {
-                            mask |= StreetType[""].first;
-                        }
                     }
 
-                    if(speed == 0)
-                    {
-                        speed = 50;
-                    }
                     if(mask == 0)
                     {
-                        mask |= StreetType[""].first;
+                        mask |= StreetType[previous].first;
+                    }
+                    if(speed == 0)
+                    {
+                        speed = StreetType[previous].second;
                     }
 
                     // Go through all nodes in the edges
@@ -204,7 +218,7 @@ namespace OSM
                                 nh.id[*current] = nh.index++;
                             }
 
-                            Edge e{nh.id[*previous], nh.id[*current], speed, mask, oneway};
+                            Edge e{nh.id[*previous], nh.id[*current], speed, mask, tourism, oneway};
                             array.addEdge(e);
                             if(!oneway)
                             {

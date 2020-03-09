@@ -49,6 +49,7 @@ namespace OSM
         void       drawPath(const Vector<Uint64>& path, const Uint8 color = 0) const;
         void       drawNodes(const Vector<Uint64>& path) const;
         void       resetAttractions();
+        void       setAttractions(const int val);
     };
 
 }  // namespace OSM

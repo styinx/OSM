@@ -14,7 +14,7 @@ namespace OSM
 
     enum class TransportType : Byte
     {
-        PEDESTRIAN       = 0x01,
+        FOOT             = 0x01,
         BICYCLE          = 0x02,
         CAR              = 0x04,
         PUBLIC_TRANSPORT = 0x08,
@@ -61,24 +61,24 @@ namespace OSM
     };
 
     static Map<std::string, Pair<Byte, Byte>> StreetType = {
-        {"living_street", {0x17, 30}},  {"service", {0x24, 30}},
-        {"driveway", {0x17, 15}},       {"road", {0x2F, 30}},
+        {"living_street", {0x17, 30}},  {"service", {0x27, 30}},
+        {"driveway", {0x17, 15}},       {"road", {0x27, 30}},
         {"pedestrian", {0x37, 5}},      {"track", {0x47, 20}},
-        {"footway", {0x43, 5}},         {"corridor", {0x41, 5}},
+        {"footway", {0x43, 5}},         {"corridor", {0x43, 5}},
         {"sidewalk", {0x43, 5}},        {"path", {0x43, 5}},
         {"steps", {0x43, 5}},           {"cycleway", {0x43, 15}},
         {"bridleway", {0x43, 15}},      {"construction", {0x43, 5}},
-        {"proposed", {0x43, 5}},        {"bus_guideway", {0x5C, 50}},
-        {"escape", {0x64, 10}},         {"raceway", {0x70, 255}},
+        {"proposed", {0x43, 5}},        {"bus_guideway", {0x57, 50}},
+        {"escape", {0x67, 10}},         {"raceway", {0x70, 255}},
 
         {"motorway_link", {0xF4, 110}}, {"trunk_link", {0xF4, 110}},
-        {"primary_link", {0xF4, 90}},   {"secondary_link", {0xF4, 90}},
-        {"tertiary_link", {0xF4, 60}},
+        {"primary_link", {0xF6, 90}},   {"secondary_link", {0xF7, 90}},
+        {"tertiary_link", {0xF7, 60}},
 
         {"motorway", {0x84, 120}},      {"trunk", {0x94, 120}},
-        {"primary", {0xA4, 100}},       {"secondary", {0xB6, 100}},
+        {"primary", {0xA6, 100}},       {"secondary", {0xB7, 100}},
         {"tertiary", {0xC7, 70}},       {"unclassified", {0xD7, 70}},
-        {"residential", {0xE7, 50}},    {"", {0xE7, 50}},
+        {"residential", {0xE7, 30}},    {"", {0xE7, 50}},
     };
 
     static Map<std::string, Byte> AttractionType = {
@@ -113,15 +113,35 @@ namespace OSM
     };
 
     template<typename E>
-    inline bool operator&(Byte value, const E mask)
+    inline bool operator&(const Byte value, const E mask)
     {
         return value & static_cast<typename std::underlying_type<E>::type>(mask);
     }
 
     template<typename E>
-    inline bool operator|(Byte value, const E mask)
+    inline bool operator&(const E mask, const Byte value)
+    {
+        return value & static_cast<typename std::underlying_type<E>::type>(mask);
+    }
+
+    template<typename E>
+    inline bool operator&(const E mask1, const E mask2)
+    {
+        return static_cast<typename std::underlying_type<E>::type>(mask1) &
+               static_cast<typename std::underlying_type<E>::type>(mask2);
+    }
+
+    template<typename E>
+    inline bool operator|(const Byte value, const E mask)
     {
         return value | static_cast<typename std::underlying_type<E>::type>(mask);
+    }
+
+    template<typename E>
+    inline bool operator|(const E mask1, const E mask2)
+    {
+        return static_cast<typename std::underlying_type<E>::type>(mask1) |
+               static_cast<typename std::underlying_type<E>::type>(mask2);
     }
 
     template<typename E>
@@ -152,6 +172,16 @@ namespace OSM
             , town(town)
             , mask(mask)
         {
+        }
+
+        bool operator<(const Node& other) const
+        {
+            return id < other.id;
+        }
+
+        bool operator==(const Node& other) const
+        {
+            return id == other.id;
         }
 
         Byte tourism() const
@@ -191,19 +221,22 @@ namespace OSM
         float  distance = 0;
         Byte   speed    = 0;
         Byte   mask     = 0;
+        Byte   tourism  = 0;
         bool   oneway   = false;
-        // 8 bits padding
+        // 0 bits padding
 
         explicit Edge(
             const Uint64 source,
             const Uint64 target,
-            const Byte   speed  = 0,
-            const Byte   mask   = 0,
-            const bool   oneway = false)
+            const Byte   speed   = 0,
+            const Byte   mask    = 0,
+            const Byte   tourism = 0,
+            const bool   oneway  = false)
             : source(source)
             , target(target)
             , speed(speed)
             , mask(mask)
+            , tourism(tourism)
             , oneway(oneway)
         {
         }
@@ -216,19 +249,23 @@ namespace OSM
             return e;
         }
 
-        bool oneWay() const
+        float duration(const Uint8 alt_speed = 0) const
         {
-            return oneway;
+            if(alt_speed > 0)
+            {
+                return distance / 1000 / static_cast<float>(alt_speed);
+            }
+            return distance / 1000 / static_cast<float>(speed);
         }
 
-        float duration() const
-        {
-            return distance / static_cast<float>(speed);
-        }
-
+        /*
+         * Distance: m
+         * Speed: km/h
+         * Weight: s
+         */
         float weight() const
         {
-            return distance / static_cast<float>(speed);
+            return distance / (static_cast<float>(speed * speed));
         }
     };
 
@@ -240,11 +277,39 @@ namespace OSM
         float          duration = 0;
         Vector<Uint64> route;
         Uint64         calculation = 0;
+        bool           way_found   = false;
     };
 
-    inline float distNodes(const Node& n1, const Node& n2)
+    inline float distNodes(const Node& n1, const Node& n2, const String& unit = "m")
     {
-        return Geo::dist(n1.lat, n1.lon, n2.lat, n2.lon);
+        if(unit == "m")
+            return Geo::dist(n1.lat, n1.lon, n2.lat, n2.lon);
+        else
+            return Geo::dist(n1.lat, n1.lon, n2.lat, n2.lon) / 1000;
+    }
+
+    inline Node midpointNode(const Node& n1, const Node& n2)
+    {
+        const auto result = Geo::midpoint(n1.lat, n1.lon, n2.lat, n2.lon);
+        return Node{0, result.first, result.second, 0, 0};
+    }
+
+    template<typename C>
+    inline Node closestNode(const Node& n, const C& container)
+    {
+        auto  index = *container.end();
+        float min   = F32_INF;
+
+        for(const auto& el : container)
+        {
+            const auto l_min = distNodes(n, el);
+            if(l_min < min)
+            {
+                index = el;
+                min   = l_min;
+            }
+        }
+        return index;
     }
 
     struct MapBounds

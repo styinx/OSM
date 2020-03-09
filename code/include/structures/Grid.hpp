@@ -43,6 +43,7 @@ namespace OSM
         const MapBounds& getBounds() const;
         Vector<Cell>     getCells() const;
         Uint64           getFirstClosest(const float lat, const float lon, const float range = 500) const;
+        Uint64           getBestClosest(const float lat, const float lon) const;
     };
 
 }  // namespace OSM

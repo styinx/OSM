@@ -99,7 +99,6 @@ namespace OSM
             const auto node = nodes[id];
             if(Geo::dist(lat, lon, node.lat, node.lon) < range)
             {
-                const auto edg = m_array->edges(node.id);
                 return node.id;
             }
         }
@@ -108,12 +107,30 @@ namespace OSM
         if(!nodes_in_cell.empty())
         {
             return *nodes_in_cell.begin();
-//            if(cell > 0 && cell < m_x * m_y - 2)
-//            {
-//
-//            }
         }
         return 0;
+    }
+
+    Uint64 Grid::getBestClosest(const float lat, const float lon) const
+    {
+        const auto nodes = m_array->getNodes();
+        const auto cell = nodeToCell(lat, lon);
+        const auto nodes_in_cell = m_cells.at(cell).children;
+        float min = F32_INF;
+        Uint64 match = 0;
+
+        for(const auto& id : nodes_in_cell)
+        {
+            const auto node = nodes[id];
+            float l_min = Geo::dist(lat, lon, node.lat, node.lon);
+            if(l_min < min)
+            {
+                min = l_min;
+                match = node.id;
+            }
+        }
+
+        return match;
     }
 
 }  // namespace OSM

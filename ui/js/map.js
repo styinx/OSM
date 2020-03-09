@@ -118,8 +118,8 @@ class UIMap {
         this.map.showGraph(bool);
     }
 
-    showRoute(route, color) {
-        this.map.showRoute(route, color);
+    showRoute(clear, route=[], color=0) {
+        this.map.showRoute(clear, route, color);
     }
 
     showNodes(show, nodes) {
@@ -128,6 +128,14 @@ class UIMap {
 
     resetAttractions() {
         this.map.resetAttractions();
+    }
+
+    addAttractions(n) {
+        this.map.addAttractions(n);
+    }
+
+    removeAttractions(n) {
+        this.map.removeAttractions(n);
     }
 }
 
@@ -178,6 +186,7 @@ class Map {
         this.l_map = L.map('map').setView([0, 0], 10);
 
         this.attractions = [];
+        this.markers = {};
         this.l_popup = L.popup();
         this.l_start = L.marker([0, 0], {
             icon: newIcon('blue'),
@@ -206,6 +215,7 @@ class Map {
         }).addTo(this.l_map);
 
         this.nodeLayer.addTo(this.l_map);
+        L.control.scale().addTo(this.l_map);
     }
 
     setView(lat, lon, zoom = -1) {
@@ -224,18 +234,21 @@ class Map {
         }
     }
 
-    showRoute(lines, color) {
+    showRoute(clear, lines, color) {
         this.routeLayer.clearLayers();
 
-        this.routeLayer.addLayer(L.geoJSON({
-            type: "LineString",
-            coordinates: lines
-        }, {
-            style: {
-                color: color ? colors[color] : style['routeColor'],
-                weight: 4
-            }
-        })).addTo(this.l_map);
+        if(clear)
+        {
+            this.routeLayer.addLayer(L.geoJSON({
+                type: "LineString",
+                coordinates: lines
+            }, {
+                style: {
+                    color: color ? colors[color] : style['routeColor'],
+                    weight: 4
+                }
+            })).addTo(this.l_map);
+        }
     }
 
     showNodes(show, nodes) {
@@ -245,13 +258,17 @@ class Map {
             let button = document.createElement('button');
             button.innerHTML = 'Add to route';
             button.onclick = function () {
-                ui_map.addAttraction(id);
-                if (obj.attractions.length === 10) {
-                    let change_marker = obj.attractions.pop();
-                    change_marker.setIcon(newIcon(change_marker.type));
+                if(obj.attractions.indexOf(marker) === -1)
+                {
+                    ui_map.addAttraction(id);
+                    if (obj.attractions.length === 10) {
+                        let change_marker = obj.attractions.pop();
+                        change_marker.setIcon(newIcon(change_marker.type));
+                    }
+
+                    marker.setIcon(newIcon('green'));
+                    obj.attractions.push(marker);
                 }
-                marker.setIcon(newIcon('green'));
-                obj.attractions.push(marker);
             };
             let p = document.createElement('p');
             p.innerHTML = text;
@@ -267,6 +284,7 @@ class Map {
                 let marker = L.marker([n[1], n[2]], {icon: newIcon(t.color)});
                 marker.type = t.color;
                 marker.bindPopup(button(this, t.text, n[3], marker)).addTo(this.nodeLayer);
+                this.markers[n[3]] = marker;
             }
         }
     }
@@ -277,6 +295,19 @@ class Map {
             a.setIcon(newIcon(a.type));
         }
         this.attractions = [];
+    }
+
+    addAttractions(n) {
+        console.log("add " + n);
+    }
+
+    removeAttractions(n) {
+        console.log("rem " + n);
+        while(n > 0) {
+            let change_marker = this.attractions.pop();
+            change_marker.setIcon(newIcon(change_marker.type));
+            n--;
+        }
     }
 }
 

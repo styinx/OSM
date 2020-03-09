@@ -22,13 +22,20 @@ namespace OSM
         Vector<float>  m_durations;
         Vector<Uint64> m_previous;
         Vector<bool>   m_visited;
+        Vector<bool>   m_changed;
+
+        void resetVisited(const Vector<bool>& changed);
 
     public:
         explicit RouteSearch(const AdjacencyArray* array, const Grid* grid);
         virtual ~RouteSearch() = default;
 
         PathResult
-        route(const Uint64 from, const Uint64 to, const TransportType type, const Vector<Node>& attractions);
+        route(const Uint64 from, const Uint64 to, const TransportType type, const bool reset = true);
+        PathResult
+        biroute(const Uint64 from, const Uint64 to, const TransportType type, const bool reset = true);
+        PathResult
+        route(const Uint64 from, const Uint64 to, const TransportType type, Vector<Node> attractions);
     };
 
 }  // namespace OSM
