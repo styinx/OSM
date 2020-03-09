@@ -1,11 +1,25 @@
 
 # OSM
 
-  
+**TOC**:
+
+- [Introduction](#introduction)
+    - [Features](#features)
+    - [Installation](#installation)
+    - [Compilation](#compilation)
+    - [Execution](#execution)
+- [Approach](#approach)
+- [Implementation](#implementation)
+    - [Data Structures and Primitives](#data-structures-and-primitives)
+    - [Examples](#examples)
+    - [Limitations](#limitations)
+- [Implementation](#implementation)
 
 ## Introduction
+<a id="introduction"/>
 
 ### Features
+<a id="features"/>
 
 **Major**:
 - Route navigation from a start point to a target.
@@ -20,6 +34,7 @@
 - Fast communication between backend and frontend through QTWebchannel.
 
 ## Installation
+<a id="installation"/>
 
 Github: [Project repository](https://github.com/styinx/OSM)  
 Build status: [![Build Status](https://travis-ci.com/styinx/OSM.svg?branch=master)](https://travis-ci.com/styinx/OSM)
@@ -41,6 +56,7 @@ $ ./scripts/install.sh
 ```
 
 ### Compilation
+<a id="compilation"/>
 
 The project can be compiled with the compile script int the `scripts/` directory which uses cmake. First, the script compiles the osmpbf library. After that the OSM poject is compiled. The executables are located at `build/bin/`.
 
@@ -50,6 +66,7 @@ The script can be used from the command line with the following command. You hav
 ```
 
 ### Execution
+<a id="execution"/>
 
 From repository root directory:
 ```
@@ -62,7 +79,11 @@ From bin directory:
 ```
 
 **Additional Notes**:
-On some occasions it happend that the program crashed during the reading of a *.pdf file. The error message is attached below. This error is caused by the osmpbf library and occurs ~ once for every 10 executions.
+
+On some occasions it happend that the program crashed during the reading of a *.pdf file. 
+The error message is attached below. 
+This error is caused by the protobuf or/and the osmpbf library and occurs ~once for every 10 executions.
+It is not caused by the implementation of this project.
 ```
 [libprotobuf FATAL /usr/include/google/protobuf/repeated_field.h:1078] CHECK failed: (index) < (current_size_): 
 terminate called after throwing an instance of 'google::protobuf::FatalException'
@@ -70,13 +91,16 @@ terminate called after throwing an instance of 'google::protobuf::FatalException
 Aborted (core dumped)
 ```
 
+## Approach
+<a id="approach"/>
+
 ## Implementation
+<a id="implementation"/>
 
 ![Class diagram](https://github.com/styinx/OSM/blob/master/report/class_diagram.pdf)
 
 ### Data Structures and Primitives
-
-  
+<a id="data_structures"/>  
 
 ```c++
 struct Node
@@ -132,20 +156,52 @@ enum class EdgeTypeMask : Byte
 ```
 
 ### Examples
+<a id="examples"/>
 
-![ST](https://github.com/styinx/OSM/blob/master/report/stuttgart.png)
-![ST](https://github.com/styinx/OSM/blob/master/report/stuttgart2.png)
-![BW](https://github.com/styinx/OSM/blob/master/report/bawü.png)
-![DE](https://github.com/styinx/OSM/blob/master/report/stuttgart.png)
-![DE](https://github.com/styinx/OSM/blob/master/report/stuttgart2.png)
-
-### Edges
-
-![Motorway](https://github.com/styinx/OSM/blob/master/report/network.png)
+![ST](https://github.com/styinx/OSM/blob/master/report/stuttgart.png "Stuttgart")
+![ST](https://github.com/styinx/OSM/blob/master/report/stuttgart2.png "Stuttgart")
+![BW](https://github.com/styinx/OSM/blob/master/report/bawü.png "Baden-Württemberg")
+![DE](https://github.com/styinx/OSM/blob/master/report/deutschland.png "Deutschland")
+![DE](https://github.com/styinx/OSM/blob/master/report/deutschland2.png "Deutschland")
   
 
 ### Limitations
+<a id="limitations"/>
 
-- Some edges are not labeled with the correct highway tags. If a user chooses such an edge as a start or stops location the Dijkstra algorithm might not find a valid route. This project provides a fallback mechanism, which looks for closest nodes that are connected to valid edges.
+**Accuracy of target selection**:
 
-- The number of attractions is limited to 10 attractions with a range of 0 to 10 kilometers.
+Some edges are not labeled with the correct highway tags. 
+If a user chooses a node as a start or stops location that is part of that edge the Dijkstra algorithm might not find a valid route. 
+This project provides a fallback mechanism, which looks for the _first_ closest node that is connected to the street network.
+The mechanism utilizes the Grid of the map an selects the first Node that is in the same cell as the initial target node that the user did specify.
+Since the first node in this cell might not always be the exact node that the user selected the calculated route will start with a gap between the start node and the actual route.
+This is marked with red in the following image.
+ 
+![Selection target](https://github.com/styinx/OSM/blob/master/report/limitation_selection.png)
+
+A possible solution for this is to calculate the _best_ closest point in a cell to the initial user defined node.
+This would degrade performance based on the number of nodes and the size of the Grid.
+Testing showed that a Grid size of 100x100 is suitable.
+Since we want to have a `O(1)` access to a node on the map we decided to keep prefer the _first_ closest node in the cell.
+The missing offset between initial node and _first_ closest seems acceptable and do not degrade the quality of the calculated route.
+As shown in the picture above the offset between initial node and the selected is ~200m which does not restrain a user by much.
+
+Future improvements could organize the Grid in a different way and allocate the dimensions dynamically based on the range of the map data.
+It might also be possible to use another data structure such as a quad tree that could also reduce the number of nodes in a cell.
+
+**Missing/Wrong edge information**:
+
+In some route calculations we identified that the search algorithm sometimes took false shortcuts to secondary or even tertiary roads instead of a motorway.
+For some cases we could detect the problems but not for every case.
+There exist edges that are not labeled with the motorway tag or have an appropriate maximum speed tag.
+
+The fallback mechanism for this is to give a highway without a value a default of a living street with the maximum speed of 30.
+This way, also pedestrians and bikers can take the route, although it might not always make sense like in the picture below.
+The picture shows the route that the algorithm created (in blue) for a car.
+It is obvious that the algorithm should have return the red marked route instead.
+
+![Motorway](https://github.com/styinx/OSM/blob/master/report/limitation_tags.png)
+
+**Number of attractions**:
+
+The number of attractions is limited to 10 attractions.
