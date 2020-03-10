@@ -256,7 +256,17 @@ class AdjacencyArray
 ### Grid
 <a id="grid"/>
 
+The `Grid` structure helps to access nodes on the map in approximately `O(1)`. 
+For this the loaded map is partitioned in a 100 by 100 grid.
+Each cell in this grid holds a number of nodes which is determined by their latitude and longitude values.
+The dimensions of the grid are set statically out of simplicity.
+A approach for future improvements would be to set those dynamically by the number of nodes and the latitude/longitude range.
 
+We provide two different approaches for the selection of a node in a cell.
+On the one hand there is the option to find the [_first_](https://github.com/styinx/OSM/blob/master/code/source/structures/Grid.cpp#L91-112) closest node.
+It will look for a node in the same cell as the specified location that is inside the specified range.
+On the other hand there is the option to find the [_best_](https://github.com/styinx/OSM/blob/master/code/source/structures/Grid.cpp#L112-134) closest node.
+This will look for the node that is exactly the closest in the cell.
 
 The implementation of the Grid class can be found [here](https://github.com/styinx/OSM/blob/master/code/include/structures/Grid.hpp).
 
