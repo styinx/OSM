@@ -25,11 +25,11 @@ namespace OSM
                 m_weights[id]   = F32_INF;
                 m_distances[id] = 0;
                 m_durations[id] = 0;
-                m_visited[id]   = false;
                 m_previous[id]  = U64_INF;
             }
             id++;
         }
+        m_visited = Vector<bool>(m_array->nodeCount(), false);
         m_changed = Vector<bool>(m_array->nodeCount(), false);
     }
 
@@ -44,12 +44,12 @@ namespace OSM
             return lhs.second > rhs.second;
         };
 
-        const auto time            = Clock::now();
-        const auto alt_speed       = (type & 0x01) ? 5 : ((type & 0x02) ? 15 : 0);
-        const auto nodes           = m_array->getNodes();
-        //const auto node_from       = nodes[from];
-        //const auto node_to         = nodes[to];
-        //const auto midpoint_node = midpointNode(node_from, node_to);
+        const auto time          = Clock::now();
+        const auto alt_speed     = (type & 0x01) ? 5 : ((type & 0x02) ? 15 : 0);
+        const auto nodes         = m_array->getNodes();
+        const auto node_to       = nodes[to];
+        const auto midpoint_node = midpointNode(nodes[from], node_to);
+        const auto search_range  = distNodes(nodes[from], node_to);
 
         m_weights[from]   = 0;
         m_distances[from] = 0;
@@ -77,12 +77,12 @@ namespace OSM
                 if(!(e.mask & type))
                     continue;
 
-                //const float node_dist = 0;distNodes(nodes[e.target], node_to, "km");
-                const float new_weight = weight + e.weight();
+                const auto  duration   = e.duration(alt_speed) * 1000;
+                const auto  distance   = distNodes(nodes[e.target], node_to) / e.speed / 1000;
+                const float new_weight = weight + duration + distance;
 
                 // Check only nodes that are inside the start's and stop's radius.
-                // @Note: the weight does currently not represent distances.
-                //if(node_dist < distNodes(nodes[e.target], midpoint_node, "km") * 1.5)
+                if(distNodes(nodes[e.target], midpoint_node, "km") * 1.5 < search_range)
                 {
                     if(new_weight < m_weights[e.target])
                     {
@@ -133,63 +133,62 @@ namespace OSM
 
         const auto start = Clock::now();
 
-        const auto comparator = [](const SearchNode& lhs, const SearchNode& rhs) {
-            return lhs.second > rhs.second;
-        };
-
-        const auto   nodes        = m_array->getNodes();
-        const auto   node_from    = nodes[from];
-        const auto   node_to      = nodes[to];
-        const auto   from_to_dist = distNodes(node_from, node_to);
-        const auto   alt_speed    = (type & 0x01) ? 5 : ((type & 0x02) ? 15 : 0);
-        Vector<bool> changed(m_array->nodeCount(), 0);
-        Vector<Byte> thread(m_array->nodeCount(), 0);
+        Vector<bool> forward(m_array->nodeCount(), false);
+        Vector<bool> backward(m_array->nodeCount(), false);
+        Uint64       target = 0;
 
         m_weights[from]   = 0;
+        m_weights[to]     = 0;
         m_distances[from] = 0;
+        m_distances[to]   = 0;
         m_durations[from] = 0;
+        m_durations[to]   = 0;
 
-        std::priority_queue<SearchNode, Vector<SearchNode>, decltype(comparator)> queue(comparator);
-        queue.push({from, m_weights[from]});
-
-        std::mutex m;
         PathResult result{};
+        std::mutex m;
 
         // Should be run in two separate threads for bidirectional search.
-        const auto search = [this, &changed, &m, &result, &thread](
-                                const Uint64 start, const TransportType type, int i) mutable {
+        const auto search = [this, &m, &result, &forward, &backward, &from, &to, &target, &type](
+                                const Uint64 start, Vector<bool>& visited) {
             const auto comparator = [](const SearchNode& lhs, const SearchNode& rhs) {
                 return lhs.second > rhs.second;
             };
 
-            const auto    alt_speed = (type & 0x01) ? 5 : ((type & 0x02) ? 15 : 0);
-            Vector<float> weights(m_array->nodeCount(), F32_INF);
-            weights[start]        = 0;
-            Uint64         target = 0;
+            const auto     nodes         = m_array->getNodes();
+            const auto     node_to       = nodes[to];
+            const auto     midpoint_node = midpointNode(nodes[from], node_to);
+            const auto     search_range  = distNodes(nodes[from], node_to);
+            const auto     alt_speed     = (type & 0x01) ? 5 : ((type & 0x02) ? 15 : 0);
             Vector<Uint64> path{};
+            Vector<float> weights(m_array->nodeCount(), F32_INF);
+            Vector<Uint64> previous(m_array->nodeCount(), U64_INF);
 
-            std::priority_queue<SearchNode, Vector<SearchNode>, decltype(comparator)> pq(comparator);
-            pq.push({start, weights[start]});
+            std::priority_queue<SearchNode, Vector<SearchNode>, decltype(comparator)> queue(comparator);
+            queue.push({start, m_weights[start]});
 
             Uint64 node;
-            Uint64 last;
-            while(!pq.empty())
+            while(!queue.empty())
             {
-                node              = pq.top().first;
-                const auto weight = pq.top().second;
-                pq.pop();
-
-                if(thread[node] > 0 && thread[node] != i)
-                {
-                    target = last;
-                    break;
-                }
+                node              = queue.top().first;
+                const auto weight = queue.top().second;
+                queue.pop();
 
                 // If already visited or the weight is bigger.
-                if(weight > m_weights[node] || m_visited[node])
+                if(weight > weights[node] || visited[node])
                     continue;
 
-                m_visited[node] = true;
+                visited[node] = true;
+
+                if(forward[node] && backward[node])
+                {
+                    m.lock();
+                    if(target == U64_INF)
+                    {
+                        target = node;
+                    }
+                    m.unlock();
+                    break;
+                }
 
                 for(const auto& e : m_array->edges(node))
                 {
@@ -197,67 +196,63 @@ namespace OSM
                     if(!(e.mask & type))
                         continue;
 
-                    Uint64 neighbour        = e.target;
-                    float  neighbour_weight = e.weight();
-                    float  new_weight       = weight + neighbour_weight;
+                    const auto  duration   = e.duration(alt_speed) * 1000;
+                    const auto  distance   = distNodes(nodes[e.target], node_to) / e.speed / 1000;
+                    const float new_weight = weight + duration + distance;
 
                     // Check only nodes that are inside the start's and stop's radius.
-                    // @Note: the weight does currently not represent distances.
-                    // if(new_weight < from_to_dist)
+                    if(distNodes(nodes[e.target], midpoint_node, "km") * 1.5 < search_range)
                     {
-                        if(new_weight < m_weights[neighbour])
+                        if(new_weight < weights[e.target])
                         {
-                            m.lock();
+                            weights[e.target]   = new_weight;
+                            m_distances[e.target] = e.distance;
+                            m_durations[e.target] = e.duration(alt_speed);
+                            previous[e.target]  = node;
+                            queue.push({e.target, new_weight});
 
-                            if(thread[node] > 0 && thread[node] != i)
-                            {
-                                break;
-                            }
-
-                            m_weights[neighbour]   = new_weight;
-                            m_distances[neighbour] = e.distance;
-                            m_durations[neighbour] = e.duration(alt_speed);
-                            m_previous[neighbour]  = node;
-                            pq.push({neighbour, m_weights[neighbour]});
-
-                            changed[node]      = true;
-                            changed[neighbour] = true;
-                            thread[node]       = i;
-                            thread[neighbour]  = i;
-                            m.unlock();
+                            m_changed[node]     = true;
+                            m_changed[e.target] = true;
                         }
                     }
                 }
-                last = node;
             }
 
             float distance = 0;
             float duration = 0;
-            auto  p        = m_previous[target];
+            auto  p        = previous[target];
             while(p != U64_INF && p != start)
             {
                 path.emplace_back(p);
                 distance += m_distances[p];
                 duration += m_durations[p];
-                p = m_previous[p];
+                p = previous[p];
             }
 
             m.lock();
-            result.route.insert(result.route.end(), path.begin(), path.end());
+            if(result.route.empty())
+            {
+               std::reverse(path.begin(), path.end());
+                result.route.insert(result.route.end(), path.begin(), path.end());
+            }
+            else
+            {
+                result.route.insert(result.route.end(), path.begin(), path.end());
+            }
             result.distance += distance;
             result.duration += duration;
             m.unlock();
         };
 
-        std::thread t1(search, from, type, 1);
-        std::thread t2(search, to, type, 2);
+        std::thread t1(search, from, std::ref(forward));
+        std::thread t2(search, to, std::ref(backward));
 
         t1.join();
         t2.join();
 
         if(reset)
         {
-            resetVisited(changed);
+            resetVisited(m_changed);
         }
 
         result.start       = from;
