@@ -1,7 +1,7 @@
 
 # OSM
 
-__TOC__:
+#### TOC:
 
 - [Introduction](#introduction)
     - [Features](#features)
@@ -27,13 +27,13 @@ The idea of this project is to create a route between to points on a map and inc
 ### Features
 <a id="features"/>
 
-__Major__:
+#### Major:
 - Route navigation from a start point to a target.
 - Selectable tourism spots which can be added to a route.
 - A possible configuration for automatic selection in a given range.
 - Route navigation with different transportation types (car, bicycle, by foot).
 
-__Minor__:
+#### Minor:
 - The map coordinates of the UI are selected to the map bounds with an appropriate zoom.
 - Distance and duration calculation for a route.
 - Expandable UI (separated from leaflet map).
@@ -45,7 +45,7 @@ __Minor__:
 Github: [Project repository](https://github.com/styinx/OSM)  
 Build status: [![Build Status](https://travis-ci.com/styinx/OSM.svg?branch=master)](https://travis-ci.com/styinx/OSM)
   
-__Requirements__:
+####Requirements:
 - inphos42/osmpbf  
 - zlib  
 - libprotobuf-dev  
@@ -79,12 +79,12 @@ From repository root directory:
 ./build/bin/OSM <relative path to pbf file>
 ```
 
-From bin directory:
+From `build/bin/` directory:
 ```
 ./OSM <relative path to the pbf file>
 ```
 
-__Additional Notes__:
+#### Additional Notes:
 
 On some occasions it happend that the program crashed during the reading of a *.pdf file. 
 The error message is attached below. 
@@ -186,7 +186,7 @@ The tags that are checked for road types and attractions can be found [here](htt
 Since there is no guarantee that all the given osm data is valid we created a default that sets every unknown tag to a default.
 This default is the living street with a speed limit of 30.
 This way pedestrians, bikers and cars can access this road.
-A highway tag that does not contain any value is given the value of a residential street with a speed limit of 50.
+A highway tag that does not contain any value is given the value of a residential street with a speed limit of 30.
 
 ```c++
 enum class EdgeTypeMask : Byte  
@@ -249,7 +249,7 @@ class AdjacencyArray
     void           computeOffsets();
     void           addNode(const Node& node);
     void           addEdge(const Edge& edge);
-    Vector<Edge> edges(const Uint64 node) const;
+    Vector<Edge>   edges(const Uint64 node) const;
 };
 ```
 
@@ -261,6 +261,10 @@ For this the loaded map is partitioned in a 100 by 100 grid.
 Each cell in this grid holds a number of nodes which is determined by their latitude and longitude values.
 The dimensions of the grid are set statically out of simplicity.
 A approach for future improvements would be to set those dynamically by the number of nodes and the latitude/longitude range.
+
+A node is inserted into the grid by the `set` method which takes the coordinates and the id of the node.
+With the given coordinates, the index of the cell is calculated and the id is inserted into that cell.
+Each `Cell` structure is represented as an array that holds an arbitrary size of nodes. 
 
 We provide two different approaches for the selection of a node in a cell.
 On the one hand there is the option to find the [_first_](https://github.com/styinx/OSM/blob/master/code/source/structures/Grid.cpp#L91-112) closest node.
@@ -295,6 +299,69 @@ class Grid
 ### Route Search
 <a id="route_search"/>
 
+The search algorithm(s) were put into a separate class since we provide more than 2 different approaches.
+For all search methods we use the Dijkstra's shortest path algorithm as a basis.
+
+For the weights we use a combination of 2 heuristics.
+The first one takes the importance of faster roads into account which means it calculates the duration it takes to travel along this edge.
+The second one takes care of the locality of a node which means it calculates the distance to the target node. 
+
+To reduce the amount of work that has to be done for large street networks we introduce another heuristic.
+It filters out all nodes (and their outgoing edges) that have a distance that is higher than the distance from the start location to the midpoint times 1.5.
+This formula is also shown below:
+
+```
+s: start location
+t: target location
+m: midpoint
+n: arbitrary node in the network
+d(x,y): distance between x and y
+
+m = ((s.lat + t.lat) / 2, (s.lon + t.lon) / 2);
+
+n is in the search set if d(n,m) < d(s,t) * 1.5
+```
+
+The first route search is a simple Dijkstra that calculates all the weights in the street network from the start location until it reaches the stop location.
+
+The second route search utilizes multithreading to a certain extend and does a bidirectional Dijkstra.
+The bidirectional Dijkstra showed a performance improvement over the first route search.
+
+The third route search uses multiple waypoints along a route.
+Those waypoints represent attractions can be selected by the user.
+ 
+```c++
+class RouteSearch
+{
+    Vector<float>  m_weights;
+    Vector<float>  m_distances;
+    Vector<float>  m_durations;
+    Vector<Uint64> m_previous;
+    Vector<bool>   m_visited;
+    Vector<bool>   m_changed;
+
+    void resetVisited(const Vector<bool>& changed);
+
+    ...    
+
+    PathResult
+    route(const Uint64 from, const Uint64 to, const TransportType type, const bool reset = true);
+
+    PathResult
+    biroute(const Uint64 from, const Uint64 to, const TransportType type, const bool reset = true);
+
+    PathResult
+    route(const Uint64 from, const Uint64 to, const TransportType type, Vector<Node> attractions);
+};
+```
+
+In the following we depict the heuristics for the search algorithm as described above.
+The midpoint is highlighted as a purple circle.
+The red circle (approximately) encloses all nodes that are possibly included in a search which should be less than the amount of the originally available nodes, for most cases.
+The black circle represents an arbitrary node that was detected by a bidirectional Dijkstra.  
+
+![Search Algorithm](https://github.com/styinx/OSM/blob/master/report/search.png "Search Algorithm")
+
 ### Examples
 <a id="examples"/>
 
@@ -308,7 +375,7 @@ class Grid
 ### Limitations
 <a id="limitations"/>
 
-__Accuracy of target selection__:
+#### Accuracy of target selection:
 
 Some edges are not labeled with the correct highway tags. 
 If a user chooses a node as a start or stops location that is part of that edge the Dijkstra algorithm might not find a valid route. 
@@ -329,7 +396,7 @@ As shown in the picture above the offset between initial node and the selected i
 Future improvements could organize the Grid in a different way and allocate the dimensions dynamically based on the range of the map data.
 It might also be possible to use another data structure such as a quad tree that could also reduce the number of nodes in a cell.
 
-__Missing/Wrong edge information__:
+#### Missing/Wrong edge information:
 
 In some route calculations we identified that the search algorithm sometimes took false shortcuts to secondary or even tertiary roads instead of a motorway.
 For some cases we could detect the problems but not for every case.
@@ -342,7 +409,7 @@ It is obvious that the algorithm should have return the red marked route instead
 
 ![Motorway](https://github.com/styinx/OSM/blob/master/report/limitation_tags.png)
 
-__Number of attractions__:
+#### Number of attractions:
 
 The number of attractions is limited to 10 attractions.
 

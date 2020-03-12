@@ -148,7 +148,7 @@ namespace OSM
         page()->runJavaScript("ui_map.showRoute(false);");
 
         if(m_route_attractions.empty())
-            return m_route_search.route(start, stop, type);
+            return m_route_search.biroute(start, stop, type);
         else
             return m_route_search.route(start, stop, type, m_route_attractions);
     }

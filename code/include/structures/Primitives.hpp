@@ -78,7 +78,7 @@ namespace OSM
         {"motorway", {0x84, 120}},      {"trunk", {0x94, 120}},
         {"primary", {0xA6, 100}},       {"secondary", {0xB7, 100}},
         {"tertiary", {0xC7, 70}},       {"unclassified", {0xD7, 70}},
-        {"residential", {0xE7, 30}},    {"", {0xE7, 50}},
+        {"residential", {0xE7, 30}},    {"", {0x17, 30}},
     };
 
     static Map<std::string, Byte> AttractionType = {
