@@ -49,7 +49,7 @@ namespace OSM
         const float vlat      = bounds.min_lat + (bounds.max_lat - bounds.min_lat) / 2;
         const float vlon      = bounds.min_lon + (bounds.max_lon - bounds.min_lon) / 2;
         const auto  diff      = std::abs(bounds.max_lon - bounds.min_lon);
-        const float auto_zoom = std::max(-15 * diff, -0.38F * diff - 10) + 20;
+        const float auto_zoom = std::max(-15 * diff, -0.50F * diff - 10) + 20;
 
         page()->runJavaScript(
             "ui_map.setView(" + QString::number(vlat) + ", " + QString::number(vlon) + ", " +
