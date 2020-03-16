@@ -204,27 +204,6 @@ namespace OSM
         auto start = m_start->text();
         auto stop  = m_stop->text();
 
-        //        if(start.isEmpty() && stop.isEmpty())
-        //        {
-        //            QString towns;
-        //            for(int i = 0; i < 10; ++i)
-        //            {
-        //                towns += QString(MapData::getTown(i).data()) + "\n";
-        //            }
-        //
-        //            QMessageBox::information(
-        //                this,
-        //                "Missing parameters",
-        //                "Please provide a start and target location.\n Here are some:\n" + towns);
-        //            return;
-        //        }
-
-        if(start.toInt() == 0 || stop.toInt() == 0)
-        {
-            QMessageBox::information(this, "Warning", "Please provide a start and a stop location.");
-            return;
-        }
-
         auto pathResult = m_parent->getMap()->calculatePath(
             start, stop, transportation(), m_route_type->currentIndex());
 
