@@ -123,6 +123,11 @@ namespace OSM
         m_duration_info       = new QLabel("0.0 h");
         m_label_calculation   = new QLabel("Calculation:");
         m_calculation_info    = new QLabel("0.0 s");
+        m_label_route_type    = new QLabel("Search algorithm");
+        m_route_type          = new QComboBox();
+
+        m_route_type->addItems({"Dijkstra", "Bidirectional Dijkstra"});
+        m_route_type->setCurrentIndex(1);
 
         auto grid_filler1 = new QWidget();
         grid_filler1->setSizePolicy(m_expanding_policy);
@@ -137,6 +142,8 @@ namespace OSM
         m_info_grid->addWidget(m_duration_info, row++, 1);
         m_info_grid->addWidget(m_label_calculation, row, 0);
         m_info_grid->addWidget(m_calculation_info, row++, 1);
+        m_info_grid->addWidget(m_label_route_type, row, 0);
+        m_info_grid->addWidget(m_route_type, row++, 1);
 
         auto grid_filler2 = new QWidget();
         grid_filler2->setSizePolicy(m_expanding_policy);
@@ -212,7 +219,14 @@ namespace OSM
         //            return;
         //        }
 
-        auto pathResult = m_parent->getMap()->calculatePath(start, stop, transportation());
+        if(start.toInt() == 0 || stop.toInt() == 0)
+        {
+            QMessageBox::information(this, "Warning", "Please provide a start and a stop location.");
+            return;
+        }
+
+        auto pathResult = m_parent->getMap()->calculatePath(
+            start, stop, transportation(), m_route_type->currentIndex());
 
         if(pathResult.route.empty())
         {
@@ -231,20 +245,28 @@ namespace OSM
         }
         else
         {
-            if(pathResult.start == 0 || pathResult.stop == 0)
+            if(pathResult.uses_default)
             {
                 QMessageBox::information(
                     this,
                     "Warning",
-                    "The path search uses most likely a default value for one of your nodes.");
+                    "The path search uses most likely a default value for one or both of your "
+                    "nodes."
+                    "\nTry to use different nodes that are close to roads or inside the map "
+                    "range.");
             }
         }
 
+        using namespace std::chrono;
+        auto t = system_clock::now();
         m_parent->getMap()->drawPath(pathResult.route);
+        const auto drawing = duration_cast<milliseconds>(system_clock::now() - t).count();
 
         m_duration_info->setText(duration(pathResult.duration));
         m_distance_info->setText(distance(pathResult.distance));
-        m_calculation_info->setText(QString::number(pathResult.calculation / 1000, 'f', 2) + " s");
+        m_calculation_info->setText(
+            QString::number(pathResult.calculation / 1000, 'f', 2) + " s (+" +
+            QString::number(drawing / 1000, 'f', 2) + " s drawing)");
     }
 
     void Panel::setShowGraph()
@@ -265,7 +287,14 @@ namespace OSM
 
     void Panel::setAttractionNumber(int)
     {
-        const auto val = m_attraction_slider->value();
+        const auto val = static_cast<size_t>(m_attraction_slider->value());
+        const auto attractions = m_parent->getMap()->numberOfAttractions();
+        if(val > attractions)
+        {
+            m_attraction_slider->setValue(attractions);
+            return;
+        }
+
         if(val == 0)
         {
             m_parent->getMap()->resetAttractions();
@@ -286,7 +315,7 @@ namespace OSM
         m_stop->setText(QString::number(lat) + "," + QString::number(lon));
     }
 
-    void Panel::addAttraction(const int size)
+    void Panel::setAttraction(const int size)
     {
         m_attraction_slider->setValue(size);
     }

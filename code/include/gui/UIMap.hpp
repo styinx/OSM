@@ -40,16 +40,19 @@ namespace OSM
         void setStart(const QString& latlon);
         void setStop(const QString& latlon);
         void addAttraction(const QString& id);
+        void removeAttraction(const QString& id);
 
     public:
         explicit UIMap(Window* parent, const OSM::AdjacencyArray* array, const MapBounds& bounds);
         virtual ~UIMap() = default;
 
-        PathResult calculatePath(const QString& from, const QString& to, const TransportType type);
-        void       drawPath(const Vector<Uint64>& path, const Uint8 color = 0) const;
-        void       drawNodes(const Vector<Uint64>& path) const;
-        void       resetAttractions();
-        void       setAttractions(const int val);
+        PathResult
+             calculatePath(const QString& from, const QString& to, const TransportType type, const Byte algorithm);
+        void drawPath(const Vector<Uint64>& path, const Uint8 color = 0) const;
+        void drawNodes(const Vector<Uint64>& path) const;
+        void resetAttractions();
+        void setAttractions(const int val);
+        size_t numberOfAttractions();
     };
 
 }  // namespace OSM

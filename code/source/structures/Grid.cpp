@@ -94,6 +94,10 @@ namespace OSM
         const auto cell = nodeToCell(lat, lon);
         const auto nodes_in_cell = m_cells.at(cell).children;
 
+        // If the cell has no nodes return 0
+        if(nodes_in_cell.empty())
+            return 0;
+
         for(const auto& id : nodes_in_cell)
         {
             const auto node = nodes[id];
@@ -103,12 +107,9 @@ namespace OSM
             }
         }
 
-        // If the cell has no nodes return 0
-        if(!nodes_in_cell.empty())
-        {
-            return *nodes_in_cell.begin();
-        }
-        return 0;
+        // Cell is not empty, but we did not find a node inside the range.
+        // So we repeat the search with double the range.
+        return getFirstClosest(lat, lon, range * 2);
     }
 
     Uint64 Grid::getBestClosest(const float lat, const float lon) const

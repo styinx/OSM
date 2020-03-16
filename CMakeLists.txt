@@ -47,12 +47,12 @@ link_directories(
 # Compiler
 #
 
-#SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -fPIC -O3")
-SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -fPIC")
+SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -fPIC -O3")
+#SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -fPIC")
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COMPILE_FLAGS}")
 
-#set(CMAKE_BUILD_TYPE RELEASE)
+set(CMAKE_BUILD_TYPE RELEASE)
 
 #
 # Libraries

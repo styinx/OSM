@@ -53,10 +53,13 @@ namespace OSM
         QLabel*      m_duration_info;
         QLabel*      m_label_calculation;
         QLabel*      m_calculation_info;
+        QLabel*      m_label_route_type;
+        QComboBox*   m_route_type;
 
         void           initTop();
         void           initBottom();
         TransportType  transportation();
+
         static QString duration(const float duration);
         static QString distance(const float distance);
 
@@ -80,7 +83,7 @@ namespace OSM
 
         void setStart(const float lat, const float lon);
         void setStop(const float lat, const float lon);
-        void addAttraction(const int size);
+        void setAttraction(const int size);
     };
 
 }  // namespace OSM
