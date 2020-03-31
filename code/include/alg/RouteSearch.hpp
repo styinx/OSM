@@ -14,6 +14,9 @@ namespace OSM
         , public NonMoveable
     {
     private:
+        const float DURATION_FACTOR = 100;
+        const float DISTANCE_FACTOR = 1000;
+        const float DISTANCE_RANGE  = 1000;
         const AdjacencyArray* m_array;
         const Grid*           m_grid;
 

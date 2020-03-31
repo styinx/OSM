@@ -48,7 +48,7 @@ link_directories(
 #
 
 SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -fPIC -O3")
-#SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -fPIC")
+#SET(GCC_COMPILE_FLAGS "-Wall -Wextra -pedantic -fPIC -O0")
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COMPILE_FLAGS}")
 

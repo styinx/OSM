@@ -279,16 +279,13 @@ namespace OSM
         float          duration     = 0;
         Uint64         calculation  = 0;
         bool           way_found    = false;
-        bool           uses_default = false;
+        Uint8          uses_default = 0;
         Vector<Uint64> route;
     };
 
-    inline float distNodes(const Node& n1, const Node& n2, const String& unit = "m")
+    inline float distNodes(const Node& n1, const Node& n2)
     {
-        if(unit == "m")
-            return Geo::dist(n1.lat, n1.lon, n2.lat, n2.lon);
-        else
-            return Geo::dist(n1.lat, n1.lon, n2.lat, n2.lon) / 1000;
+        return Geo::dist(n1.lat, n1.lon, n2.lat, n2.lon);
     }
 
     inline Node midpointNode(const Node& n1, const Node& n2)

@@ -29,6 +29,8 @@ namespace OSM
         load(QUrl{"qrc:///map_html"});
     }
 
+    // Private
+
     Uint64 UIMap::townToNode(const QString& town) const
     {
         const Uint16 town_id = MapData::getTownID(town.toStdString());
@@ -43,6 +45,13 @@ namespace OSM
         return town_id;
     }
 
+    void UIMap::runJS(const QString& script) const
+    {
+        page()->runJavaScript(script);
+    }
+
+    // Public
+
     void UIMap::onLoad()
     {
         const auto  bounds    = m_grid.getBounds();
@@ -51,7 +60,7 @@ namespace OSM
         const auto  diff      = std::abs(bounds.max_lon - bounds.min_lon);
         const float auto_zoom = std::max(-15 * diff, -0.50F * diff - 10) + 20;
 
-        page()->runJavaScript(
+        runJS(
             "ui_map.setView(" + QString::number(vlat) + ", " + QString::number(vlon) + ", " +
             QString::number(static_cast<int>(std::round(auto_zoom))) + ");");
     }
@@ -59,11 +68,11 @@ namespace OSM
     void UIMap::showGraph(const bool show)
     {
         QString setShow = show ? "true" : "false";
-        page()->runJavaScript("ui_map.showGraph(" + setShow + ")");
+        runJS("ui_map.showGraph(" + setShow + ")");
 
         m_graph->buildMotorway();
 
-        page()->runJavaScript("ui_graph.show();");
+        runJS("ui_graph.show();");
     }
 
     void UIMap::showNodes(const bool show)
@@ -84,11 +93,11 @@ namespace OSM
                 }
             }
 
-            page()->runJavaScript(call + "true, [" + params.left(params.size() - 1) + "]);");
+            runJS(call + "true, [" + params.left(params.size() - 1) + "]);");
         }
         else
         {
-            page()->runJavaScript(call + "false);");
+            runJS(call + "false);");
         }
     }
 
@@ -154,7 +163,13 @@ namespace OSM
             stop  = m_grid.getFirstClosest(latlon2.first, latlon2.second);
         }
 
-        page()->runJavaScript("ui_map.showRoute(false);");
+        if(start == 0 || stop == 0)
+        {
+            Uint8 which = start == 0 ? 1 : 2;
+            return {start, stop, 0, 0, 0, false, which, {}};
+        }
+
+        runJS("ui_map.showRoute(false);");
 
         if(m_route_attractions.empty())
         {
@@ -179,7 +194,7 @@ namespace OSM
             params += "[" + QString::number(n.lon) + "," + QString::number(n.lat) + "],";
         }
 
-        page()->runJavaScript(
+        runJS(
             "ui_map.showRoute(true, [" + params.left(params.size() - 1) + "], " +
             QString::number(color) + ");");
     }
@@ -194,15 +209,15 @@ namespace OSM
             const auto n = nodes[node];
             params += "[0," + QString::number(n.lat) + "," + QString::number(n.lon) + "],";
         }
-        page()->runJavaScript("ui_map.showNodes(true, [" + params.left(params.size() - 1) + "]);");
+        runJS("ui_map.showNodes(true, [" + params.left(params.size() - 1) + "]);");
     }
 
     void UIMap::resetAttractions()
     {
         m_route_attractions.clear();
 
-        page()->runJavaScript("ui_map.resetAttractions();");
-        page()->runJavaScript("ui_map.showRoute(false);");
+        runJS("ui_map.resetAttractions();");
+        runJS("ui_map.showRoute(false);");
     }
 
     void UIMap::setAttractions(const int val)
@@ -211,8 +226,8 @@ namespace OSM
 
         if(diff > 0)
         {
-            page()->runJavaScript("ui_map.addAttractions(" + QString::number(diff) + ");");
-            page()->runJavaScript("ui_map.showRoute(false);");
+            runJS("ui_map.addAttractions(" + QString::number(diff) + ");");
+            runJS("ui_map.showRoute(false);");
         }
         else if(diff < 0)
         {
@@ -220,8 +235,8 @@ namespace OSM
             {
                 m_route_attractions.pop_back();
             }
-            page()->runJavaScript("ui_map.removeAttractions(" + QString::number(std::abs(diff)) + ");");
-            page()->runJavaScript("ui_map.showRoute(false);");
+            runJS("ui_map.removeAttractions(" + QString::number(std::abs(diff)) + ");");
+            runJS("ui_map.showRoute(false);");
         }
     }
 

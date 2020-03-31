@@ -207,7 +207,7 @@ namespace OSM
         auto pathResult = m_parent->getMap()->calculatePath(
             start, stop, transportation(), m_route_type->currentIndex());
 
-        if(pathResult.route.empty())
+        if(pathResult.route.empty() || !pathResult.way_found)
         {
             if(pathResult.start == pathResult.stop)
             {
@@ -226,26 +226,29 @@ namespace OSM
         {
             if(pathResult.uses_default)
             {
+                QString which = pathResult.uses_default == 1 ? "the start node" : "end node";
+
                 QMessageBox::information(
                     this,
                     "Warning",
-                    "The path search uses most likely a default value for one or both of your "
-                    "nodes."
-                    "\nTry to use different nodes that are close to roads or inside the map "
-                    "range.");
+                    "The path search uses a default value for " + which +
+                        ".\nTry to use different nodes that are close to roads or inside the map "
+                        "range.");
+            }
+            else
+            {
+                using namespace std::chrono;
+                auto t = system_clock::now();
+                m_parent->getMap()->drawPath(pathResult.route);
+                const auto drawing = duration_cast<milliseconds>(system_clock::now() - t).count();
+
+                m_duration_info->setText(duration(pathResult.duration));
+                m_distance_info->setText(distance(pathResult.distance));
+                m_calculation_info->setText(
+                    QString::number(static_cast<float>(pathResult.calculation) / 1000, 'f', 2) + " s (+" +
+                    QString::number(static_cast<float>(drawing) / 1000, 'f', 2) + " s drawing)");
             }
         }
-
-        using namespace std::chrono;
-        auto t = system_clock::now();
-        m_parent->getMap()->drawPath(pathResult.route);
-        const auto drawing = duration_cast<milliseconds>(system_clock::now() - t).count();
-
-        m_duration_info->setText(duration(pathResult.duration));
-        m_distance_info->setText(distance(pathResult.distance));
-        m_calculation_info->setText(
-            QString::number(pathResult.calculation / 1000, 'f', 2) + " s (+" +
-            QString::number(drawing / 1000, 'f', 2) + " s drawing)");
     }
 
     void Panel::setShowGraph()
@@ -266,7 +269,7 @@ namespace OSM
 
     void Panel::setAttractionNumber(int)
     {
-        const auto val = static_cast<size_t>(m_attraction_slider->value());
+        const auto val         = static_cast<size_t>(m_attraction_slider->value());
         const auto attractions = m_parent->getMap()->numberOfAttractions();
         if(val > attractions)
         {
