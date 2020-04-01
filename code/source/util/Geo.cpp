@@ -40,7 +40,7 @@ namespace OSM
         const auto v = sin((lon1_rad - lon2_rad) / 2);
 
         return static_cast<float>(
-            2.0F * e_rad * asin(sqrt(pow(u, 2) + cos(lat1_rad) * cos(lat2_rad) * pow(v, 2))));
+            2.0F * e_rad * asin(sqrt(u * u + cos(lat1_rad) * cos(lat2_rad) * v * v)));
     }
 
-} // namespace OSM
+}  // namespace OSM

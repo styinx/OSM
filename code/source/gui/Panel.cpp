@@ -123,6 +123,11 @@ namespace OSM
         m_duration_info       = new QLabel("0.0 h");
         m_label_calculation   = new QLabel("Calculation:");
         m_calculation_info    = new QLabel("0.0 s");
+        m_label_route_type    = new QLabel("Search algorithm");
+        m_route_type          = new QComboBox();
+
+        m_route_type->addItems({"Dijkstra", "Bidirectional Dijkstra"});
+        m_route_type->setCurrentIndex(1);
 
         auto grid_filler1 = new QWidget();
         grid_filler1->setSizePolicy(m_expanding_policy);
@@ -137,6 +142,8 @@ namespace OSM
         m_info_grid->addWidget(m_duration_info, row++, 1);
         m_info_grid->addWidget(m_label_calculation, row, 0);
         m_info_grid->addWidget(m_calculation_info, row++, 1);
+        m_info_grid->addWidget(m_label_route_type, row, 0);
+        m_info_grid->addWidget(m_route_type, row++, 1);
 
         auto grid_filler2 = new QWidget();
         grid_filler2->setSizePolicy(m_expanding_policy);
@@ -197,24 +204,10 @@ namespace OSM
         auto start = m_start->text();
         auto stop  = m_stop->text();
 
-        //        if(start.isEmpty() && stop.isEmpty())
-        //        {
-        //            QString towns;
-        //            for(int i = 0; i < 10; ++i)
-        //            {
-        //                towns += QString(MapData::getTown(i).data()) + "\n";
-        //            }
-        //
-        //            QMessageBox::information(
-        //                this,
-        //                "Missing parameters",
-        //                "Please provide a start and target location.\n Here are some:\n" + towns);
-        //            return;
-        //        }
+        auto pathResult = m_parent->getMap()->calculatePath(
+            start, stop, transportation(), m_route_type->currentIndex());
 
-        auto pathResult = m_parent->getMap()->calculatePath(start, stop, transportation());
-
-        if(pathResult.route.empty())
+        if(pathResult.route.empty() || !pathResult.way_found)
         {
             if(pathResult.start == pathResult.stop)
             {
@@ -231,20 +224,31 @@ namespace OSM
         }
         else
         {
-            if(pathResult.start == 0 || pathResult.stop == 0)
+            if(pathResult.uses_default)
             {
+                QString which = pathResult.uses_default == 1 ? "the start node" : "end node";
+
                 QMessageBox::information(
                     this,
                     "Warning",
-                    "The path search uses most likely a default value for one of your nodes.");
+                    "The path search uses a default value for " + which +
+                        ".\nTry to use different nodes that are close to roads or inside the map "
+                        "range.");
+            }
+            else
+            {
+                using namespace std::chrono;
+                auto t = system_clock::now();
+                m_parent->getMap()->drawPath(pathResult.route);
+                const auto drawing = duration_cast<milliseconds>(system_clock::now() - t).count();
+
+                m_duration_info->setText(duration(pathResult.duration));
+                m_distance_info->setText(distance(pathResult.distance));
+                m_calculation_info->setText(
+                    QString::number(static_cast<float>(pathResult.calculation) / 1000, 'f', 2) + " s (+" +
+                    QString::number(static_cast<float>(drawing) / 1000, 'f', 2) + " s drawing)");
             }
         }
-
-        m_parent->getMap()->drawPath(pathResult.route);
-
-        m_duration_info->setText(duration(pathResult.duration));
-        m_distance_info->setText(distance(pathResult.distance));
-        m_calculation_info->setText(QString::number(pathResult.calculation / 1000, 'f', 2) + " s");
     }
 
     void Panel::setShowGraph()
@@ -265,7 +269,14 @@ namespace OSM
 
     void Panel::setAttractionNumber(int)
     {
-        const auto val = m_attraction_slider->value();
+        const auto val         = static_cast<size_t>(m_attraction_slider->value());
+        const auto attractions = m_parent->getMap()->numberOfAttractions();
+        if(val > attractions)
+        {
+            m_attraction_slider->setValue(attractions);
+            return;
+        }
+
         if(val == 0)
         {
             m_parent->getMap()->resetAttractions();
@@ -286,7 +297,7 @@ namespace OSM
         m_stop->setText(QString::number(lat) + "," + QString::number(lon));
     }
 
-    void Panel::addAttraction(const int size)
+    void Panel::setAttraction(const int size)
     {
         m_attraction_slider->setValue(size);
     }

@@ -14,6 +14,7 @@
     - [Adjacency Array](#adjacency-array)
     - [Grid](#grid)
     - [Route search](#route-search)
+    - [Performance](#performance)
     - [Examples](#examples)
     - [Limitations](#limitations)
 - [Conclusion](#conclusion)
@@ -355,12 +356,27 @@ class RouteSearch
 };
 ```
 
+![Necklace](https://github.com/styinx/OSM/blob/master/report/limitation_tags.png)[1]
+
 In the following we depict the heuristics for the search algorithm as described above.
 The midpoint is highlighted as a purple circle.
 The red circle (approximately) encloses all nodes that are possibly included in a search which should be less than the amount of the originally available nodes, for most cases.
-The black circle represents an arbitrary node that was detected by a bidirectional Dijkstra.  
+The black circle represents an arbitrary node that was detected by a bidirectional Dijkstra. 
 
 ![Search Algorithm](https://github.com/styinx/OSM/blob/master/report/search.png "Search Algorithm")
+
+### Performance
+<a id="performance"/>
+
+CPU: Intel(R) Core(TM) i5-4690K CPU @ 3.50GHz
+RAM: 16 GB
+
+| Map Data | # of filtered nodes /<br> # of available nodes | # of filtered ways /<br> # of available ways | time to read | time to process | memory size | simple Dijkstra | bidirectional Dijkstra | TSP Dijkstra (max. 10 stops) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Hamburg | 131,218 / 544,000 | 138,329 / 530,578 | ~2s | <1s | ~200MB | <1s | <1s | <1s |
+| Stuttgart | 3,250,509 / 14,660,711 | 608,479 / 2,546,502 | ~9s | ~1s | ~600MB | <1s | ~0-1s | ~0-1s |
+| Baden-Württemberg | 10,352,924 / 43,693,622 | 1,768,234 / 7,245,584 | ~27s | ~10s | ~1.5GB | ~4s | ~0-2s | ~0-15s |
+| Deutschland | 62,435,117 / 307,793,444 | 11,303,797 / 49,974,007 | ~3.2min | ~2min | ~8.6GB | ~40s | ~0-20s | - |
 
 ### Examples
 <a id="examples"/>
@@ -415,3 +431,7 @@ The number of attractions is limited to 10 attractions.
 
 ## Conclusion
 <a id="conclusion"/>
+
+## References
+
+[1][TSP](https://page.mi.fu-berlin.de/rote/Papers/pdf/Two+solvable+cases+of+the+traveling+salesman+problem.pdf)

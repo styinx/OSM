@@ -95,17 +95,17 @@ namespace OSM
         return m_edges.size();
     }
 
-    Vector<Node> AdjacencyArray::getNodes() const
+    const Vector<Node>& AdjacencyArray::getNodes() const
     {
         return m_nodes;
     }
 
-    Vector<Edge> AdjacencyArray::getEdges() const
+    const Vector<Edge>& AdjacencyArray::getEdges() const
     {
         return m_edges;
     }
 
-    Vector<Uint64> AdjacencyArray::getOOffsets() const
+    const Vector<Uint64>& AdjacencyArray::getOOffsets() const
     {
         return m_o_offset;
     }
@@ -129,6 +129,17 @@ namespace OSM
         }
         return neighbours;
     }
+
+    Vector<Uint64> AdjacencyArray::edgeIDs(const Uint64 node) const
+    {
+        Vector<Uint64> edges;
+        for(Uint64 i = m_o_offset[node]; i < m_o_offset[node + 1]; ++i)
+        {
+            edges.emplace_back(i);
+        }
+        return edges;
+    }
+
     Vector<Edge> AdjacencyArray::edges(const Uint64 node) const
     {
         Vector<Edge> edges;

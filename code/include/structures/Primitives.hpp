@@ -165,6 +165,8 @@ namespace OSM
         Byte   mask = 0;
         // 40 bits padding
 
+        Node() = default;
+
         explicit Node(const Uint64 id, const double lat, const double lon, const Byte mask, const Uint16 town)
             : id(id)
             , lat(static_cast<float>(lat))
@@ -271,21 +273,19 @@ namespace OSM
 
     struct PathResult
     {
-        Uint64         start    = 0;
-        Uint64         stop     = 0;
-        float          distance = 0;
-        float          duration = 0;
+        Uint64         start        = 0;
+        Uint64         stop         = 0;
+        float          distance     = 0;
+        float          duration     = 0;
+        Uint64         calculation  = 0;
+        bool           way_found    = false;
+        Uint8          uses_default = 0;
         Vector<Uint64> route;
-        Uint64         calculation = 0;
-        bool           way_found   = false;
     };
 
-    inline float distNodes(const Node& n1, const Node& n2, const String& unit = "m")
+    inline float distNodes(const Node& n1, const Node& n2)
     {
-        if(unit == "m")
-            return Geo::dist(n1.lat, n1.lon, n2.lat, n2.lon);
-        else
-            return Geo::dist(n1.lat, n1.lon, n2.lat, n2.lon) / 1000;
+        return Geo::dist(n1.lat, n1.lon, n2.lat, n2.lon);
     }
 
     inline Node midpointNode(const Node& n1, const Node& n2)

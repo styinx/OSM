@@ -19,14 +19,14 @@ namespace OSM
         , public NonMoveable
     {
     private:
-        Vector<Node>   m_nodes;
-        Vector<Edge>   m_edges;
-        Vector<Uint64> m_o_offset;
-
         std::mutex m_node_mutex;
         std::mutex m_edge_mutex;
 
     public:
+        Vector<Node>   m_nodes;
+        Vector<Edge>   m_edges;
+        Vector<Uint64> m_o_offset;
+
         explicit AdjacencyArray();
         AdjacencyArray(const AdjacencyArray& other)     = delete;
         AdjacencyArray(AdjacencyArray&& other) noexcept = delete;
@@ -34,17 +34,18 @@ namespace OSM
         AdjacencyArray& operator=(AdjacencyArray&& other) noexcept = delete;
         virtual ~AdjacencyArray()                                  = default;
 
-        void           computeOffsets();
-        void           addNode(const Node& node);
-        void           addEdge(const Edge& edge);
-        size_t         nodeCount() const;
-        size_t         edgeCount() const;
-        Vector<Node>   getNodes() const;
-        Vector<Edge>   getEdges() const;
-        Vector<Uint64> getOOffsets() const;
-        Vector<Uint64> neighbourIDs(const Uint64 node) const;
-        Vector<Node> neighbours(const Uint64 node) const;
-        Vector<Edge> edges(const Uint64 node) const;
+        void                  computeOffsets();
+        void                  addNode(const Node& node);
+        void                  addEdge(const Edge& edge);
+        size_t                nodeCount() const;
+        size_t                edgeCount() const;
+        const Vector<Node>&   getNodes() const;
+        const Vector<Edge>&   getEdges() const;
+        const Vector<Uint64>& getOOffsets() const;
+        Vector<Uint64>        neighbourIDs(const Uint64 node) const;
+        Vector<Node>          neighbours(const Uint64 node) const;
+        Vector<Uint64>        edgeIDs(const Uint64 node) const;
+        Vector<Edge>          edges(const Uint64 node) const;
     };
 }  // namespace OSM
 

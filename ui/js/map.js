@@ -108,6 +108,10 @@ class UIMap {
         this.cpp_ui_map.addAttraction(id);
     }
 
+    removeAttraction(id) {
+        this.cpp_ui_map.removeAttraction(id);
+    }
+
     // C++ -> JS
 
     setView(lat, lon, zoom) {
@@ -176,7 +180,7 @@ function newIcon(type) {
         opacity: 0.5,
         iconSize: [32, 32],
         iconAnchor: [16, 32],
-        popupAnchor: [16, -32],
+        popupAnchor: [0, -32],
         type: type
     });
 }
@@ -268,6 +272,13 @@ class Map {
 
                     marker.setIcon(newIcon('green'));
                     obj.attractions.push(marker);
+                    button.innerHTML = "Remove<br>from route";
+                }
+                else {
+                    button.innerHTML = 'Add to route';
+                    marker.setIcon(newIcon(marker.type));
+                    obj.removeAttraction(marker);
+                    ui_map.removeAttraction(id);
                 }
             };
             let p = document.createElement('p');
@@ -287,6 +298,10 @@ class Map {
                 this.markers[n[3]] = marker;
             }
         }
+
+        for(let ra in this.attractions) {
+            this.attractions[ra].addTo(this.nodeLayer);
+        }
     }
 
     resetAttractions() {
@@ -298,16 +313,18 @@ class Map {
     }
 
     addAttractions(n) {
-        console.log("add " + n);
     }
 
     removeAttractions(n) {
-        console.log("rem " + n);
         while(n > 0) {
             let change_marker = this.attractions.pop();
             change_marker.setIcon(newIcon(change_marker.type));
             n--;
         }
+    }
+
+    removeAttraction(marker) {
+        this.attractions.splice(this.attractions.indexOf(marker), 1);
     }
 }
 
