@@ -21,6 +21,10 @@ namespace OSM
     {
         Q_OBJECT
         Q_PROPERTY(int zoom MEMBER m_zoom)
+        Q_PROPERTY(QVariantList attr_id MEMBER m_attr_id)
+        Q_PROPERTY(QVariantList attr_lat MEMBER m_attr_lat)
+        Q_PROPERTY(QVariantList attr_lon MEMBER m_attr_lon)
+        Q_PROPERTY(QVariantList attr_tourism MEMBER m_attr_tourism)
     private:
         Window*               m_parent;
         WebPage*              m_page;
@@ -28,10 +32,14 @@ namespace OSM
         const AdjacencyArray* m_array;
         UIGraph*              m_graph;
 
-        int          m_zoom;
+        int          m_zoom = 0;
         Grid         m_grid;
         RouteSearch  m_route_search;
         Vector<Node> m_route_attractions{};
+        QVariantList m_attr_id{};
+        QVariantList m_attr_lat{};
+        QVariantList m_attr_lon{};
+        QVariantList m_attr_tourism{};
 
         Uint64 townToNode(const QString& town) const;
         void   runJS(const QString& script) const;

@@ -248,7 +248,6 @@ namespace OSM
                 }
                 result.distance += distance;
                 result.duration += duration;
-                result.uses_default = target == 0 ? 1 : 0;
                 m.unlock();
             };
 

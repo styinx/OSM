@@ -27,6 +27,18 @@ namespace OSM
         page()->setWebChannel(m_channel);
 
         load(QUrl{"qrc:///map_html"});
+
+        for(const auto& node : m_array->getNodes())
+        {
+            const auto n = node;
+            if(n.mask & NodeTypeMask::TOURISM)
+            {
+                m_attr_id.append(QVariant((qlonglong)n.id));
+                m_attr_lat.append(QVariant(n.lat));
+                m_attr_lon.append(QVariant(n.lon));
+                m_attr_tourism.append(QVariant(n.tourism()));
+            }
+        }
     }
 
     // Private
@@ -77,28 +89,7 @@ namespace OSM
 
     void UIMap::showNodes(const bool show)
     {
-        QString call = "ui_map.showNodes(";
-
-        if(show)
-        {
-            const auto nodes = m_array->getNodes();
-            QString    params;
-            for(const auto& node : nodes)
-            {
-                const auto n = node;
-                if(n.mask & NodeTypeMask::TOURISM)
-                {
-                    params += "[" + QString::number(n.tourism()) + ", " + QString::number(n.lat) +
-                              "," + QString::number(n.lon) + ", " + QString::number(n.id) + "],";
-                }
-            }
-
-            runJS(call + "true, [" + params.left(params.size() - 1) + "]);");
-        }
-        else
-        {
-            runJS(call + "false);");
-        }
+        runJS(QString("ui_map.showNodes(").append((show) ? "true" : "false").append(")"));
     }
 
     void UIMap::setStart(const QString& latlon)

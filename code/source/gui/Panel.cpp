@@ -218,8 +218,9 @@ namespace OSM
                 QMessageBox::information(
                     this,
                     "No way found",
-                    "No way was found.\nMake sure that the start and stop point are connected to "
-                    "the road network.");
+                    "No way was found.<br>Make sure that the <b>start</b> and <b>stop</b> location "
+                    "are near the road network or choose the <b>pedestrian</b> travel method which "
+                    "can reach any node.");
             }
         }
         else
@@ -231,9 +232,9 @@ namespace OSM
                 QMessageBox::information(
                     this,
                     "Warning",
-                    "The path search uses a default value for " + which +
-                        ".\nTry to use different nodes that are close to roads or inside the map "
-                        "range.");
+                    "The path search uses a default value for <b>" + which +
+                        "</b>.<br>Try to use different nodes that are close to roads or inside the "
+                        "map range.");
             }
             else
             {

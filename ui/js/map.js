@@ -56,6 +56,7 @@ class UIMap {
         this.map = ll_map;
 
         this.map.l_map.on("click", this.onMapClick);
+        this.map.l_map.on('zoomend', this.onZoom);
     }
 
     onMapClick(e) {
@@ -70,6 +71,10 @@ class UIMap {
         map.l_popup.setLatLng(e.latlng)
             .setContent(start + "&nbsp;" + stop)
             .addTo(map.l_map);
+    }
+
+    onZoom(e) {
+        window.ui_map.zoom = parseInt(window.map.l_map.getZoom());
     }
 
     // JS -> C++
@@ -122,7 +127,7 @@ class UIMap {
         this.map.showGraph(bool);
     }
 
-    showRoute(clear, route=[], color=0) {
+    showRoute(clear, route = [], color = 0) {
         this.map.showRoute(clear, route, color);
     }
 
@@ -172,17 +177,6 @@ class UIGraph {
             // secondary
         }
     }
-}
-
-function newIcon(type) {
-    return L.icon({
-        iconUrl: icons[type],
-        opacity: 0.5,
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        type: type
-    });
 }
 
 class Map {
@@ -241,8 +235,7 @@ class Map {
     showRoute(clear, lines, color) {
         this.routeLayer.clearLayers();
 
-        if(clear)
-        {
+        if (clear) {
             this.routeLayer.addLayer(L.geoJSON({
                 type: "LineString",
                 coordinates: lines
@@ -255,51 +248,40 @@ class Map {
         }
     }
 
-    showNodes(show, nodes) {
+    showNodes(show) {
         this.nodeLayer.clearLayers();
 
-        let button = function (obj, text, id, marker) {
-            let button = document.createElement('button');
-            button.innerHTML = 'Add to route';
-            button.onclick = function () {
-                if(obj.attractions.indexOf(marker) === -1)
-                {
-                    ui_map.addAttraction(id);
-                    if (obj.attractions.length === 10) {
-                        let change_marker = obj.attractions.pop();
-                        change_marker.setIcon(newIcon(change_marker.type));
-                    }
-
-                    marker.setIcon(newIcon('green'));
-                    obj.attractions.push(marker);
-                    button.innerHTML = "Remove<br>from route";
-                }
-                else {
-                    button.innerHTML = 'Add to route';
-                    marker.setIcon(newIcon(marker.type));
-                    obj.removeAttraction(marker);
-                    ui_map.removeAttraction(id);
-                }
-            };
-            let p = document.createElement('p');
-            p.innerHTML = text;
-            p.appendChild(document.createElement('br'));
-            p.appendChild(button);
-            return p;
-        };
-
         if (show) {
-            for (let i = 0; i < nodes.length; i++) {
-                let n = nodes[i];
-                let t = tourism[n[0]];
-                let marker = L.marker([n[1], n[2]], {icon: newIcon(t.color)});
-                marker.type = t.color;
-                marker.bindPopup(button(this, t.text, n[3], marker)).addTo(this.nodeLayer);
-                this.markers[n[3]] = marker;
+            // Init markers
+            if (Object.keys(this.markers).length === 0) {
+                let ids = ui_map.cpp_ui_map.attr_id;
+                let lats = ui_map.cpp_ui_map.attr_lat;
+                let lons = ui_map.cpp_ui_map.attr_lon;
+                let tourisms = ui_map.cpp_ui_map.attr_tourism;
+
+                for (let i = 0; i < ids.length; i++) {
+                    let t = tourism[tourisms[i]];
+                    let marker = L.marker([lats[i], lons[i]], {
+                        icon: newIcon(t.color)
+                    });
+                    marker.type = t.color;
+                    marker.id = ids[i];
+                    marker.tourism = tourisms[i];
+                    marker.bindPopup(buttonFunc(this, marker));
+                    this.markers[ids[i]] = marker;
+                }
+            }
+            let n = 0;
+            let fac = Math.round(Math.log10(ui_map.cpp_ui_map.attr_id.length));
+            for (let id in this.markers) {
+                if(n % fac === 0) {
+                    this.markers[id].addTo(this.nodeLayer);
+                }
+                n++;
             }
         }
 
-        for(let ra in this.attractions) {
+        for (let ra in this.attractions) {
             this.attractions[ra].addTo(this.nodeLayer);
         }
     }
@@ -308,6 +290,7 @@ class Map {
         for (let key in this.attractions) {
             let a = this.attractions[key];
             a.setIcon(newIcon(a.type));
+            a.bindPopup(buttonFunc(this, a))
         }
         this.attractions = [];
     }
@@ -316,7 +299,7 @@ class Map {
     }
 
     removeAttractions(n) {
-        while(n > 0) {
+        while (n > 0) {
             let change_marker = this.attractions.pop();
             change_marker.setIcon(newIcon(change_marker.type));
             n--;
@@ -326,6 +309,47 @@ class Map {
     removeAttraction(marker) {
         this.attractions.splice(this.attractions.indexOf(marker), 1);
     }
+}
+
+function newIcon(type) {
+    return L.icon({
+        iconUrl: icons[type],
+        opacity: 0.5,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+        type: type
+    });
+}
+
+function buttonFunc(obj, marker) {
+    let button = document.createElement('button');
+    button.innerHTML = 'Add to route';
+    button.onclick = function () {
+        if (obj.attractions.indexOf(marker) === -1) {
+            ui_map.addAttraction(marker.id);
+            if (obj.attractions.length === 10) {
+                let change_marker = obj.attractions.pop();
+                change_marker.setIcon(newIcon(change_marker.type));
+            }
+
+            marker.setIcon(newIcon('green'));
+            obj.attractions.push(marker);
+            button.innerHTML = "Remove<br>from route";
+        } else {
+            button.innerHTML = 'Add to route';
+            marker.setIcon(newIcon(marker.type));
+            obj.removeAttraction(marker);
+            ui_map.removeAttraction(marker.id);
+        }
+    };
+    let p = document.createElement('p');
+    p.style.color = tourism[marker.tourism].color;
+    p.style.fontWeight = 'bolder';
+    p.innerHTML = tourism[marker.tourism].text;
+    p.appendChild(document.createElement('br'));
+    p.appendChild(button);
+    return p;
 }
 
 document.addEventListener("DOMContentLoaded", function () {
