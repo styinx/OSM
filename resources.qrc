@@ -6,7 +6,15 @@
     <file alias="icon_car">ui/img/car.png</file>
     <file alias="icon_bike">ui/img/bike.png</file>
     <file alias="icon_foot">ui/img/foot.png</file>
-    <file alias="icon_marker">ui/img/marker.png</file>
+    <file alias="icon_marker_black">ui/img/marker_black.png</file>
+    <file alias="icon_marker_blue">ui/img/marker_blue.png</file>
+    <file alias="icon_marker_green">ui/img/marker_green.png</file>
+    <file alias="icon_marker_orange">ui/img/marker_orange.png</file>
+    <file alias="icon_marker_pink">ui/img/marker_pink.png</file>
+    <file alias="icon_marker_purple">ui/img/marker_purple.png</file>
+    <file alias="icon_marker_red">ui/img/marker_red.png</file>
+    <file alias="icon_marker_white">ui/img/marker_white.png</file>
+    <file alias="icon_marker_yellow">ui/img/marker_yellow.png</file>
     <file alias="icon_public_transport">ui/img/public_transport.png</file>
 </qresource>
 </RCC>

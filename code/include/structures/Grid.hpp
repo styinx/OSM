@@ -3,9 +3,8 @@
 
 #include "NonCopyable.hpp"
 #include "NonMoveable.hpp"
-#include "gui/mapTypes.hpp"
-#include "prototypes.hpp"
 #include "structures/AdjacencyArray.hpp"
+#include "types.hpp"
 
 namespace OSM
 {
@@ -31,18 +30,25 @@ namespace OSM
         Vector<Cell>          m_cells{m_x * m_y};
 
         Uint16 nodeToCell(const float lat, const float lon) const;
+        Uint64 findNode(const float lat, const float lon, float range, const bool first) const;
 
     public:
         explicit Grid(const MapBounds& bounds, const AdjacencyArray* array);
         virtual ~Grid() = default;
 
+        void             set(const Uint16 cell, const Uint64 index);
         void             set(const float lat, const float lon, const Uint64 index);
         Vector<Uint64>   get(const Uint16 cell) const;
         Vector<Uint64>   get(const float lat, const float lon) const;
         Vector<Uint64>   get(const MapBounds& bounds) const;
         const MapBounds& getBounds() const;
         Vector<Cell>     getCells() const;
-        Uint64           getFirstClosest(const float lat, const float lon, const float range = 100) const;
+        Uint64           getFirstClosest(
+                      const float lat,
+                      const float lon,
+                      const float range             = 100,
+                      const bool  search_neighbours = true) const;
+        Uint64 getBestClosest(const float lat, const float lon) const;
     };
 
 }  // namespace OSM

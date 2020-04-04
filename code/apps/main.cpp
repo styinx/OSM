@@ -3,9 +3,11 @@
 #include "structures/AdjacencyArray.hpp"
 
 #include <QApplication>
+#include <iostream>
 
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
+#ifndef NDEBUG
     QByteArray localMsg = msg.toLocal8Bit();
     switch (type) {
     case QtDebugMsg:
@@ -24,6 +26,7 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QS
         fprintf(stderr, "Fatal: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
         abort();
     }
+#endif
 }
 
 int main(int argc, char** argv)
@@ -38,6 +41,12 @@ int main(int argc, char** argv)
         bounds = reader->getMapBounds();
 
         reader->read(array);
+    }
+    else
+    {
+        std::cout << "Missing map file. Please specify a *.pbf file.\n"
+                  << "Usage: ./OSM <relative path to the *.pbf file>\n";
+        return 0;
     }
 
     qInstallMessageHandler(myMessageOutput);

@@ -6,258 +6,312 @@ namespace OSM
     RouteSearch::RouteSearch(const AdjacencyArray* array, const Grid* grid)
         : m_array(array)
         , m_grid(grid)
-        , m_V(array->nodeCount())
-        , m_prev(array->nodeCount(), U64_max)
-        , m_dist(array->nodeCount(), U64_max)
-        , m_frontier()
-        , m_explored()
+        , m_weights(m_array->nodeCount(), F32_INF)
+        , m_distances(m_array->nodeCount(), F32_INF)
+        , m_durations(m_array->nodeCount(), F32_INF)
+        , m_previous(m_array->nodeCount(), U64_INF)
+        , m_visited(m_array->nodeCount(), false)
+        , m_changed(m_array->nodeCount(), false)
     {
     }
 
-    Vector<Uint64> RouteSearch::route(const Uint64 from, const Uint64 to)
+    void RouteSearch::resetVisited(const Vector<bool>& changed)
     {
-        struct SearchNode
+        Uint64 id = 0;
+        for(const auto& c : changed)
         {
-            Uint64 id = std::numeric_limits<Uint64>::max();
-            Uint64 previous = std::numeric_limits<Uint64>::max();
-            float weight = std::numeric_limits<float>::max();
-
-            bool operator<(const SearchNode& other) const
+            if(c)
             {
-                return weight < other.weight;
+                m_weights[id]   = F32_INF;
+                m_distances[id] = 0;
+                m_durations[id] = 0;
+                m_previous[id]  = U64_INF;
             }
+            id++;
+        }
+        m_visited = Vector<bool>(m_array->nodeCount(), false);
+        m_changed = Vector<bool>(m_array->nodeCount(), false);
+    }
+
+    PathResult
+    RouteSearch::route(const Uint64 from, const Uint64 to, const TransportType type, const bool reset)
+    {
+        using SearchNode = Pair<Uint64, float>;
+        using Clock      = std::chrono::system_clock;
+        using MS         = std::chrono::milliseconds;
+
+        const auto comparator = [](const SearchNode& lhs, const SearchNode& rhs) {
+            return lhs.second > rhs.second;
         };
 
-        Vector<SearchNode> explored(m_array->nodeCount(), SearchNode{});
-        Deque<SearchNode> frontier;
+        const auto time      = Clock::now();
+        const auto alt_speed = (type & 0x01) ? 5 : ((type & 0x02) ? 15 : 0);
+        const auto nodes     = m_array->getNodes();
+        const auto edges     = m_array->getEdges();
+        const auto offsets   = m_array->getOOffsets();
+        const auto node_to   = nodes[to];
 
-        frontier.emplace_front(SearchNode{from, U64_max, 0});
-        explored[from] = frontier.front();
+        m_weights[from]   = 0;
+        m_distances[from] = 0;
+        m_durations[from] = 0;
 
-        while(!frontier.empty())
+        std::priority_queue<SearchNode, Vector<SearchNode>, decltype(comparator)> queue(comparator);
+        queue.push({from, m_weights[from]});
+
+        Uint64 node = from;
+        while(!queue.empty() && node != to)
         {
-            const auto current = frontier.front();
-            frontier.pop_front();
+            node              = queue.top().first;
+            const auto weight = queue.top().second;
+            queue.pop();
 
-            if(explored[current.id].id != U64_max)
+            // If already visited or the weight is bigger.
+            if(weight > m_weights[node] || m_visited[node])
+                continue;
+
+            m_visited[node] = true;
+
+            for(Uint64 i = offsets[node]; i < offsets[node + 1]; ++i)
             {
-                Set<SearchNode> sorted_neighbours;
-                for(const auto edge : m_array->edges(current.id))
+                const auto e = edges[i];
+                // Skip roads that are not part of the chosen transportation type.
+                if(!(e.mask & type))
+                    continue;
+
+                const auto duration   = e.duration(alt_speed) * DURATION_FACTOR;
+                const auto distance   = distNodes(nodes[e.target], node_to) / DISTANCE_FACTOR / e.speed;
+                const auto new_weight = weight + duration + distance;
+
+                if(new_weight < m_weights[e.target])
                 {
-                    if(edge.target == to)
+                    m_weights[e.target]   = new_weight;
+                    m_distances[e.target] = e.distance;
+                    m_durations[e.target] = e.duration(alt_speed);
+                    m_previous[e.target]  = node;
+                    queue.push({e.target, new_weight});
+
+                    m_changed[node]     = true;
+                    m_changed[e.target] = true;
+                }
+            }
+        }
+
+        // Create the route from start to stop.
+        PathResult result{};
+        auto       p = m_previous[to];
+        while(p != U64_INF && p != from)
+        {
+            result.route.emplace_back(p);
+            result.distance += m_distances[p];
+            result.duration += m_durations[p];
+            p = m_previous[p];
+        }
+
+        // Reset all values that were changed during the search.
+        if(reset)
+        {
+            resetVisited(m_changed);
+        }
+
+        // Set result values.
+        result.start        = from;
+        result.stop         = to;
+        result.uses_default = (from == 0) ? 1 : ((to == 0) ? 2 : 0);
+        result.way_found    = !result.route.empty();
+        result.calculation  = std::chrono::duration_cast<MS>(Clock::now() - time).count();
+        return result;
+    }
+
+    PathResult
+    RouteSearch::biroute(const Uint64 from, const Uint64 to, const TransportType type, const bool reset)
+    {
+        using SearchNode = Pair<Uint64, float>;
+        using Clock      = std::chrono::system_clock;
+        using MS         = std::chrono::milliseconds;
+
+        const auto start   = Clock::now();
+        const auto nodes   = m_array->getNodes();
+        const auto edges   = m_array->getEdges();
+        const auto offsets = m_array->getOOffsets();
+
+        Vector<bool> forward(m_array->nodeCount(), false);
+        Vector<bool> backward(m_array->nodeCount(), false);
+        Uint64       target = 0;
+
+        m_weights[from]   = 0;
+        m_weights[to]     = 0;
+        m_distances[from] = 0;
+        m_distances[to]   = 0;
+        m_durations[from] = 0;
+        m_durations[to]   = 0;
+
+        PathResult result{};
+        std::mutex m;
+
+        // Should be run in two separate threads for bidirectional search.
+        const auto search =
+            [this, &m, &result, &forward, &backward, &from, &to, &target, &type, &nodes, &edges, &offsets](
+                const Uint64 start, Vector<bool>& visited) {
+                const auto comparator = [](const SearchNode& lhs, const SearchNode& rhs) {
+                    return lhs.second > rhs.second;
+                };
+
+                const auto     node_to   = nodes[to];
+                const auto     alt_speed = (type & 0x01) ? 5 : ((type & 0x02) ? 15 : 0);
+                Vector<Uint64> path{};
+                Vector<float>  weights(m_array->nodeCount(), F32_INF);
+                Vector<Uint64> previous(m_array->nodeCount(), U64_INF);
+
+                std::priority_queue<SearchNode, Vector<SearchNode>, decltype(comparator)> queue(
+                    comparator);
+                queue.push({start, m_weights[start]});
+
+                Uint64 node;
+                while(!queue.empty())
+                {
+                    node              = queue.top().first;
+                    const auto weight = queue.top().second;
+                    queue.pop();
+
+                    // If already visited or the weight is bigger.
+                    if(weight > weights[node] || visited[node])
+                        continue;
+
+                    visited[node] = true;
+
+                    if(forward[node] && backward[node])
                     {
-                        Vector<Uint64> route{to};
-                        SearchNode neighbour = current;
-                        while(neighbour.previous != U64_max)
+                        m.lock();
+                        if(target == 0)
                         {
-                            route.emplace_back(neighbour.id);
-                            neighbour = explored[neighbour.previous];
+                            target = node;
                         }
-                        return route;
+                        m.unlock();
+                        break;
                     }
 
-                    if(explored[edge.target].id == U64_max)
+                    for(Uint64 i = offsets[node]; i < offsets[node + 1]; ++i)
                     {
-                        const auto new_weight = current.weight + edge.weight();
-                        const auto neighbour  = SearchNode{edge.target, current.id, new_weight};
-                        sorted_neighbours.emplace(neighbour);
-                        explored[edge.target] = neighbour;
+                        const auto e = edges[i];
+                        // Skip roads that are not part of the chosen transportation type.
+                        if(!(e.mask & type))
+                            continue;
+
+                        const auto duration = e.duration(alt_speed) * DURATION_FACTOR;
+                        const auto distance = distNodes(nodes[e.target], node_to) / e.speed / DISTANCE_FACTOR;
+                        const auto new_weight = weight + duration + distance;
+
+                        if(new_weight < weights[e.target])
+                        {
+                            weights[e.target]     = new_weight;
+                            m_distances[e.target] = e.distance;
+                            m_durations[e.target] = e.duration(alt_speed);
+                            previous[e.target]    = node;
+                            queue.push({e.target, new_weight});
+
+                            m_changed[node]     = true;
+                            m_changed[e.target] = true;
+                        }
                     }
                 }
-                frontier.insert(frontier.end(), sorted_neighbours.begin(), sorted_neighbours.end());
-            }
 
-        }
+                float distance = 0;
+                float duration = 0;
+                auto  p        = previous[target];
+                while(p != U64_INF && p != start)
+                {
+                    path.emplace_back(p);
+                    distance += m_distances[p];
+                    duration += m_durations[p];
+                    p = previous[p];
+                }
 
-        return {};
-    }
-//
-//    Vector<Uint64> RouteSearch::computeDijkstra(const Uint64 from, const Uint64 to)
-//    {
-//        Vector<Uint64> path{};
-//        Uint64         u        = 0;
-//        const auto     ooffsets = m_array->getOOffsets();
-//        const auto     nodes    = m_array->getNodes();
-//        const auto     edges    = m_array->getEdges();
-//
-//        // Init Vertex set from 0 to n (index of the node in the array)
-//        for(Uint64 i = 0; i < m_array->nodeCount(); ++i)
-//        {
-//            m_V[i] = i;
-//        }
-//
-//        m_dist = Vector<float>(nodes.size(), U64_max);
-//        m_prev = Vector<Uint64>(nodes.size(), U64_max);
-//
-//        m_dist[to] = 0;
-//
-//        while(!m_V.empty())
-//        {
-//            // Find node with min dist that is still in V
-//            auto min       = U64_max;
-//            auto min_index = 0;
-//            for(Uint64 index = 0; index < m_dist.size(); ++index)
-//            {
-//                if(m_V[index] < U64_max)
-//                {
-//                    auto l_min = m_dist[index];
-//                    if(l_min < min)
-//                    {
-//                        min       = l_min;
-//                        min_index = index;
-//                    }
-//                }
-//            }
-//            if(min == U64_max)
-//            {
-//                return {path};
-//            }
-//            u = m_V[min_index];
-//
-//            // Check outgoing neighbours of min neighbour
-//            for(Uint64 i = ooffsets[u]; i < ooffsets[u + 1]; ++i)
-//            {
-//                const auto neighbour = edges[i].target;
-//
-//                if(m_V[neighbour] < U64_max)
-//                {
-//                    const float alternative = m_dist[u] + distNodes(nodes[u], nodes[neighbour]);
-//
-//                    if(alternative < m_dist[neighbour])
-//                    {
-//                        m_dist[neighbour] = alternative;
-//                        m_prev[neighbour] = u;
-//                    }
-//                }
-//            }
-//
-//            // Remove u from V
-//            m_V[u] = U64_max;
-//
-//            // we found a route
-//            if(u == from)
-//            {
-//                while(u < U64_max)
-//                {
-//                    path.emplace_back(u);
-//                    u = m_prev[u];
-//                }
-//            }
-//        }
-//
-//        return {path};
-//    }
-//
-//    Vector<Uint64> RouteSearch::PQ(const Uint64 from, const Uint64 to)
-//    {
-//        const auto ooffsets = m_array->getOOffsets();
-//        const auto nodes    = m_array->getNodes();
-//        const auto edges    = m_array->getEdges();
-//
-//        using Prio = Pair<Uint64, float>;
-//        struct CMP
-//        {
-//            bool operator()(const Prio& l, const Prio& r){ return l.second < r.second; }
-//        };
-//        std::priority_queue<Prio, Vector<Prio>, CMP> pq;
-//        Vector<Uint64> path;
-//
-//        m_dist = Vector<float>(nodes.size(), U64_max);
-//        m_prev = Vector<Uint64>(nodes.size(), U64_max);
-//        m_V = Vector<Uint64>(nodes.size(), U64_max);
-//
-//        m_dist[from] = 0;
-//
-//        for(const auto& node : nodes)
-//        {
-//            pq.emplace(Prio{node.id, m_dist[node.id]});
-//        }
-//
-//        while(!pq.empty())
-//        {
-//            const auto t = pq.top();
-//            auto u = t.first;
-//            m_V[u] = U64_max;
-//            pq.pop();
-//
-//            for(Uint64 i = ooffsets[u]; i < ooffsets[u + 1]; ++i)
-//            {
-//                if(m_V[i] != U64_max)
-//                {
-//                    const auto neighbour = edges[i].target;
-//
-//                    const float alternative = m_dist[u] + distNodes(nodes[u], nodes[neighbour]);
-//
-//                    if(alternative < m_dist[neighbour])
-//                    {
-//                        m_dist[neighbour] = alternative;
-//                        m_prev[neighbour] = u;
-//                        pq.push(Prio{u, t.second - alternative});
-//                        m_V[u] = 0;
-//                    }
-//                }
-//            }
-//        }
-//
-//        for(const auto& n : m_prev)
-//        {
-//            if(n != U64_max)
-//            {
-//                path.emplace_back(n);
-//            }
-//        }
-//
-//        return path;
-//    }
-//
-//    Vector<Uint64> RouteSearch::UCS(const Uint64 from, const Uint64 to)
-//    {
-//        Uint64     node     = from;
-//        const auto ooffsets = m_array->getOOffsets();
-//        const auto nodes    = m_array->getNodes();
-//        const auto edges    = m_array->getEdges();
-//
-//        m_frontier.clear();
-//        m_explored.clear();
-//
-//        m_frontier.emplace_back(node);
-//
-//        while(!m_frontier.empty())
-//        {
-//            node = m_frontier.front();
-//            m_frontier.pop_front();
-//
-//            if(node == to)
-//            {
-//                return {m_frontier.begin(), m_frontier.end()};
-//            }
-//
-//            m_explored.emplace(node);
-//
-//            // Check outgoing neighbours of min neighbour
-//            for(Uint64 i = ooffsets[node]; i < ooffsets[node + 1]; ++i)
-//            {
-//                const auto neighbour = edges[i].target;
-//                if(std::find(m_explored.begin(), m_explored.end(), neighbour) == m_explored.end())
-//                {
-//                    m_frontier.emplace_back(neighbour);
-//                }
-//            }
-//        }
-//
-//        return {};
-//    }
+                m.lock();
+                // Combine the two routes into one with the right order.
+                if(start == from)
+                {
+                    std::reverse(path.begin(), path.end());
+                    if(result.route.empty())
+                    {
+                        result.route.insert(result.route.end(), path.begin(), path.end());
+                    }
+                    else
+                    {
+                        Vector<Uint64> temp = result.route;
+                        result.route        = path;
+                        result.route.insert(result.route.end(), temp.begin(), temp.end());
+                    }
+                }
+                else
+                {
+                    result.route.insert(result.route.end(), path.begin(), path.end());
+                }
+                result.distance += distance;
+                result.duration += duration;
+                m.unlock();
+            };
 
-    std::string RouteSearch::computeGeoJson(const Uint64 from, const Uint64 to)
-    {
-        std::string path;
-        const auto  nodes = m_array->getNodes();
+        std::thread t1(search, from, std::ref(forward));
+        std::thread t2(search, to, std::ref(backward));
 
-        for(const auto& node : route(from, to))
+        t1.join();
+        t2.join();
+
+        if(reset)
         {
-            path += "[" + std::to_string(nodes[node].lon) + std::to_string(nodes[node].lat) + "]";
+            resetVisited(m_changed);
         }
-        return path;
+
+        result.start     = from;
+        result.stop      = to;
+        result.way_found = !result.route.empty();
+        result.uses_default |= (from == 0) ? 1 : ((to == 0) ? 2 : 0);
+        result.calculation = std::chrono::duration_cast<MS>(Clock::now() - start).count();
+        return result;
+    }
+
+    PathResult
+    RouteSearch::route(const Uint64 from, const Uint64 to, const TransportType type, Vector<Node> attractions)
+    {
+        const auto nodes               = m_array->getNodes();
+        const auto node_from           = nodes[from];
+
+        // Sort nodes by the shortest distance to each other.
+        Deque<Uint64> sorted;
+        Node          start_node = node_from;
+        Node          stop_node;
+        while(!attractions.empty())
+        {
+            stop_node = closestNode(start_node, attractions);
+            sorted.push_back(m_grid->getFirstClosest(stop_node.lat, stop_node.lon, DISTANCE_RANGE));
+            attractions.erase(
+                std::remove(attractions.begin(), attractions.end(), stop_node), attractions.end());
+            start_node = stop_node;
+        }
+        sorted.push_back(to);
+
+        PathResult result{};
+
+        Uint64 start = from;
+        Uint64 stop  = 0;
+        while(!sorted.empty())
+        {
+            stop = sorted.front();
+            sorted.pop_front();
+            PathResult local = biroute(start, stop, type);
+            start            = stop;
+
+            result.route.insert(result.route.end(), local.route.begin(), local.route.end());
+            result.duration += local.duration;
+            result.distance += local.distance;
+            result.uses_default |= local.uses_default;
+            result.calculation += local.calculation;
+        }
+
+        result.start     = from;
+        result.stop      = to;
+        result.way_found = !result.route.empty();
+        return result;
     }
 
 }  // namespace OSM

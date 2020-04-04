@@ -13,11 +13,11 @@ namespace OSMTest
         //     c - d
         AdjacencyArray array{};
 
-        Node a{0, 1, 0, 0, 0, 0};
-        Node b{1, 1, 1, 0, 0, 0};
-        Node c{2, 0, 1, 0, 0, 0};
-        Node d{3, 0, 2, 0, 0, 0};
-        Node e{4, 1, 3, 0, 0, 0};
+        Node a{0, 1, 0, 0, 0};
+        Node b{1, 1, 1, 0, 0};
+        Node c{2, 0, 1, 0, 0};
+        Node d{3, 0, 2, 0, 0};
+        Node e{4, 1, 3, 0, 0};
 
         array.addNode(a);
         array.addNode(b);
@@ -49,11 +49,12 @@ namespace OSMTest
 
         array.computeOffsets();
 
-        RouteSearch    dijkstra{&array};
-        Vector<Uint64> res = dijkstra.computeDijkstra(a.id, e.id);
+        Grid        grid{{}, &array};
+        RouteSearch dijkstra{&array, &grid};
+        PathResult  res = dijkstra.route(a.id, e.id, TransportType::ANY);
 
         Vector<Uint64> optimal_path = {a.id, b.id, e.id};
 
-        ASSERT_EQ(res, optimal_path);
+        ASSERT_EQ(res.route, optimal_path);
     }
 }  // namespace OSMTest

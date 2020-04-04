@@ -3,7 +3,7 @@
 
 #include "NonCopyable.hpp"
 #include "NonMoveable.hpp"
-#include "prototypes.hpp"
+#include "types.hpp"
 
 #include <QtCore/QString>
 namespace OSM
@@ -20,6 +20,7 @@ namespace OSM
         virtual ~Geo() = default;
 
         static Pair<float, float> stringToLatLon(const QString& str);
+        static Pair<float, float> midpoint(const float lat1, const float lon1, const float lat2, const float lon2);
         static float dist(const float lat1, const float lon1, const float lat2, const float lon2);
         static float deg2rad(const float deg);
     };

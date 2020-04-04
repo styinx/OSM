@@ -1,25 +1,31 @@
 #include "gui/UIGraph.hpp"
 
+#include <QtDebug>
+
 namespace OSM
 {
 
     UIGraph::UIGraph(const AdjacencyArray* array)
         : m_array(array)
     {
-        buildNetwork(EdgeTypeMask::MOTORWAY);
     }
 
-    void UIGraph::buildNetwork(const EdgeTypeMask street_type)
+    QJsonArray UIGraph::buildNetwork(const std::string street_type)
     {
+        QJsonArray array{};
         const auto nodes = m_array->getNodes();
 
         for(const auto& edge : m_array->getEdges())
         {
-            if(edge.mask & street_type)
+            if(edge.mask & StreetType[street_type].first)
             {
-                m_motorway.insert(QString::number(edge.source), QString::number(edge.target));
+                array.push_back(QJsonArray({QJsonValue(nodes[edge.source].lat),
+                                            QJsonValue(nodes[edge.source].lon),
+                                            QJsonValue(nodes[edge.target].lat),
+                                            QJsonValue(nodes[edge.target].lon)}));
             }
         }
+        return array;
     }
 
-} // namespace OSM
+}  // namespace OSM
