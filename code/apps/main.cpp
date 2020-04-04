@@ -7,6 +7,7 @@
 
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
+#ifndef NDEBUG
     QByteArray localMsg = msg.toLocal8Bit();
     switch (type) {
     case QtDebugMsg:
@@ -25,6 +26,7 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QS
         fprintf(stderr, "Fatal: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
         abort();
     }
+#endif
 }
 
 int main(int argc, char** argv)

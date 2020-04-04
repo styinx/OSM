@@ -1,4 +1,5 @@
 #include "structures/Grid.hpp"
+
 #include "util/Geo.hpp"
 
 namespace OSM
@@ -15,6 +16,8 @@ namespace OSM
             set(node.lat, node.lon, node.id);
         }
     }
+
+    // Private
 
     Uint16 Grid::nodeToCell(const float lat, const float lon) const
     {
@@ -33,6 +36,36 @@ namespace OSM
 
         return static_cast<Uint16>(y * m_y + x);
     }
+
+    Uint64 Grid::findNode(const float lat, const float lon, const float range, const bool first) const
+    {
+        const auto nodes         = m_array->getNodes();
+        const auto cell          = nodeToCell(lat, lon);
+        const auto nodes_in_cell = m_cells.at(cell).children;
+        float      min           = range;
+        Uint64     match         = 0;
+
+        if(nodes_in_cell.empty())
+            return U64_INF;
+
+        for(const auto& id : nodes_in_cell)
+        {
+            const auto node  = nodes[id];
+            float      l_min = Geo::dist(lat, lon, node.lat, node.lon);
+            if(l_min < min)
+            {
+                min   = l_min;
+                match = node.id;
+
+                if(first)
+                    return match;
+            }
+        }
+
+        return match;
+    }
+
+    // Public
 
     void Grid::set(const Uint16 cell, const Uint64 index)
     {
@@ -88,50 +121,49 @@ namespace OSM
         return m_cells;
     }
 
-    Uint64 Grid::getFirstClosest(const float lat, const float lon, const float range) const
+    Uint64
+    Grid::getFirstClosest(const float lat, const float lon, float range, const bool search_neighbours) const
     {
-        const auto nodes = m_array->getNodes();
-        const auto cell = nodeToCell(lat, lon);
-        const auto nodes_in_cell = m_cells.at(cell).children;
-
-        // If the cell has no nodes return 0
-        if(nodes_in_cell.empty())
-            return 0;
-
-        for(const auto& id : nodes_in_cell)
+        // Cell is not empty, but we did not find a node inside the range.
+        // So we repeat with double the range until we find a node.
+        auto match = findNode(lat, lon, range, true);
+        while(match == 0)
         {
-            const auto node = nodes[id];
-            if(Geo::dist(lat, lon, node.lat, node.lon) < range)
-            {
-                return node.id;
-            }
+            range *= 2;
+            match = findNode(lat, lon, range, true);
         }
 
-        // Cell is not empty, but we did not find a node inside the range.
-        // So we repeat the search with double the range.
-        return getFirstClosest(lat, lon, range * 2);
+        const auto node = m_array->m_nodes[match];
+
+        if(match == U64_INF && search_neighbours)
+        {
+            // Respective lat and lon range of a cell.
+            const auto cell_lat = m_lat_range / m_y;
+            const auto cell_lon = m_lat_range / m_x;
+            Vector<Pair<float, float>> neighbour_cells{
+                {lat - cell_lat, lon - cell_lon},
+                {lat - cell_lat, lon},
+                {lat - cell_lat, lon + cell_lon},
+                {lat, lon - cell_lon},
+                {lat, lon + cell_lon},
+                {lat + cell_lat, lon - cell_lon},
+                {lat + cell_lat, lon + cell_lon},
+                {lat + cell_lat, lon}
+            };
+
+            for(const auto& n : neighbour_cells)
+            {
+                match = getFirstClosest(n.first, n.second, range, false);
+                if(match > 0 && match < U64_INF)
+                    return match;
+            }
+        }
+        return match;
     }
 
     Uint64 Grid::getBestClosest(const float lat, const float lon) const
     {
-        const auto nodes = m_array->getNodes();
-        const auto cell = nodeToCell(lat, lon);
-        const auto nodes_in_cell = m_cells.at(cell).children;
-        float min = F32_INF;
-        Uint64 match = 0;
-
-        for(const auto& id : nodes_in_cell)
-        {
-            const auto node = nodes[id];
-            float l_min = Geo::dist(lat, lon, node.lat, node.lon);
-            if(l_min < min)
-            {
-                min = l_min;
-                match = node.id;
-            }
-        }
-
-        return match;
+        return findNode(lat, lon, F32_INF, false);
     }
 
 }  // namespace OSM

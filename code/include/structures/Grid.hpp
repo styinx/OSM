@@ -30,6 +30,7 @@ namespace OSM
         Vector<Cell>          m_cells{m_x * m_y};
 
         Uint16 nodeToCell(const float lat, const float lon) const;
+        Uint64 findNode(const float lat, const float lon, float range, const bool first) const;
 
     public:
         explicit Grid(const MapBounds& bounds, const AdjacencyArray* array);
@@ -42,8 +43,12 @@ namespace OSM
         Vector<Uint64>   get(const MapBounds& bounds) const;
         const MapBounds& getBounds() const;
         Vector<Cell>     getCells() const;
-        Uint64           getFirstClosest(const float lat, const float lon, const float range = 100) const;
-        Uint64           getBestClosest(const float lat, const float lon) const;
+        Uint64           getFirstClosest(
+                      const float lat,
+                      const float lon,
+                      const float range             = 100,
+                      const bool  search_neighbours = true) const;
+        Uint64 getBestClosest(const float lat, const float lon) const;
     };
 
 }  // namespace OSM
