@@ -392,7 +392,7 @@ When using the third search algorithm we try to solve an instance of a TSP probl
 For the heuristics of the path search we use the nearest neighbour strategy.
 When visualizing this approach the algorithm might produce a so called necklace pattern that is shown below [1].
 
-![Necklace](https://github.com/styinx/OSM/blob/master/report/limitation_tags.png)
+![Necklace](https://github.com/styinx/OSM/blob/master/report/necklace.png)
 
 ### Performance
 <a id="performance"/>
